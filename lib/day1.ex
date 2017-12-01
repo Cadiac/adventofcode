@@ -23,7 +23,7 @@ defmodule Day1.Part1 do
     |> Enum.sum
   end
 
-  def compare(input, current, next) when is_nil(next) do
+  defp compare(input, current, next) when is_nil(next) do
     if current == String.first(input) do
       String.to_integer(current)
     else
@@ -40,7 +40,7 @@ defmodule Day1.Part1 do
   end
 end
 
-defmodule Day2.Part2 do
+defmodule Day1.Part2 do
   @moduledoc """
   Documentation for Part2.
   """
