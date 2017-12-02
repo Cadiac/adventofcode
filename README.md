@@ -1,21 +1,29 @@
-# Day1
+# Advent of Code 2017
 
-**TODO: Add description**
+Solutions to [Advent of Code 2017](https://adventofcode.com/) implemented in [Elixir](https://elixir-lang.github.io/).
 
-## Installation
+## Installing
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `day1` to your list of dependencies in `mix.exs`:
+Follow [Elixir](https://elixir-lang.github.io/install.html) installation instructions.
 
-```elixir
-def deps do
-  [
-    {:day1, "~> 0.1.0"}
-  ]
-end
+## Running solutions
+
+You can test all solutions as doctests by running 
+
+```bash
+$ mix test
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/day1](https://hexdocs.pm/day1).
+You can also start up an interactive shell and run the invidual solutions manually.
+
+```
+$ iex -S mix
+iex(1)> Day1.Part1.solve("1122")
+3
+```
+
+## Solutions
+
+* [Day 1](lib/day1.exs)
+* [Day 2](lib/day2.exs)
 
