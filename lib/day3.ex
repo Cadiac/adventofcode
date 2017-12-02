@@ -1,4 +1,4 @@
-defmodule Day2.Part1 do
+defmodule Day3.Part1 do
   @moduledoc """
   Documentation for Part1.
   """
@@ -25,7 +25,7 @@ defmodule Day2.Part1 do
   end
 end
 
-defmodule Day2.Part2 do
+defmodule Day3.Part2 do
   @moduledoc """
   Documentation for Part2.
   """
