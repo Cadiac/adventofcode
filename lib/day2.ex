@@ -54,13 +54,11 @@ defmodule Day2.Part2 do
     |> Enum.reduce_while(0, fn(e, acc) -> find_even_division(e, acc, r) end)
   end
 
-  defp find_even_division(e, acc, row) do
-    {value, index} = e
-
-    even = Enum.find(row, fn(x) -> index != elem(x, 1) && rem(value, elem(x, 0)) == 0 end)
+  defp find_even_division({value, index}, _acc, row) do
+    even = Enum.find(row, fn({v, i}) -> index != i && rem(value, v) == 0 end)
 
     if is_nil(even) do
-      {:cont, acc}
+      {:cont, 0}
     else
       {:halt, div(value, elem(even, 0))}
     end
