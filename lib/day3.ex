@@ -26,25 +26,21 @@ defmodule Day3.Matrix do
   Creates a Matrix
 
   ## Examples:
-    iex> Matrix.create(5)
+    iex> Matrix.create |> Stream.drop(4) |> Enum.take(1) |> List.first
     [%Cell{going: :south, v: 5, x: -1, y: 1},
      %Cell{going: :west, v: 4, x: 0, y: 1},
      %Cell{going: :west, v: 3, x: 1, y: 1},
      %Cell{going: :north, v: 2, x: 1, y: 0},
      %Cell{going: :east, v: 1, x: 0, y: 0}]
   """
-  def create(max_v) do
+  def create() do
     first = %Cell{x: 0, y: 0, v: 1, going: :east}
 
-    create_cells([first], max_v)
+    Stream.unfold([first], fn cells -> {cells, create_cells(cells)} end)
   end
 
-  defp create_cells([%Cell{v: v} | _tail] = cells, max_v) when v == max_v do
-    cells
-  end
-
-  defp create_cells([%Cell{} = previous | _tail] = cells, max_v) do
-    create_cells([next_cell(previous) | cells], max_v)
+  defp create_cells([%Cell{} = previous | _tail] = cells) do
+    [next_cell(previous) | cells]
   end
 
   @doc """
@@ -155,10 +151,8 @@ defmodule Day3.Matrix do
     round(:math.sqrt(number))
   end
 
-  @doc """
-  Finds all neighbours that currently exist for cell in cells
-  """
-  def find_neighbours_values(cells, %Cell{} = cell) do
+  # Finds all neighbours that currently exist for cell in cells
+  defp find_neighbours_values(cells, %Cell{} = cell) do
     potential_neighbours = [
       Cell.add(cell, directions(:north)),
       Cell.add(cell, directions(:northeast)),
@@ -208,11 +202,15 @@ defmodule Day3.Part1 do
     2
     iex> Part1.solve(1024)
     31
+    iex> Part1.solve(347991)
+    480
   """
   def solve(input) do
-    input
-    |> Matrix.create
-    |> Enum.find(fn(x) -> x.v == input end)
+    Matrix.create
+    |> Stream.drop(input - 1)
+    |> Enum.take(1)
+    |> List.first
+    |> List.first
     |> distance
   end
 
@@ -269,6 +267,27 @@ defmodule Day3.Part2 do
     |> pick_sum
   end
 
+  @doc """
+  Returns the first value written that is larger than puzzle input
+
+  147  142  133  122   59
+  304    5    4    2   57
+  330   10    1    1   54
+  351   11   23   25   26
+  362  747  806--->   ...
+
+  ## Examples:
+    iex> Part2.solve(1)
+    1
+    iex> Part2.solve(20)
+    23
+    iex> Part2.solve(60)
+    122
+    iex> Part2.solve(750)
+    806
+    iex> Part2.solve(347991)
+    349975
+  """
   def solve(input) do    
     Matrix.create_with_neighbours
     |> Stream.drop_while(fn([head | _tail]) -> head.sum < input end)
