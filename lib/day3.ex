@@ -21,7 +21,6 @@ defmodule Day3.Matrix do
   """
 
   alias Day3.Cell, as: Cell
-  require Logger
 
   @doc """
   Creates a Matrix
@@ -49,31 +48,27 @@ defmodule Day3.Matrix do
   end
 
   @doc """
-  Creates a Matrix with neighbour values sum as value
+  Creates Stream of Cells representing a Matrix with neighbour values sum as value
 
   ## Examples:
-    iex> Matrix.create_with_neighbours(5)
+    iex> Matrix.create_with_neighbours() |> Stream.drop(4) |> Enum.take(1) |> List.first
     [%Cell{going: :south, sum: 5, v: 5, x: -1, y: 1},
      %Cell{going: :west, sum: 4, v: 4, x: 0, y: 1},
      %Cell{going: :west, sum: 2, v: 3, x: 1, y: 1},
      %Cell{going: :north, sum: 1, v: 2, x: 1, y: 0},
      %Cell{going: :east, sum: 1, v: 1, x: 0, y: 0}]
   """
-  def create_with_neighbours(max_v) do
+  def create_with_neighbours() do
     first = %Cell{x: 0, y: 0, v: 1, going: :east, sum: 1}
 
-    create_cells_with_neighbours([first], max_v)
+    Stream.unfold([first], fn cells -> {cells, create_cells_with_neighbours(cells)} end)
   end
 
-  defp create_cells_with_neighbours([%Cell{v: v} | _tail] = cells, max_v) when v == max_v do
-    cells
-  end
-
-  defp create_cells_with_neighbours([%Cell{} = previous | _tail] = cells, max_v) do
+  defp create_cells_with_neighbours([%Cell{} = previous | _tail] = cells) do
     next = next_cell(previous)
     sum = find_neighbours_values(cells, next)
 
-    create_cells_with_neighbours([%{next | sum: sum} | cells], max_v)
+    [%{next | sum: sum} | cells]
   end
 
   @doc """
@@ -235,7 +230,7 @@ defmodule Day3.Part2 do
   alias Day3.Cell, as: Cell
   
   @doc """
-  Finds the first value written that is larger than puzzle input
+  Returns value written that is at v
 
   147  142  133  122   59
   304    5    4    2   57
@@ -244,31 +239,42 @@ defmodule Day3.Part2 do
   362  747  806--->   ...
 
   ## Examples:
-    iex> Part2.solve(1)
+    iex> Part2.solve_value(1)
     1
-    iex> Part2.solve(2)
+    iex> Part2.solve_value(2)
     1
-    iex> Part2.solve(3)
+    iex> Part2.solve_value(3)
     2
-    iex> Part2.solve(4)
+    iex> Part2.solve_value(4)
     4
-    iex> Part2.solve(5)
+    iex> Part2.solve_value(5)
     5
-    iex> Part2.solve(6)
+    iex> Part2.solve_value(6)
     10
-    iex> Part2.solve(7)
+    iex> Part2.solve_value(7)
     11
-    iex> Part2.solve(8)
+    iex> Part2.solve_value(8)
     23
-    iex> Part2.solve(9)
+    iex> Part2.solve_value(9)
     25
-    iex> Part2.solve(10)
+    iex> Part2.solve_value(10)
     26
   """
-  def solve(input) do
-    input
-    |> Matrix.create_with_neighbours
-    |> Enum.find(fn(x) -> x.v == input end)
+  def solve_value(input) do
+    Matrix.create_with_neighbours
+    |> Stream.drop_while(fn([head | _tail]) -> head.v < input end)
+    |> Enum.take(1)
+    |> List.first
+    |> List.first
+    |> pick_sum
+  end
+
+  def solve(input) do    
+    Matrix.create_with_neighbours
+    |> Stream.drop_while(fn([head | _tail]) -> head.sum < input end)
+    |> Enum.take(1)
+    |> List.first
+    |> List.first
     |> pick_sum
   end
 
