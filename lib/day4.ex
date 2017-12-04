@@ -40,3 +40,73 @@ defmodule Day4.Part1 do
     length(splitted) == length(unique)
   end
 end
+
+defmodule Day4.Part2 do
+  @moduledoc """
+  Documentation for Part2.
+  """
+
+  @doc ~S"""
+  Checks if passphrase is legit. Valid passphrase must contain
+  no two words that are anagrams of each other.
+
+  ## Examples:
+    iex> Part2.solve("abcde fghij\nabcde xyz ecdab")
+    1
+    iex> Part2.solve("iiii oiii ooii oooi oooo\nabcde fghij\nabcde xyz ecdab")
+    2
+    iex> Part2.solve("oiii ioii iioi iiio")
+    0
+  """
+  def solve(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.map(fn(x) -> is_valid(x) end)
+    |> Enum.reduce(0, fn(x, acc) -> if x, do: acc + 1, else: acc end) 
+  end
+
+  @doc """
+  Valid passphrase must contain no two words that are anagrams of each other.
+
+  ## Examples:
+    iex> Part2.is_valid("abcde fghij")
+    true
+    iex> Part2.is_valid("abcde xyz ecdab")
+    false
+    iex> Part2.is_valid("iiii oiii ooii oooi oooo")
+    true
+    iex> Part2.is_valid("oiii ioii iioi iiio")
+    false
+  """
+  def is_valid(passphrase) do
+    signatures = passphrase
+    |> String.split(" ")
+    |> Enum.map(fn(w) -> word_signature(w) end)
+    
+    uniq_signatures = Enum.uniq(signatures)
+
+    length(signatures) == length(uniq_signatures)
+  end
+
+  @doc """
+  Finds a signature for word from its graphemes.
+  
+  ## Examples:
+    iex> Part2.word_signature("foobar")
+    [{"a", 1}, {"b", 1}, {"f", 1}, {"o", 2}, {"r", 1}]
+    iex> Part2.word_signature("oofarb")
+    [{"a", 1}, {"b", 1}, {"f", 1}, {"o", 2}, {"r", 1}]
+    iex> Part2.word_signature("oofarr")
+    [{"a", 1}, {"f", 1}, {"o", 2}, {"r", 2}]
+  """
+  def word_signature(word) do
+    graphemes = String.graphemes(word)
+
+    graphemes
+    |> Enum.uniq
+    |> Enum.map(fn(c) ->
+      {c, length(Enum.filter(graphemes, fn(g) -> c == g end))} 
+    end)
+    |> Enum.sort
+  end
+end

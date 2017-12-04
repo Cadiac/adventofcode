@@ -285,8 +285,6 @@ defmodule Day3.Part2 do
     122
     iex> Part2.solve(750)
     806
-    iex> Part2.solve(347991)
-    349975
   """
   def solve(input) do    
     Matrix.create_with_neighbours
