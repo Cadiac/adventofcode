@@ -41,7 +41,7 @@ defmodule Day5.Part2 do
   Every time offsets are used they are increased by one if they are three or more, and decreased otherwise.
 
   ## Examples:
-    iex> Part1.solve("0\n3\n0\n1\n-3")
+    iex> Part2.solve("0\n3\n0\n1\n-3")
     10
   """
   def solve(input) do

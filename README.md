@@ -1,4 +1,4 @@
-# Advent of Code 2017
+# 🎄🎄🎄 Advent of Code 2017 🎄🎄🎄  
 
 Solutions to [Advent of Code 2017](https://adventofcode.com/) implemented in [Elixir](https://elixir-lang.github.io/).
 
@@ -24,7 +24,9 @@ iex(1)> Day1.Part1.solve("1122")
 
 ## Solutions
 
-* [Day 1](lib/day1.exs)
-* [Day 2](lib/day2.exs)
-* [Day 3](lib/day3.exs)
-* [Day 4](lib/day4.exs)
+❄️ [Day 1](lib/day1.exs)
+❄️ [Day 1](lib/day1.exs)
+❄️ [Day 2](lib/day2.exs)
+❄️ [Day 3](lib/day3.exs)
+❄️ [Day 4](lib/day4.exs)
+❄️ [Day 5](lib/day5.exs)
