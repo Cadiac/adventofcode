@@ -50,14 +50,19 @@ defmodule Day7.Prgm do
     end)}
   end
 
-  def find_unbalanced_prgm(%Prgm{} = prgm) do
+  # Goes up the trees until a balanced layer is found, and calculates the correct weight
+  def find_unbalanced_prgm(%Prgm{} = prgm, prev_balance \\ 0) do
     groups = Enum.group_by(prgm.towers, fn x -> x.total_weight end)
 
     try do
-      {balance, balanced} = Enum.max_by(groups, fn({_k, v}) -> length(v) end)
+      {balance, _balanced} = Enum.max_by(groups, fn({_k, v}) -> length(v) end)
       {unbalance, unbalanced} = Enum.min_by(groups, fn({_k, v}) -> length(v) end)
       
-      %{balance: balance, balanced: length(balanced), unbalance: unbalance, unbalanced: List.first(unbalanced)}
+      if balance == unbalance do
+        prev_balance - prgm.total_weight + prgm.weight
+      else
+        List.first(unbalanced) |> find_unbalanced_prgm(balance)
+      end
     rescue
       Enum.EmptyError -> nil
     end
@@ -76,7 +81,7 @@ defmodule Day7.Part1 do
 
   ## Examples:
     iex> input = "pbga (66)\nxhth (57)\nebii (61)\nhavc (66)\nktlj (57)\nfwft (72) -> ktlj, cntj, xhth\nqoyq (66)\npadx (45) -> pbga, havc, qoyq\ntknk (41) -> ugml, padx, fwft\njptl (61)\nugml (68) -> gyxo, ebii, jptl\ngyxo (61)\ncntj (57)"
-    iex> Part1.solve()
+    iex> Part1.solve(input)
     "tknk"
   """
   def solve(input) do
@@ -113,7 +118,7 @@ defmodule Day7.Part2 do
 
   ## Examples:
     iex> input = "pbga (66)\nxhth (57)\nebii (61)\nhavc (66)\nktlj (57)\nfwft (72) -> ktlj, cntj, xhth\nqoyq (66)\npadx (45) -> pbga, havc, qoyq\ntknk (41) -> ugml, padx, fwft\njptl (61)\nugml (68) -> gyxo, ebii, jptl\ngyxo (61)\ncntj (57)"
-    iex> Part2.solve()
+    iex> Part2.solve(input)
     60
   """
   def solve(input) do
@@ -137,5 +142,6 @@ defmodule Day7.Part2 do
     |> Prgm.find_root_prgrm
     |> Prgm.add_towers_to_prgm(rows)
     |> Prgm.add_total_weights
+    |> Prgm.find_unbalanced_prgm
   end
 end
