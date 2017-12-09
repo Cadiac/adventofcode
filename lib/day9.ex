@@ -1,56 +1,4 @@
 defmodule Day9 do
-  @doc ~S"""
-  Returns the given string as list of caracters without any garbage substrings.
-  Result list contains the remaining characters in reverse order.
-
-  * `<>`, empty garbage.
-  * `<random characters>`, garbage containing random characters.
-  * `<<<<>`, because the extra `<` are ignored.
-  * `<{!>}>`, because the first `>` is canceled.
-  * `<!!>`, because the second `!` is canceled, allowing the `>` to terminate the garbage.
-  * `<!!!>>`, because the second `!` and the first > are canceled.
-  * `<{o"i!a,<{i<a>`, which ends at the first `>`.
-
-  ## Examples:
-    iex> Day9.remove_garbage(String.graphemes("foo<>bar"))
-    ["r", "a", "b", "o", "o", "f"]
-    iex> Day9.remove_garbage(String.graphemes("foo<bar>bar"))
-    ["r", "a", "b", "o", "o", "f"]
-    iex> Day9.remove_garbage(String.graphemes("foo<<<<>bar"))
-    ["r", "a", "b", "o", "o", "f"]
-    iex> Day9.remove_garbage(String.graphemes("foo<{!>}>bar"))
-    ["r", "a", "b", "o", "o", "f"]
-    iex> Day9.remove_garbage(String.graphemes("foo<!!>bar"))
-    ["r", "a", "b", "o", "o", "f"]
-    iex> Day9.remove_garbage(String.graphemes("foo<!!!>>bar"))
-    ["r", "a", "b", "o", "o", "f"]
-    iex> Day9.remove_garbage(String.graphemes(~s(foo<{o"i!a,<{i<a>bar)))
-    ["r", "a", "b", "o", "o", "f"]
-  """
-  def remove_garbage(characters) do
-    characters
-    |> Enum.reduce(%{ignore: false, active: false, clean: []}, fn(c, acc) ->
-      cond do
-        acc.ignore ->
-          %{acc | ignore: false}
-        c == "!" ->
-          %{acc | ignore: true}
-        acc.active && c != ">" ->
-          acc
-        acc.active && c == ">" ->
-          %{acc | active: false}
-        c == "<" ->
-          %{acc | active: true}
-        true ->
-          %{acc | clean: [c | acc.clean]}
-      end
-    end)
-    |> Map.get(:clean)
-  end
-end
-
-
-defmodule Day9.Part1 do
   @moduledoc """
   --- Day 9: Stream Processing ---
 
@@ -110,7 +58,100 @@ defmodule Day9.Part1 do
   * `{{<!!>},{<!!>},{<!!>},{<!!>}}`, score of 1 + 2 + 2 + 2 + 2 = 9.
   * `{{<a!>},{<a!>},{<a!>},{<ab>}}`, score of 1 + 2 = 3.
   """
+  
+  @doc ~S"""
+  Returns the given string as list of caracters without any garbage substrings.
+  Result list contains the remaining characters in reverse order.
 
+  * `<>`, empty garbage.
+  * `<random characters>`, garbage containing random characters.
+  * `<<<<>`, because the extra `<` are ignored.
+  * `<{!>}>`, because the first `>` is canceled.
+  * `<!!>`, because the second `!` is canceled, allowing the `>` to terminate the garbage.
+  * `<!!!>>`, because the second `!` and the first > are canceled.
+  * `<{o"i!a,<{i<a>`, which ends at the first `>`.
+
+  ## Examples:
+    iex> Day9.remove_garbage(String.graphemes("foo<>bar"))
+    ["r", "a", "b", "o", "o", "f"]
+    iex> Day9.remove_garbage(String.graphemes("foo<bar>bar"))
+    ["r", "a", "b", "o", "o", "f"]
+    iex> Day9.remove_garbage(String.graphemes("foo<<<<>bar"))
+    ["r", "a", "b", "o", "o", "f"]
+    iex> Day9.remove_garbage(String.graphemes("foo<{!>}>bar"))
+    ["r", "a", "b", "o", "o", "f"]
+    iex> Day9.remove_garbage(String.graphemes("foo<!!>bar"))
+    ["r", "a", "b", "o", "o", "f"]
+    iex> Day9.remove_garbage(String.graphemes("foo<!!!>>bar"))
+    ["r", "a", "b", "o", "o", "f"]
+    iex> Day9.remove_garbage(String.graphemes(~s(foo<{o"i!a,<{i<a>bar)))
+    ["r", "a", "b", "o", "o", "f"]
+  """
+  def remove_garbage(characters) do
+    characters
+    |> Enum.reduce(%{ignore: false, active: false, clean: []}, fn(c, acc) ->
+      cond do
+        acc.ignore ->
+          %{acc | ignore: false}
+        c == "!" ->
+          %{acc | ignore: true}
+        acc.active && c != ">" ->
+          acc
+        acc.active && c == ">" ->
+          %{acc | active: false}
+        c == "<" ->
+          %{acc | active: true}
+        true ->
+          %{acc | clean: [c | acc.clean]}
+      end
+    end)
+    |> Map.get(:clean)
+  end
+
+  @doc ~S"""
+  Counts how many non-cancelled characters of garbage are removed. `<` and `>`
+  characters starting the garbage blocks are not counted.
+  
+  ## Examples:
+    iex> Day9.removed_garbage_count(String.graphemes("foo<>bar"))
+    0
+    iex> Day9.removed_garbage_count(String.graphemes("foo<bar>bar"))
+    3
+    iex> Day9.removed_garbage_count(String.graphemes("foo<<<<>bar"))
+    3
+    iex> Day9.removed_garbage_count(String.graphemes("foo<{!>}>bar"))
+    2
+    iex> Day9.removed_garbage_count(String.graphemes("foo<!!>bar"))
+    0
+    iex> Day9.removed_garbage_count(String.graphemes("foo<!!!>>bar"))
+    0
+    iex> Day9.removed_garbage_count(String.graphemes(~s(foo<{o"i!a,<{i<a>bar)))
+    10
+  """
+  def removed_garbage_count(characters) do
+    characters
+    |> Enum.reduce(%{ignore: false, active: false, removed: 0, clean: []}, fn(c, acc) ->
+      cond do
+        acc.ignore ->
+          %{acc | ignore: false}
+        c == "!" ->
+          %{acc | ignore: true}
+        acc.active && c != ">" ->
+          %{acc | removed: acc.removed + 1}
+        acc.active && c == ">" ->
+          %{acc | active: false}
+        c == "<" ->
+          %{acc | active: true}
+        true ->
+          %{acc | clean: [c | acc.clean]}
+      end
+    end)
+    |> Map.get(:removed)
+  end
+end
+
+
+defmodule Day9.Part1 do
   alias Day9
 
   @doc ~S"""  
@@ -147,5 +188,38 @@ defmodule Day9.Part1 do
       end
     end)
     |> Map.get(:value)
+  end
+end
+
+defmodule Day9.Part2 do
+  @moduledoc """
+  --- Part Two ---
+
+  Now, you're ready to remove the garbage.
+
+  To prove you've removed it, you need to count all of the characters within the garbage.
+  The leading and trailing < and > don't count, nor do any canceled characters or the ! doing the canceling.
+  """
+  alias Day9
+
+  @doc ~S"""  
+  How many non-canceled characters are within the garbage in your puzzle input?
+
+  ## Examples:
+    iex> Part2.solve("{{{},{},{{}}}}")
+    0
+    iex> Part2.solve("{<a>,<a>,<a>,<a>}")
+    4
+    iex> Part2.solve("{{<ab>},{<ab>},{<ab>},{<ab>}}")
+    8
+    iex> Part2.solve("{{<!!>},{<!!>},{<!!>},{<!!>}}")
+    0
+    iex> Part2.solve("{{<a!>},{<a!>},{<a!>},{<ab>}}")
+    17
+  """
+  def solve(input) do
+    input
+    |> String.graphemes
+    |> Day9.removed_garbage_count
   end
 end
