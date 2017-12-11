@@ -3,10 +3,18 @@
 # 🎄🎄🎄 Advent of Code 2017 🎄🎄🎄  
 
 Solutions to [Advent of Code 2017](https://adventofcode.com/) implemented in [Elixir](https://elixir-lang.github.io/).
+The initial goal was to implement these exercises without the use of external libraries, but Day 11 happened to be
+the perfect use case for my [Hextille](https://hexdocs.pm/hextille/api-reference.html) library so it was used.
 
 ## Installing
 
 Follow [Elixir](https://elixir-lang.github.io/install.html) installation instructions.
+
+To install dependencies, run
+
+```
+$ mix deps.get
+```
 
 ## Running solutions
 
@@ -37,3 +45,4 @@ iex(1)> Day1.Part1.solve("1122")
 ❄️ [Day 8](lib/day8.ex)
 ❄️ [Day 9](lib/day9.ex)
 ❄️ [Day 10](lib/day10.ex)
+❄️ [Day 11](lib/day11.ex)
