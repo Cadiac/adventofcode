@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/Cadiac/adventofcode.svg?branch=master)](https://travis-ci.org/Cadiac/adventofcode)
+[![Build Status](https://travis-ci.org/Cadiac/adventofcode.svg?branch=2017)](https://travis-ci.org/Cadiac/adventofcode)
 
 # 🎄🎄🎄 Advent of Code 2017 🎄🎄🎄  
 
