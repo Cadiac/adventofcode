@@ -48,14 +48,14 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_solves_part1_examples() {
+    fn it_solves_day01_part1_examples() {
         assert_eq!(part_1(String::from("./test/part1_1.txt")).unwrap(), 3);
         assert_eq!(part_1(String::from("./test/part1_2.txt")).unwrap(), 0);
         assert_eq!(part_1(String::from("./test/part1_3.txt")).unwrap(), -6);
     }
 
     #[test]
-    fn it_solves_part2_examples() {
+    fn it_solves_day01_part2_examples() {
         assert_eq!(part_2(String::from("./test/part2_1.txt")).unwrap(), 0);
         assert_eq!(part_2(String::from("./test/part2_2.txt")).unwrap(), 10);
         assert_eq!(part_2(String::from("./test/part2_3.txt")).unwrap(), 5);

@@ -33,12 +33,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_solves_part1_examples() {
+    fn it_solves_day02_part1_examples() {
         assert_eq!(part_1().unwrap(), 0);
     }
 
     #[test]
-    fn it_solves_part2_examples() {
+    fn it_solves_day02_part2_examples() {
         assert_eq!(part_2().unwrap(), 0);
     }
 }
