@@ -26,9 +26,6 @@ fn part_1(file: &str) -> usize {
 }
 
 fn part_2(file: &str) -> String {
-    let mut found = false;
-    let mut result = String::new();
-
     for (i, word1) in file.lines().enumerate() {
         for word2 in file.lines().skip(i + 1) {
             if word1.len() != word2.len() {
@@ -51,19 +48,16 @@ fn part_2(file: &str) -> String {
             }
 
             if differences == 1 {
-                found = true;
-                // Doesn't work if the last character is different.. whatever
-                result = [&word1[..diff_index], &word2[diff_index+1..]].concat();
-                break;
+                if diff_index == word1.len() - 1 {
+                    // Make sure this works even if the last char is different
+                    return String::from(&word1[..diff_index])
+                }
+                return [&word1[..diff_index], &word2[diff_index+1..]].concat();
             }
         };
-
-        if found {
-            break;
-        }
     };
 
-    result
+    panic!("Result not found");
 }
 
 fn main() {
