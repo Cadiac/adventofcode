@@ -11,16 +11,23 @@ Follow [Rust](https://www.rust-lang.org/en-US/install.html) installation instruc
 
 ## Running solutions
 
-You can test individual solutions by running
+The project is split into small cargo projects for every day.
+
+You can run individual solutions by running
 
 ```bash
 $ cargo run
 ```
 
-in each solvers directory.
+or run the tests with
 
-Add your input files as `input.txt` in each days directory to run the code.
+```bash
+$ cargo test
+```
+
+in each solvers directory.
 
 ## Solutions
 
 ❄️ [Day 01](day01/src/main.rs)
+❄️ [Day 02](day02/src/main.rs)
