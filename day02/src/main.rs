@@ -29,8 +29,8 @@ fn part_2(file: &str) -> String {
     let mut found = false;
     let mut result = String::new();
 
-    for word1 in file.lines() {
-        for word2 in file.lines() {
+    for (i, word1) in file.lines().enumerate() {
+        for word2 in file.lines().skip(i + 1) {
             if word1.len() != word2.len() {
                 continue;
             }
