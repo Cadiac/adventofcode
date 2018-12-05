@@ -187,12 +187,12 @@ mod tests {
     const TEST_FILE: &str = include_str!("../test/example.txt");
 
     #[test]
-    fn it_solves_day02_part1_example() {
+    fn it_solves_day04_part1_example() {
         assert_eq!(part_1(TEST_FILE), 240);
     }
 
     #[test]
-    fn it_solves_day02_part2_example() {
+    fn it_solves_day04_part2_example() {
         assert_eq!(part_2(TEST_FILE), 4455);
     }
 }

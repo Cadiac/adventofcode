@@ -98,12 +98,12 @@ mod tests {
     const TEST_FILE: &str = include_str!("../test/example.txt");
 
     #[test]
-    fn it_solves_day02_part1_example() {
+    fn it_solves_day03_part1_example() {
         assert_eq!(part_1(TEST_FILE), 4);
     }
 
     #[test]
-    fn it_solves_day02_part2_example() {
+    fn it_solves_day03_part2_example() {
         assert_eq!(part_2(TEST_FILE), String::from("3"));
     }
 }
