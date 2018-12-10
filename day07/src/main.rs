@@ -35,62 +35,8 @@ fn calculate_task_duration(task_id: char, min_duration: u32) -> u32 {
     (task_id as u8 - 'A' as u8) as u32 + 1 + min_duration
 }
 
-fn part_1(file: &str) -> String {
-    let mut all_tasks: BTreeMap<char, Task> = BTreeMap::new();
-
-    let input_regex = Regex::new(r"^Step (.+) must be finished before step (.+) can begin.$").unwrap();
-    
-    for line in file.lines() {
-        for capture in input_regex.captures_iter(line) {
-            let dependency = capture[1].parse::<char>().unwrap();
-            let task_id = capture[2].parse::<char>().unwrap();
-
-            all_tasks
-                .entry(task_id)
-                .or_insert(Task{
-                    id: task_id,
-                    depends_on: HashSet::new(),
-                    work_total: 0u32,
-                    work_complete: 0u32
-                })
-                .depends_on
-                .insert(dependency);
-
-            // Make sure the dependency task is also created
-            all_tasks
-                .entry(dependency)
-                .or_insert(Task{
-                    id: dependency,
-                    depends_on: HashSet::new(),
-                    work_total: 0u32,
-                    work_complete: 0u32
-                });
-        };
-    };
-    
-    let mut task_order: Vec<String> = Vec::new();
-
-    loop {
-        let next_task_id = find_next_available_task(&all_tasks);
-
-        match next_task_id {
-            Some(next_task_id) => {
-                task_order.push(next_task_id.to_string());
-                for (_id, task) in all_tasks.iter_mut() {
-                    task.depends_on.remove(&next_task_id.clone());
-                };
-                all_tasks.remove(&next_task_id);
-            },
-            None => {
-                return task_order.join("");
-            }
-        };
-    }
-}
-
-fn part_2(file: &str, concurrency: u32, min_duration: u32) -> u32 {
+fn read_and_parse_file(file: &str, min_duration: u32) -> BTreeMap<char, Task> {
     let mut available_tasks: BTreeMap<char, Task> = BTreeMap::new();
-
     let input_regex = Regex::new(r"^Step (.+) must be finished before step (.+) can begin.$").unwrap();
     
     for line in file.lines() {
@@ -120,8 +66,37 @@ fn part_2(file: &str, concurrency: u32, min_duration: u32) -> u32 {
                 });
         };
     };
-    
+
+    available_tasks
+}
+
+fn part_1(file: &str) -> String {
+    let mut all_tasks: BTreeMap<char, Task> = read_and_parse_file(file, 0);
+    let mut task_order: Vec<String> = Vec::new();
+
+    loop {
+        let next_task_id = find_next_available_task(&all_tasks);
+
+        match next_task_id {
+            Some(next_task_id) => {
+                task_order.push(next_task_id.to_string());
+                for (_id, task) in all_tasks.iter_mut() {
+                    task.depends_on.remove(&next_task_id.clone());
+                };
+                all_tasks.remove(&next_task_id);
+            },
+            None => {
+                return task_order.join("");
+            }
+        };
+    }
+}
+
+fn part_2(file: &str, concurrency: u32, min_duration: u32) -> u32 {
+    let mut available_tasks: BTreeMap<char, Task> = read_and_parse_file(file, min_duration);
+    let mut complete_tasks: Vec<char> = Vec::new();
     let mut workers: Vec<Worker> = Vec::new();
+    let mut elapsed_time: u32 = 0;
 
     for worker in 0..concurrency {
         workers.push(Worker{
@@ -130,9 +105,6 @@ fn part_2(file: &str, concurrency: u32, min_duration: u32) -> u32 {
             task: None
         })
     }
-
-    let mut complete_tasks: Vec<char> = Vec::new();
-    let mut elapsed_time: u32 = 0;
 
     loop {
         if available_tasks.len() == 0 && workers.iter().all(|worker| !worker.active) {
