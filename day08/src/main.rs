@@ -47,8 +47,27 @@ fn create_node(slice: &[i32]) -> Node {
     current_node
 }
 
-fn metadata_sum(node: &Node) -> i32 {
-    node.metadata.iter().sum::<i32>() + node.children.iter().map(|c| metadata_sum(c)).sum::<i32>()
+fn part1_metadata_sum(node: &Node) -> i32 {
+    node.metadata.iter().sum::<i32>() + node.children.iter().map(|c| part1_metadata_sum(c)).sum::<i32>()
+}
+
+fn part2_metadata_sum(node: &Node) -> i32 {
+    if node.children.is_empty() {
+        return node.metadata.iter().sum::<i32>();
+    };
+
+    let mut total_sum = 0;
+
+    for index in node.metadata.iter() {
+        let child = node.children.iter().nth((index-1) as usize);
+
+        total_sum = match child {
+            Some(child) => total_sum + part2_metadata_sum(child),
+            None => total_sum
+        };
+    };
+
+    total_sum
 }
 
 fn part_1(file: &str) -> i32 {
@@ -58,13 +77,26 @@ fn part_1(file: &str) -> i32 {
         .collect();
 
     let root = create_node(&data[..]);
-    metadata_sum(&root)
+    part1_metadata_sum(&root)
 }
+
+fn part_2(file: &str) -> i32 {
+    let data: Vec<i32> = file
+        .split(" ")
+        .map(|a| a.parse::<i32>().unwrap())
+        .collect();
+
+    let root = create_node(&data[..]);
+    part2_metadata_sum(&root)
+}
+
 
 fn main() {
     let part1_result = part_1(INPUT_FILE);
+    let part2_result = part_2(INPUT_FILE);
     
     println!("Part 1: {}", part1_result);
+    println!("Part 2: {}", part2_result);
 }
 
 #[cfg(test)]
@@ -73,7 +105,12 @@ mod tests {
     const TEST_FILE: &str = include_str!("../test/example.txt");
 
     #[test]
-    fn it_solves_day07_part1_example() {
+    fn it_solves_day08_part1_example() {
         assert_eq!(part_1(TEST_FILE), 138);
+    }
+
+    #[test]
+    fn it_solves_day08_part2_example() {
+        assert_eq!(part_2(TEST_FILE), 66);
     }
 }
