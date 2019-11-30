@@ -1,16 +1,9 @@
 language: rust
 rust:
-  - 1.30.1
+  - 1.36.0
 
 env:
   - TEST_DIR=day01
-  - TEST_DIR=day02
-  - TEST_DIR=day03
-  - TEST_DIR=day04
-  - TEST_DIR=day05
-  - TEST_DIR=day06
-  - TEST_DIR=day07
-  - TEST_DIR=day08
 
 script:
   - cd $TEST_DIR
