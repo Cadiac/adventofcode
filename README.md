@@ -1,8 +1,8 @@
-[![Build Status](https://travis-ci.org/Cadiac/adventofcode.svg?branch=2018)](https://travis-ci.org/Cadiac/adventofcode)
+[![Build Status](https://travis-ci.org/Cadiac/adventofcode.svg?branch=2019)](https://travis-ci.org/Cadiac/adventofcode)
 
-# 🎄🎄🎄 Advent of Code 2018 🎄🎄🎄  
+# 🎄🎄🎄 Advent of Code 2019 🎄🎄🎄  
 
-Solutions to [Advent of Code 2018](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
+Solutions to [Advent of Code 2019](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
 My goal was to try something new and learn a new language.
 
 ## Installing
@@ -30,10 +30,3 @@ in each solvers directory.
 ## Solutions
 
 ❄️ [Day 01](day01/src/main.rs)
-❄️ [Day 02](day02/src/main.rs)
-❄️ [Day 03](day03/src/main.rs)
-❄️ [Day 04](day04/src/main.rs)
-❄️ [Day 05](day05/src/main.rs)
-❄️ [Day 06](day06/src/main.rs)
-❄️ [Day 07](day07/src/main.rs)
-❄️ [Day 08](day08/src/main.rs)

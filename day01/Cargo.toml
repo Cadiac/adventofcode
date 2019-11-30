@@ -1,6 +1,6 @@
 [package]
 name = "day01"
 version = "0.1.0"
-authors = ["Jaakko Husso <jaakko.husso@futurice.com>"]
+authors = ["Jaakko Husso <jaakko.t.husso@gmail.com>"]
 
 [dependencies]
