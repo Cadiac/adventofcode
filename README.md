@@ -3,7 +3,7 @@
 # 🎄🎄🎄 Advent of Code 2019 🎄🎄🎄  
 
 Solutions to [Advent of Code 2019](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
-My goal was to try something new and learn a new language.
+My goal is to try something new and learn a new language.
 
 ## Installing
 
