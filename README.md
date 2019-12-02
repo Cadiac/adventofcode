@@ -30,3 +30,4 @@ in each solvers directory.
 ## Solutions
 
 ❄️ [Day 01](day01/src/main.rs)
+❄️ [Day 02](day02/src/main.rs)
