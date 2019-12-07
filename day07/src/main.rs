@@ -42,8 +42,6 @@ fn load_in(mut program: Vec<i32>, mut program_counter: usize, mut input_buffer: 
     program[param_0] = input_buffer.pop().expect("not enough input values in buffer");
     program_counter += 2;
 
-    println!("Read value {} in", program[param_0]);
-
     return (program, program_counter, output, input_buffer);
 }
 
@@ -123,8 +121,8 @@ fn run_program(mut program: Vec<i32>, mut input_buffer: Vec<i32>) -> (Vec<i32>, 
     let mut program_counter = 0;
     let mut output = 0;
     
-    println!("[DEBUG]: input: {:?}", input_buffer);
-    println!("[DEBUG]: program: {:?}", program);
+    // println!("[DEBUG]: input: {:?}", input_buffer);
+    // println!("[DEBUG]: program: {:?}", program);
 
     loop {
         let instruction = program[program_counter];
@@ -136,8 +134,8 @@ fn run_program(mut program: Vec<i32>, mut input_buffer: Vec<i32>) -> (Vec<i32>, 
 
         let mode = (a_mode, b_mode, c_mode);
 
-        println!("[DEBUG]: pc: {}, opcode: {}, mode: {:?}", program_counter, opcode, mode);
-        println!("[DEBUG]: program: {:?}", program);
+        // println!("[DEBUG]: pc: {}, opcode: {}, mode: {:?}", program_counter, opcode, mode);
+        // println!("[DEBUG]: program: {:?}", program);
 
         let (new_program, new_program_counter, new_output, new_input_buffer) = match opcode {
             1 => add(program, program_counter, input_buffer, output, mode),
@@ -159,13 +157,13 @@ fn run_program(mut program: Vec<i32>, mut input_buffer: Vec<i32>) -> (Vec<i32>, 
         output = new_output;
         input_buffer = new_input_buffer;
 
-        println!("[DEBUG]: program: {:?}", program);
+        // println!("[DEBUG]: program: {:?}", program);
     }
 
-    println!("[HALT]: output: {:?}, pc: {}, opcode: {}, program: {:?}",
-        output, program_counter, program[program_counter], program);
+    // println!("[HALT]: output: {:?}, pc: {}, opcode: {}, program: {:?}",
+    //     output, program_counter, program[program_counter], program);
 
-    println!("[DEBUG]: output: {}", output);
+    // println!("[DEBUG]: output: {}", output);
 
     return (program, output);
 }
@@ -201,9 +199,9 @@ fn part_1(main_program: &Vec<i32>) -> (i32, Vec<i32>) {
 
 fn main() -> () {
     let program: Vec<i32> = INPUT_FILE.split(',').map(|register| register.parse::<i32>()    .expect("Parse fail")).collect();
-    let (part1_output, _phase_settings) = part_1(&program);
+    let (part1_max_output, phase_settings) = part_1(&program);
 
-    println!("Part 1: {}", part1_output);
+    println!("Part 1: {}, settings: {:?}", part1_max_output, phase_settings);
 }
 
 #[cfg(test)]
