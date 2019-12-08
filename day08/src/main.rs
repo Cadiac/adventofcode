@@ -1,10 +1,12 @@
 const INPUT_FILE: &str = include_str!("../input.txt");
 
-fn part_1(input: &str, width: usize, height: usize) -> i32 {
+fn parse_image(input: &str, width: usize, height: usize) -> Vec<Vec<u32>> {
     let layer_length = width * height;
     let layer_count = input.len() / layer_length;
 
     let mut image = Vec::new();
+
+    println!("[DEBUG]: width: {}, height: {}, layers_count: {}, layer_length: {}", width, height, layer_count, layer_length);
 
     for i in 0..layer_count {
         let layer_input = &input[i * layer_length .. (i+1) * layer_length];
@@ -13,7 +15,11 @@ fn part_1(input: &str, width: usize, height: usize) -> i32 {
         image.push(layer_chars);
     }
 
-    println!("[DEBUG]: width: {}, height: {}, layers_count: {}, layer_length: {}", width, height, layer_count, layer_length);
+    return image;
+}
+
+fn part_1(input: &str, width: usize, height: usize) -> i32 {
+    let image = parse_image(input, width, height);
 
     let result = image.iter().fold((std::i32::MAX, 0), |(fewest, checksum), layer| {
         let mut zero_digits = 0;        
@@ -44,11 +50,52 @@ fn part_1(input: &str, width: usize, height: usize) -> i32 {
     return result.1;
 }
 
+fn part_2(input: &str, width: usize, height: usize) -> Vec<Vec<u32>> {
+    let image = parse_image(input, width, height);
+
+    let mut result_image: Vec<Vec<u32>> = vec![vec![0; width]; height];
+
+    let pixel_count = width * height;
+    let layer_count = input.len() / pixel_count;
+
+    'outer: for pixel in 0..pixel_count {
+        'inner: for layer in 0..layer_count {
+            let layer_pixel = image[layer][pixel];
+
+            // If transparent (=2) this layer doesn't draw anything
+            if layer_pixel == 2 {
+                continue 'inner;
+            }
+
+            result_image[pixel / width][pixel % width] = layer_pixel;
+            break 'inner;
+        }
+    }
+
+    return result_image;
+}
 
 fn main() -> () {
     let part1 = part_1(INPUT_FILE, 25, 6);
+    let part2 = part_2(INPUT_FILE, 25, 6);
 
-    println!("Part 1: {}", part1);
+    println!("[INFO]: Part 1: {}", part1);
+    println!("[INFO]: Part 2: {:?}", part2);
+
+    let mut result_text = String::new();
+
+    for row in part2 {
+        result_text += "\n[INFO]: ";
+        for column in row {
+            if column == 1 {
+                result_text += "█";
+            } else {
+                result_text += " ";
+            }
+        }
+    }
+
+    println!("{}", result_text);
 }
 
 #[cfg(test)]
@@ -78,5 +125,10 @@ mod tests {
         // 2 x 2 digits
         // checksum = 6
         assert_eq!(part_1("1210010010120102", 4, 2), 6);
+    }
+
+    #[test]
+    fn it_draws_part2_image() {
+        assert_eq!(part_2("0222112222120000", 2, 2), vec![vec![0,1], vec![1,0]]);
     }
 }
