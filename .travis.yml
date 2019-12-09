@@ -11,6 +11,7 @@ env:
   - TEST_DIR=day06
   - TEST_DIR=day07
   - TEST_DIR=day08
+  - TEST_DIR=day09
 
 script:
   - cd $TEST_DIR
