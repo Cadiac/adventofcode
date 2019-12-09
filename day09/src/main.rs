@@ -215,7 +215,7 @@ fn run_program(state: &mut ProgramState) {
 
     state.halt = true;
 
-    println!("[HALT]: state: {:?}", state);
+    // println!("[HALT]: state: {:?}", state);
 }
 
 fn part_1(program: Vec<i64>) -> ProgramState {
@@ -237,14 +237,33 @@ fn part_1(program: Vec<i64>) -> ProgramState {
     return state;
 }
 
+fn part_2(program: Vec<i64>) -> ProgramState {
+    let mut memory = program.clone();
+    memory.resize(MEMORY_SIZE, 0);
+
+    let mut state = ProgramState{
+        mem: memory,
+        program_counter: 0,
+        input_buffer: VecDeque::from(vec![2]),
+        mode: (0, 0, 0),
+        output_buffer: VecDeque::new(),
+        relative_base: 0,
+        halt: false
+    };
+
+    run_program(&mut state);
+
+    return state;
+}
+
 fn main() -> () {
     let program: Vec<i64> = INPUT_FILE.split(',').map(|register| register.parse::<i64>().expect("Parse fail")).collect();
 
-    let halt_state_part1 = part_1(program);
-    println!("Part 1: {:?}", halt_state_part1.output_buffer);
+    let halt_state_1 = part_1(program.clone());
+    println!("Part 1: {:?}", halt_state_1.output_buffer);
 
-    // let (part2_max_output, phase_settings) = part_2(&mem);
-    // println!("Part 2: {}, settings: {:?}", part2_max_output, phase_settings);
+    let halt_state_2 = part_2(program.clone());
+    println!("Part 1: {:?}", halt_state_2.output_buffer);
 }
 
 #[cfg(test)]
