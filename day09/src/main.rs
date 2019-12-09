@@ -14,6 +14,12 @@ struct ProgramState {
     halt: bool
 }
 
+enum ReturnFlag {
+    InputRequired,
+    Halted,
+    Running
+}
+
 fn read_param(state: &ProgramState, param: i64, mode: i64) -> i64 {
     match mode {
         0 => state.mem[param as usize],
@@ -33,8 +39,7 @@ fn write_param(state: &ProgramState, param: i64, mode: i64) -> usize {
 }
 
 // Opcode 1 adds together numbers read from two positions and stores the result in a third position.
-fn add(state: &mut ProgramState)
-    -> Result<(&mut ProgramState), &'static str> {
+fn add(state: &mut ProgramState) -> ReturnFlag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
     let param_2 = state.mem[state.program_counter + 3];
@@ -44,12 +49,11 @@ fn add(state: &mut ProgramState)
     state.mem[write_addr] = read_param(state, param_0, state.mode.0) + read_param(state, param_1, state.mode.1);
     state.program_counter += 4;
 
-    return Ok(state);
+    return ReturnFlag::Running;
 }
 
 // Opcode 2 works exactly like opcode 1, except it multiplies the two inputs instead of adding them.
-fn mul(state: &mut ProgramState)
-    -> Result<(&mut ProgramState), &'static str> {
+fn mul(state: &mut ProgramState) -> ReturnFlag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
     let param_2 = state.mem[state.program_counter + 3];
@@ -59,15 +63,14 @@ fn mul(state: &mut ProgramState)
     state.mem[write_addr] = read_param(state, param_0, state.mode.0) * read_param(state, param_1, state.mode.1);
     state.program_counter += 4;
 
-    return Ok(state);
+    return ReturnFlag::Running;
 }
 
 // Opcode 3 takes a single integer as input and saves it to the position given by its only parameter. 
 // For example, the instruction 3,50 would take an input value and store it at address 50.
-fn load_in(state: &mut ProgramState)
-    -> Result<(&mut ProgramState), &'static str> {
+fn load_in(state: &mut ProgramState) -> ReturnFlag {
     if state.input_buffer.len() == 0 {
-        return Err("input required");
+        return ReturnFlag::InputRequired;
     }
 
     let param_0 = state.mem[state.program_counter + 1];
@@ -76,23 +79,21 @@ fn load_in(state: &mut ProgramState)
     state.mem[write_addr] = state.input_buffer.pop_front().expect("not enough input values in buffer");
     state.program_counter += 2;
 
-    return Ok(state);
+    return ReturnFlag::Running;
 }
 
 // Opcode 4 outputs the value of its only parameter.
 // For example, the instruction 4,50 would output the value at address 50.
-fn load_out(state: &mut ProgramState)
-    -> Result<(&mut ProgramState), &'static str> {
+fn load_out(state: &mut ProgramState) -> ReturnFlag {
     let param_0 = state.mem[state.program_counter + 1];
     state.output_buffer.push_back(read_param(state, param_0, state.mode.0));
     state.program_counter += 2;
 
-    return Ok(state);
+    return ReturnFlag::Running;
 }
 
 // Opcode 5 is jump-if-true: if the first parameter is non-zero, it sets the instruction pointer to the value from the second parameter. Otherwise, it does nothing.
-fn jump_if_true(state: &mut ProgramState)
-    -> Result<(&mut ProgramState), &'static str> {
+fn jump_if_true(state: &mut ProgramState) -> ReturnFlag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
 
@@ -102,12 +103,12 @@ fn jump_if_true(state: &mut ProgramState)
         state.program_counter += 3;
     }
 
-    return Ok(state);
+    return ReturnFlag::Running;
 }
 
 // Opcode 6 is jump-if-false: if the first parameter is zero, it sets the instruction pointer to the value from the second parameter. Otherwise, it does nothing.
 fn jump_if_false(state: &mut ProgramState)
-    -> Result<(&mut ProgramState), &'static str> {
+    -> ReturnFlag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
 
@@ -117,12 +118,11 @@ fn jump_if_false(state: &mut ProgramState)
         state.program_counter += 3;
     }
 
-    return Ok(state);
+    return ReturnFlag::Running;
 }
 
 // Opcode 7 is less than: if the first parameter is less than the second parameter, it stores 1 in the position given by the third parameter. Otherwise, it stores 0.
-fn cmp_less_than(state: &mut ProgramState)
-    -> Result<(&mut ProgramState), &'static str> {
+fn cmp_less_than(state: &mut ProgramState) -> ReturnFlag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
     let param_2 = state.mem[state.program_counter + 3];
@@ -137,12 +137,11 @@ fn cmp_less_than(state: &mut ProgramState)
 
     state.program_counter += 4;
 
-    return Ok(state);
+    return ReturnFlag::Running;
 }
 
 // Opcode 8 is equals: if the first parameter is equal to the second parameter, it stores 1 in the position given by the third parameter. Otherwise, it stores 0.
-fn cmp_equals(state: &mut ProgramState)
-    -> Result<(&mut ProgramState), &'static str> {
+fn cmp_equals(state: &mut ProgramState) -> ReturnFlag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
     let param_2 = state.mem[state.program_counter + 3];
@@ -157,22 +156,21 @@ fn cmp_equals(state: &mut ProgramState)
 
     state.program_counter += 4;
 
-    return Ok(state);
+    return ReturnFlag::Running;
 }
 
 // Opcode 8 is equals: if the first parameter is equal to the second parameter, it stores 1 in the position given by the third parameter. Otherwise, it stores 0.
-fn adj_rel_base(state: &mut ProgramState)
-    -> Result<(&mut ProgramState), &'static str> {
+fn adj_rel_base(state: &mut ProgramState) -> ReturnFlag {
     let param_0 = state.mem[state.program_counter + 1];
 
     state.relative_base += read_param(state, param_0, state.mode.0);
     state.program_counter += 2;
 
-    return Ok(state);
+    return ReturnFlag::Running;
 }
 
 
-fn run_program(state: &mut ProgramState) {
+fn run_program(state: &mut ProgramState) -> ReturnFlag {
     loop {
         let instruction = state.mem[state.program_counter];
         let opcode = instruction % 100;
@@ -184,7 +182,6 @@ fn run_program(state: &mut ProgramState) {
 
         // println!("[DEBUG]: state: {:?}", state);
         
-        // TODO: Refactor to return enums
         let return_flag = match opcode {
             1 => add(state),
             2 => mul(state),
@@ -195,27 +192,25 @@ fn run_program(state: &mut ProgramState) {
             7 => cmp_less_than(state),
             8 => cmp_equals(state),
             9 => adj_rel_base(state),
-            99 => break,
-            _ => {
-                println!("[ERROR]: state: {:?}", state);
-                panic!("unknown opcode");
-            }
+            99 => ReturnFlag::Halted,
+            _ => ReturnFlag::Halted
         };
 
         match return_flag {
-            Ok(_) => {
-                // Still running
+            ReturnFlag::Running => {
+                continue;
             },
-            Err(_err) => {
-                state.input_buffer = VecDeque::new();
-                return;
+            ReturnFlag::InputRequired => {
+                // println!("[SUSPEND]: state: {:?}", state);
+                return ReturnFlag::InputRequired;
+            },
+            ReturnFlag::Halted => {
+                state.halt = true;
+                // println!("[HALT]: state: {:?}", state);
+                return ReturnFlag::Halted;
             }
         }
     }
-
-    state.halt = true;
-
-    // println!("[HALT]: state: {:?}", state);
 }
 
 fn part_1(program: Vec<i64>) -> ProgramState {
@@ -224,12 +219,8 @@ fn part_1(program: Vec<i64>) -> ProgramState {
 
     let mut state = ProgramState{
         mem: memory,
-        program_counter: 0,
         input_buffer: VecDeque::from(vec![1]),
-        mode: (0, 0, 0),
-        output_buffer: VecDeque::new(),
-        relative_base: 0,
-        halt: false
+        ..Default::default()
     };
 
     run_program(&mut state);
@@ -243,12 +234,8 @@ fn part_2(program: Vec<i64>) -> ProgramState {
 
     let mut state = ProgramState{
         mem: memory,
-        program_counter: 0,
         input_buffer: VecDeque::from(vec![2]),
-        mode: (0, 0, 0),
-        output_buffer: VecDeque::new(),
-        relative_base: 0,
-        halt: false
+        ..Default::default()
     };
 
     run_program(&mut state);
@@ -319,7 +306,7 @@ mod tests {
     }
 
     #[test]
-    fn it_solves_day5_part2_compare_examples() {
+    fn it_solves_day5_part2_compare_example_1() {
         // Using position mode, consider whether the input is equal to 8; output 1 (if it is) or 0 (if it is not).
         let program = vec![3,9,8,9,10,9,4,9,99,-1,8];
 
@@ -334,7 +321,10 @@ mod tests {
         assert!(state.halt);
         assert!(state.input_buffer.is_empty());
         assert_eq!(state.output_buffer, VecDeque::from(vec![0]));
+    }
 
+    #[test]
+    fn it_solves_day5_part2_compare_example_2() {
         // Using position mode, consider whether the input is less than 8; output 1 (if it is) or 0 (if it is not).
         let program = vec![3,9,7,9,10,9,4,9,99,-1,8];
 
@@ -349,7 +339,10 @@ mod tests {
         assert!(state.halt);
         assert!(state.input_buffer.is_empty());
         assert_eq!(state.output_buffer, VecDeque::from(vec![0]));
+    }
 
+    #[test]
+    fn it_solves_day5_part2_compare_example_3() {
         // Using immediate mode, consider whether the input is equal to 8; output 1 (if it is) or 0 (if it is not).
         let program = vec![3,3,1108,-1,8,3,4,3,99];
 
@@ -364,7 +357,10 @@ mod tests {
         assert!(state.halt);
         assert!(state.input_buffer.is_empty());
         assert_eq!(state.output_buffer, VecDeque::from(vec![0]));
+    }
 
+    #[test]
+    fn it_solves_day5_part2_compare_example_4() {
         // Using immediate mode, consider whether the input is less than 8; output 1 (if it is) or 0 (if it is not)
         let program = vec![3,3,1107,-1,8,3,4,3,99];
 
