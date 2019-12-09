@@ -14,10 +14,11 @@ struct ProgramState {
     halt: bool
 }
 
-enum ReturnFlag {
+enum Flag {
     InputRequired,
     Halted,
-    Running
+    Running,
+    Exception
 }
 
 fn read_param(state: &ProgramState, param: i64, mode: i64) -> i64 {
@@ -39,7 +40,7 @@ fn write_param(state: &ProgramState, param: i64, mode: i64) -> usize {
 }
 
 // Opcode 1 adds together numbers read from two positions and stores the result in a third position.
-fn add(state: &mut ProgramState) -> ReturnFlag {
+fn add(state: &mut ProgramState) -> Flag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
     let param_2 = state.mem[state.program_counter + 3];
@@ -49,11 +50,11 @@ fn add(state: &mut ProgramState) -> ReturnFlag {
     state.mem[write_addr] = read_param(state, param_0, state.mode.0) + read_param(state, param_1, state.mode.1);
     state.program_counter += 4;
 
-    return ReturnFlag::Running;
+    return Flag::Running;
 }
 
 // Opcode 2 works exactly like opcode 1, except it multiplies the two inputs instead of adding them.
-fn mul(state: &mut ProgramState) -> ReturnFlag {
+fn mul(state: &mut ProgramState) -> Flag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
     let param_2 = state.mem[state.program_counter + 3];
@@ -63,14 +64,14 @@ fn mul(state: &mut ProgramState) -> ReturnFlag {
     state.mem[write_addr] = read_param(state, param_0, state.mode.0) * read_param(state, param_1, state.mode.1);
     state.program_counter += 4;
 
-    return ReturnFlag::Running;
+    return Flag::Running;
 }
 
 // Opcode 3 takes a single integer as input and saves it to the position given by its only parameter. 
 // For example, the instruction 3,50 would take an input value and store it at address 50.
-fn load_in(state: &mut ProgramState) -> ReturnFlag {
+fn load_in(state: &mut ProgramState) -> Flag {
     if state.input_buffer.len() == 0 {
-        return ReturnFlag::InputRequired;
+        return Flag::InputRequired;
     }
 
     let param_0 = state.mem[state.program_counter + 1];
@@ -79,21 +80,21 @@ fn load_in(state: &mut ProgramState) -> ReturnFlag {
     state.mem[write_addr] = state.input_buffer.pop_front().expect("not enough input values in buffer");
     state.program_counter += 2;
 
-    return ReturnFlag::Running;
+    return Flag::Running;
 }
 
 // Opcode 4 outputs the value of its only parameter.
 // For example, the instruction 4,50 would output the value at address 50.
-fn load_out(state: &mut ProgramState) -> ReturnFlag {
+fn load_out(state: &mut ProgramState) -> Flag {
     let param_0 = state.mem[state.program_counter + 1];
     state.output_buffer.push_back(read_param(state, param_0, state.mode.0));
     state.program_counter += 2;
 
-    return ReturnFlag::Running;
+    return Flag::Running;
 }
 
 // Opcode 5 is jump-if-true: if the first parameter is non-zero, it sets the instruction pointer to the value from the second parameter. Otherwise, it does nothing.
-fn jump_if_true(state: &mut ProgramState) -> ReturnFlag {
+fn jump_if_true(state: &mut ProgramState) -> Flag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
 
@@ -103,12 +104,12 @@ fn jump_if_true(state: &mut ProgramState) -> ReturnFlag {
         state.program_counter += 3;
     }
 
-    return ReturnFlag::Running;
+    return Flag::Running;
 }
 
 // Opcode 6 is jump-if-false: if the first parameter is zero, it sets the instruction pointer to the value from the second parameter. Otherwise, it does nothing.
 fn jump_if_false(state: &mut ProgramState)
-    -> ReturnFlag {
+    -> Flag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
 
@@ -118,11 +119,11 @@ fn jump_if_false(state: &mut ProgramState)
         state.program_counter += 3;
     }
 
-    return ReturnFlag::Running;
+    return Flag::Running;
 }
 
 // Opcode 7 is less than: if the first parameter is less than the second parameter, it stores 1 in the position given by the third parameter. Otherwise, it stores 0.
-fn cmp_less_than(state: &mut ProgramState) -> ReturnFlag {
+fn cmp_less_than(state: &mut ProgramState) -> Flag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
     let param_2 = state.mem[state.program_counter + 3];
@@ -137,11 +138,11 @@ fn cmp_less_than(state: &mut ProgramState) -> ReturnFlag {
 
     state.program_counter += 4;
 
-    return ReturnFlag::Running;
+    return Flag::Running;
 }
 
 // Opcode 8 is equals: if the first parameter is equal to the second parameter, it stores 1 in the position given by the third parameter. Otherwise, it stores 0.
-fn cmp_equals(state: &mut ProgramState) -> ReturnFlag {
+fn cmp_equals(state: &mut ProgramState) -> Flag {
     let param_0 = state.mem[state.program_counter + 1];
     let param_1 = state.mem[state.program_counter + 2];
     let param_2 = state.mem[state.program_counter + 3];
@@ -156,21 +157,21 @@ fn cmp_equals(state: &mut ProgramState) -> ReturnFlag {
 
     state.program_counter += 4;
 
-    return ReturnFlag::Running;
+    return Flag::Running;
 }
 
 // Opcode 8 is equals: if the first parameter is equal to the second parameter, it stores 1 in the position given by the third parameter. Otherwise, it stores 0.
-fn adj_rel_base(state: &mut ProgramState) -> ReturnFlag {
+fn adj_rel_base(state: &mut ProgramState) -> Flag {
     let param_0 = state.mem[state.program_counter + 1];
 
     state.relative_base += read_param(state, param_0, state.mode.0);
     state.program_counter += 2;
 
-    return ReturnFlag::Running;
+    return Flag::Running;
 }
 
 
-fn run_program(state: &mut ProgramState) -> ReturnFlag {
+fn run_program(state: &mut ProgramState) -> Flag {
     loop {
         let instruction = state.mem[state.program_counter];
         let opcode = instruction % 100;
@@ -182,7 +183,7 @@ fn run_program(state: &mut ProgramState) -> ReturnFlag {
 
         // println!("[DEBUG]: state: {:?}", state);
         
-        let return_flag = match opcode {
+        let exec_flag = match opcode {
             1 => add(state),
             2 => mul(state),
             3 => load_in(state),
@@ -192,22 +193,25 @@ fn run_program(state: &mut ProgramState) -> ReturnFlag {
             7 => cmp_less_than(state),
             8 => cmp_equals(state),
             9 => adj_rel_base(state),
-            99 => ReturnFlag::Halted,
-            _ => ReturnFlag::Halted
+            99 => Flag::Halted,
+            _ => Flag::Exception
         };
 
-        match return_flag {
-            ReturnFlag::Running => {
-                continue;
-            },
-            ReturnFlag::InputRequired => {
+        match exec_flag {
+            Flag::Running => continue,
+            Flag::InputRequired => {
                 // println!("[SUSPEND]: state: {:?}", state);
-                return ReturnFlag::InputRequired;
+                return Flag::InputRequired;
             },
-            ReturnFlag::Halted => {
+            Flag::Halted => {
                 state.halt = true;
                 // println!("[HALT]: state: {:?}", state);
-                return ReturnFlag::Halted;
+                return Flag::Halted;
+            },
+            Flag::Exception => {
+                state.halt = true;
+                println!("[ERROR]: state: {:?}", state);
+                return Flag::Exception;
             }
         }
     }
