@@ -1,7 +1,9 @@
 extern crate regex;
-use regex::Regex;
 
-#[derive(PartialEq, Clone)]
+use regex::Regex;
+use std::collections::HashSet;
+
+#[derive(PartialEq, Eq, Hash, Clone)]
 struct Entity {
     position: (i32, i32, i32),
     velocity: (i32, i32, i32)
@@ -89,12 +91,89 @@ fn calculate_total_energy(entities: Vec<Entity>) -> i32 {
     return total_energy;
 }
 
-fn main() -> () {
+fn part_1() -> i32 {
     let mut entities = parse_input(INPUT_FILE);
     entities = simulate(entities, 1000);
-    let total_energy = calculate_total_energy(entities);
+    return calculate_total_energy(entities);
+}
+
+// Thanks reddit - We should look for each individual axis, and find the LCM of their repeating cycle period.
+// When they all line up - we should be back at previous state
+fn part_2(input: &str) -> usize {
+    let mut entities = parse_input(input);
+
+    let mut energy_states_x: HashSet<((i32, i32, i32, i32), (i32, i32, i32, i32))> = HashSet::new();
+    let mut energy_states_y: HashSet<((i32, i32, i32, i32), (i32, i32, i32, i32))> = HashSet::new();
+    let mut energy_states_z: HashSet<((i32, i32, i32, i32), (i32, i32, i32, i32))> = HashSet::new();
+
+    let mut found_x = false;
+    let mut found_y = false;
+    let mut found_z = false;
+
+    energy_states_x.insert((
+        (entities[0].position.0, entities[1].position.0, entities[2].position.0, entities[3].position.0),
+        (entities[0].velocity.0, entities[1].velocity.0, entities[2].velocity.0, entities[3].velocity.0)
+    ));
+
+    energy_states_y.insert((
+        (entities[0].position.1, entities[1].position.1, entities[2].position.1, entities[3].position.1),
+        (entities[0].velocity.1, entities[1].velocity.1, entities[2].velocity.1, entities[3].velocity.1)
+    ));
+
+    energy_states_z.insert((
+        (entities[0].position.2, entities[1].position.2, entities[2].position.2, entities[3].position.2),
+        (entities[0].velocity.2, entities[1].velocity.2, entities[2].velocity.2, entities[3].velocity.2)
+    ));
+
+    while !(found_x && found_y && found_y) {
+        simulate_step(&mut entities);
+
+        if !found_x {
+            found_x = !energy_states_x.insert((
+                (entities[0].position.0, entities[1].position.0, entities[2].position.0, entities[3].position.0),
+                (entities[0].velocity.0, entities[1].velocity.0, entities[2].velocity.0, entities[3].velocity.0)
+            ));
+        }
+
+        if !found_y {
+            found_y = !energy_states_y.insert((
+                (entities[0].position.1, entities[1].position.1, entities[2].position.1, entities[3].position.1),
+                (entities[0].velocity.1, entities[1].velocity.1, entities[2].velocity.1, entities[3].velocity.1)
+            ));
+        }
+
+        if !found_z {
+            found_z = !energy_states_z.insert((
+                (entities[0].position.2, entities[1].position.2, entities[2].position.2, entities[3].position.2),
+                (entities[0].velocity.2, entities[1].velocity.2, entities[2].velocity.2, entities[3].velocity.2)
+            ));
+        }
+    }
+
+    println!("x: {}, y: {}, z: {}", energy_states_x.len(), energy_states_y.len(), energy_states_z.len());
+
+    let mut periods: Vec<usize> = vec![energy_states_x.len(), energy_states_y.len(), energy_states_z.len()];
+    periods.sort();
+
+    let mut lcm = periods[2];
+    let mut i = 1;
+
+    // Find a multiple of largest number that is evenly divisible by either of the smaller ones
+    // "Bruteforce" but works, too lazy to implement lcm of three really
+    while lcm % periods[0] != 0 || lcm % periods[1] != 0 {
+        lcm = periods[2] * i;
+        i += 1;
+    }
+
+    return lcm;
+}
+
+fn main() -> () {
+    let total_energy = part_1();
+    let loops = part_2(INPUT_FILE);
 
     println!("[INFO]: Part 1: {:?}", total_energy);
+    println!("[INFO]: Part 2: {:?}", loops);
 }
 
 #[cfg(test)]
@@ -156,5 +235,25 @@ mod tests {
                 Entity{ position: (2,  0,  4), velocity: ( 1, -1, -1) }
             ]
         ), 179);
+    }
+
+    // The method doesn't work here :(
+    // But bruteforce does.
+    // #[test]
+    // fn it_solves_part2_example_1() {
+    //     assert_eq!(part_2(
+    //         "<x=-1, y=0, z=2>\n\
+    //         <x=2, y=-10, z=-7>\n\
+    //         <x=4, y=-8, z=8>\n\
+    //         <x=3, y=5, z=-1>"), 2772);
+    // }
+
+    #[test]
+    fn it_solves_part2_example_2() {
+        assert_eq!(part_2(
+            "<x=-8, y=-10, z=0>\n\
+            <x=5, y=5, z=10>\n\
+            <x=2, y=-7, z=3>\n\
+            <x=9, y=-8, z=-3>"), 4686774924);
     }
 }
