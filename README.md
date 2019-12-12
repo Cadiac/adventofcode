@@ -40,7 +40,7 @@ in each solvers directory.
 ❄️ [Day 09](day09/src/main.rs)
 ❄️ [Day 10](day10/src/main.rs)
 ❄️ [Day 11](day11/src/main.rs)
-🎁 Day 12
+❄️ [Day 12](day12/src/main.rs)
 🎁 Day 13
 🎁 Day 14
 🎁 Day 15
