@@ -272,6 +272,9 @@ fn part_2(program: Vec<i64>) -> io::Result<(i64)> {
         let mut x = 0;
         let mut y = 0;
 
+        let mut ball_position_x = 0;
+        let mut paddle_position_x = 0;
+
         while let Some(output) = state.output_buffer.pop_front() {
             match output_state {
                 0 => x = output,
@@ -280,6 +283,14 @@ fn part_2(program: Vec<i64>) -> io::Result<(i64)> {
                     if x == -1 && y == 0 {
                         score = output;
                     } else {
+                        if output == 4 {
+                            ball_position_x = x;
+                        }
+
+                        if output == 3 {
+                            paddle_position_x = x;
+                        }
+
                         screen[y as usize][x as usize] = output;
                     }
                 },
@@ -289,16 +300,6 @@ fn part_2(program: Vec<i64>) -> io::Result<(i64)> {
             output_state = (output_state + 1) % 3;
         }
     
-        match flag {
-            Flag::InputRequired => {
-                let mut input = String::new();
-                io::stdin().read_line(&mut input)?;
-                joystic = input.trim().parse::<i64>().unwrap();
-            },
-            Flag::Halted => break,
-            _ => break
-        }
-
         println!("joystic {}, score: {}", joystic, score);
         let mut screen_str = String::new();
         for row in screen.clone() {
@@ -314,7 +315,26 @@ fn part_2(program: Vec<i64>) -> io::Result<(i64)> {
             }
         }
         println!("{}", screen_str);
+        
+        match flag {
+            Flag::InputRequired => {
+                // Human controlled
+                // let mut input = String::new();
+                // io::stdin().read_line(&mut input)?;
+                // joystic = input.trim().parse::<i64>().unwrap();
 
+                // "AI"
+                let dx_ball_paddle = ball_position_x - paddle_position_x;
+        
+                if dx_ball_paddle == 0 {
+                    joystic = 0;
+                } else {
+                    joystic = dx_ball_paddle / dx_ball_paddle.abs();
+                }
+            },
+            Flag::Halted => break,
+            _ => break
+        }
         state.input_buffer.push_back(joystic);
     }
 
@@ -324,10 +344,10 @@ fn part_2(program: Vec<i64>) -> io::Result<(i64)> {
 fn main() -> () {
     let program: Vec<i64> = INPUT_FILE.split(',').map(|register| register.parse::<i64>().expect("Parse fail")).collect();
 
-    // let block_count = part_1(program.clone());
-    let score = part_2(program.clone());
+    let block_count = part_1(program.clone());
+    let score = part_2(program.clone()).unwrap();
 
-    // println!("[INFO] Part 1: {:?}", block_count);
+    println!("[INFO] Part 1: {:?}", block_count);
     println!("[INFO] Part 2: {:?}", score);
 }
 
