@@ -1,6 +1,9 @@
+extern crate pancurses;
+
 use std::collections::VecDeque;
 use std::collections::HashMap;
 use std::io;
+use pancurses::{initscr, endwin};
 
 const INPUT_FILE: &str = include_str!("../input.txt");
 const MEMORY_SIZE: usize = 65536;
@@ -265,6 +268,10 @@ fn part_2(program: Vec<i64>) -> io::Result<(i64)> {
 
     let mut screen: Vec<Vec<i64>> = vec![vec![0; 50]; 25];
 
+    let window = initscr();
+    pancurses::curs_set(0);
+    window.keypad(true);
+
     loop {
         let flag = run_program(&mut state);
     
@@ -300,21 +307,22 @@ fn part_2(program: Vec<i64>) -> io::Result<(i64)> {
             output_state = (output_state + 1) % 3;
         }
     
-        println!("joystic {}, score: {}", joystic, score);
-        let mut screen_str = String::new();
-        for row in screen.clone() {
-            screen_str += "\n[INFO]: ";
-            for column in row {
-                screen_str += match column {
-                    1 => "█",
-                    2 => "▒",
-                    3 => "▔",
-                    4 => "o",
-                    _ => " "
-                }
+        window.mvprintw(0, 14, &format!("[SCORE]: {}", score));
+
+        for y in 0..screen.len() {
+            for x in 0..screen[y].len() {
+                let pixel = screen[y][x];
+                let _cursor = match pixel {
+                    1 => window.mvprintw(y as i32 + 1, x as i32, "█"),
+                    2 => window.mvprintw(y as i32 + 1, x as i32, "▒"),
+                    3 => window.mvprintw(y as i32 + 1, x as i32, "▔"),
+                    4 => window.mvprintw(y as i32 + 1, x as i32, "o"),
+                    _ => window.mvprintw(y as i32 + 1, x as i32, " ")
+                };
             }
         }
-        println!("{}", screen_str);
+
+        window.refresh();
         
         match flag {
             Flag::InputRequired => {
@@ -323,14 +331,20 @@ fn part_2(program: Vec<i64>) -> io::Result<(i64)> {
                 // io::stdin().read_line(&mut input)?;
                 // joystic = input.trim().parse::<i64>().unwrap();
 
-                // "AI"
-                let dx_ball_paddle = ball_position_x - paddle_position_x;
-        
-                if dx_ball_paddle == 0 {
-                    joystic = 0;
-                } else {
-                    joystic = dx_ball_paddle / dx_ball_paddle.abs();
+                match window.getch() {
+                    Some(pancurses::Input::KeyLeft) => { joystic = -1 },
+                    Some(pancurses::Input::KeyRight) => { joystic = 1 },
+                    Some(_input) => { joystic = 0 },
+                    None => { joystic = 0 }
                 }
+
+                // "AI"
+                // let dx_ball_paddle = ball_position_x - paddle_position_x;
+                // if dx_ball_paddle == 0 {
+                //     joystic = 0;
+                // } else {
+                //     joystic = dx_ball_paddle / dx_ball_paddle.abs();
+                // }
             },
             Flag::Halted => break,
             _ => break
@@ -338,16 +352,18 @@ fn part_2(program: Vec<i64>) -> io::Result<(i64)> {
         state.input_buffer.push_back(joystic);
     }
 
+    endwin();
+
     return Ok(score);
 }
 
 fn main() -> () {
     let program: Vec<i64> = INPUT_FILE.split(',').map(|register| register.parse::<i64>().expect("Parse fail")).collect();
 
-    let block_count = part_1(program.clone());
+    // let block_count = part_1(program.clone());
     let score = part_2(program.clone()).unwrap();
 
-    println!("[INFO] Part 1: {:?}", block_count);
+    // println!("[INFO] Part 1: {:?}", block_count);
     println!("[INFO] Part 2: {:?}", score);
 }
 
