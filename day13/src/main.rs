@@ -326,11 +326,6 @@ fn part_2(program: Vec<i64>) -> io::Result<(i64)> {
         
         match flag {
             Flag::InputRequired => {
-                // Human controlled
-                // let mut input = String::new();
-                // io::stdin().read_line(&mut input)?;
-                // joystic = input.trim().parse::<i64>().unwrap();
-
                 match window.getch() {
                     Some(pancurses::Input::KeyLeft) => { joystic = -1 },
                     Some(pancurses::Input::KeyRight) => { joystic = 1 },
