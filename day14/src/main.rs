@@ -16,7 +16,7 @@ struct Nanofactory {
     total_ore_required: i64,
 }
 
-// Based on reddit example, had difficulty..
+// Based on reddit example, I had difficulty getting my original algorithm to work..
 impl Nanofactory {
     fn new(input: &str) -> Self {
         let mut reactions: HashMap<String, Reaction> = HashMap::new();
@@ -83,7 +83,7 @@ fn part_2(input: &str, max_ore: i64) -> i64 {
     let mut min_fuel = 1;
     let mut max_fuel = 1;
 
-    // Quickly sensible max fuel start value
+    // Quickly find sensible max fuel start value
     loop {
         let mut factory = Nanofactory::new(input);
         let total_ore = factory.calculate_total_ore(String::from("FUEL"), max_fuel);
@@ -93,11 +93,8 @@ fn part_2(input: &str, max_ore: i64) -> i64 {
         max_fuel *= 2; // Double the fuel until we go over the limit
     }
 
-    println!("[DEBUG]: min {}, max {}", min_fuel, max_fuel);
-
-    loop {
+    let fuel = loop {
         let mid = (min_fuel + max_fuel) / 2;
-        println!("[DEBUG]: checking {}", mid);
 
         let mut factory = Nanofactory::new(input);
         let total_ore = factory.calculate_total_ore(String::from("FUEL"), mid);
@@ -106,13 +103,21 @@ fn part_2(input: &str, max_ore: i64) -> i64 {
         } else if total_ore < max_ore {
             min_fuel = mid + 1;
         } else {
-            return mid;
+            break mid;
         }
 
         if max_fuel < min_fuel || min_fuel > max_fuel {
-            return mid;
+            break mid;
         }
+    };
+
+    // Now check if the fuel amount we found is over or at the limit
+    let mut factory = Nanofactory::new(input);
+    let total_ore = factory.calculate_total_ore(String::from("FUEL"), fuel);
+    if total_ore > max_ore {
+        return fuel - 1;
     }
+    return fuel;
 }
 
 fn main() -> () {
@@ -231,7 +236,7 @@ mod tests {
             145 ORE => 6 MNCFX\n\
             1 NVRVD => 8 CXFTF\n\
             1 VJHF, 6 MNCFX => 4 RFSQX\n\
-            176 ORE => 6 VJHF", 1000000000000), 5586023); // 5586022
+            176 ORE => 6 VJHF", 1000000000000), 5586022);
     }
 
     #[test]
@@ -253,7 +258,6 @@ mod tests {
            3 BHXH, 2 VRPVC => 7 MZWV\n\
            121 ORE => 7 VRPVC\n\
            7 XCVML => 6 RJRHP\n\
-           5 BHXH, 4 VRPVC => 5 LTCX", 1000000000000), 460665);
-           // 460664 is the correct, off by one..
+           5 BHXH, 4 VRPVC => 5 LTCX", 1000000000000), 460664);
     }
 }
