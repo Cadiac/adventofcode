@@ -349,7 +349,7 @@ fn part_1(program: Vec<i64>) -> io::Result<()> {
         for (coords, (tile, _p1_dist, p2_dist)) in &world {
             let _cursor = match tile {
                 0 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, "█"),
-                1 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, (p2_dist % 10).to_string()),
+                1 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, (p2_dist / 35).to_string()),
                 2 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, "▒"),
                 _ => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, " ")
             };
