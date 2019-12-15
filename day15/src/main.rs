@@ -4,10 +4,6 @@ use std::collections::VecDeque;
 use std::collections::HashMap;
 use std::io;
 use pancurses::{initscr, endwin};
-extern crate rand;
-
-use rand::Rng;
-
 
 const INPUT_FILE: &str = include_str!("../input.txt");
 const MEMORY_SIZE: usize = 2048;
@@ -227,7 +223,7 @@ fn run_program(state: &mut ProgramState) -> Flag {
     }
 }
 
-fn part_1(program: Vec<i64>) -> io::Result<(i64)> {
+fn part_1(program: Vec<i64>) -> io::Result<()> {
     let mut memory = program.clone();
     memory.resize(MEMORY_SIZE, 0);
 
@@ -237,8 +233,7 @@ fn part_1(program: Vec<i64>) -> io::Result<(i64)> {
         ..Default::default()
     };
 
-    let mut world: HashMap<(i64, i64), (i64, i64), > = HashMap::new();
-    let mut rng = rand::thread_rng();
+    let mut world: HashMap<(i64, i64), (i64, i64, i64)> = HashMap::new();
 
     let window = initscr();
     pancurses::curs_set(0);
@@ -249,56 +244,25 @@ fn part_1(program: Vec<i64>) -> io::Result<(i64)> {
     let mut x = 0;
     let mut y = 0;
 
+    let mut goal_found = false;
+    let mut goal_x = 0;
+    let mut goal_y = 0;
+
+    let mut part_1 = -1;
+
     'main: loop {
         let direction;
-        let distance = world.entry((x, y)).or_insert((1, 0)).1;
+        let part1_distance = world.entry((x, y)).or_insert((1, 0, 99999)).1;
+        let part2_distance = world.entry((x, y)).or_insert((1, 0, 99999)).2;
 
         let mut target_x = x;
         let mut target_y = y;
 
-        // Manual movement
-        // match window.getch() {
-        //     Some(pancurses::Input::KeyUp) => {
-        //         target_y -= 1;
-        //         direction = 1;
-        //     },
-        //     Some(pancurses::Input::KeyDown) => {
-        //         target_y += 1;
-        //         direction = 2;
-        //     },
-        //     Some(pancurses::Input::KeyLeft) => {
-        //         target_x -= 1;
-        //         direction = 3;
-        //     },
-        //     Some(pancurses::Input::KeyRight) => {
-        //         target_x += 1;
-        //         direction = 4;
-        //     },
-        //     Some(_input) => { direction = 1; },
-        //     None => { direction = 1; }
-        // }
-
         match facing {
-            0 => {
-                // Up
-                target_y -= 1;
-                direction = 1;
-            },
-            1 => {
-                // Right
-                target_x += 1;
-                direction = 4;
-            },
-            2 => {
-                // Down
-                target_y += 1;
-                direction = 2;
-            },
-            3 => {
-                // Left
-                target_x -= 1;
-                direction = 3;
-            },
+            0 => { target_y -= 1; direction = 1; }, // Up
+            1 => { target_x += 1; direction = 4; }, // Right
+            2 => { target_y += 1; direction = 2; }, // Down
+            3 => { target_x -= 1; direction = 3; }, // Left
             _ => unreachable!()
         }
 
@@ -308,49 +272,90 @@ fn part_1(program: Vec<i64>) -> io::Result<(i64)> {
         
         if Flag::Halted == flag {
             endwin();
-            return Ok(distance);
+            return Ok(());
         }
 
         // Explore the maze by following wall on the left
         'explore: while let Some(output) = state.output_buffer.pop_front() {
             if output == 0 {
                 // hit a wall
-                world.entry((target_x, target_y)).or_insert((output, distance));
+                world.entry((target_x, target_y)).or_insert((output, 0, 0));
 
                 // Move to the direction one step right from wall
                 // so the wall stays on left
                 facing = (facing + 1) % 4;
-            }
-            if output == 1 {
+            } else if output == 1 && !goal_found {
                 // moved
                 x = target_x;
                 y = target_y;
 
-                world.entry((x, y)).or_insert((output, distance + 1));
+                world.entry((x, y)).or_insert((output, part1_distance + 1, 99999));
+
+                // test is there a wall to left of us by moving there
+                facing = (facing + 3) % 4;
+            } else if output == 2 && !goal_found {
+                // we found the goal - now start exploring from that point to everywhere,
+                // mapping the distance
+                goal_found = true;
+                part_1 = part1_distance + 1;
+
+                x = target_x;
+                y = target_y;
+                
+                goal_x = x;
+                goal_y = y;
+
+                world.entry((x, y)).or_insert((output, part1_distance + 1, 0));
+            } else if (output == 1 || output == 2) && goal_found {
+                // moved
+                x = target_x;
+                y = target_y;
+
+                if x == goal_x && y == goal_y {
+                    // Back at goal, done
+                    match window.getch() {
+                        Some(_input) => (),
+                        None => ()
+                    };
+                    window.refresh();
+                    endwin();
+
+                    return Ok(());
+                }
+
+                match world.get(&(x, y)) {
+                    Some((_tile, _, known_distance)) => {
+                        if *known_distance > part2_distance + 1 {
+                            world.insert((x, y), (output, 0, part2_distance + 1));
+                        }
+                    },
+                    None => {
+                        world.insert((x, y), (output, 0, part2_distance + 1));
+                    }
+                }
+
+                world.entry((x, y)).or_insert((output, 0, part2_distance + 1));
 
                 // test is there a wall to left of us by moving there
                 facing = (facing + 3) % 4;
             }
-            if output == 2 {
-                match window.getch() {
-                    Some(_) => (),
-                    None => ()
-                }
-                endwin();
-                return Ok(distance + 1);
-            }
         }
 
-        for (coords, (tile, distance)) in &world {
+        let (_, (_, _, part_2)) = world.iter().max_by(|(_, (_, _, a)), (_, (_, _, b))| a.cmp(b)).unwrap();
+
+        window.mvprintw(0, 16, &format!("[PART_1]: {}", part_1));
+        window.mvprintw(1, 16, &format!("[PART_2]: {}   ", part_2));
+        window.mvprintw(2, 16, &format!("[OXYGEN]: ({}, {})", goal_x, goal_y));
+        for (coords, (tile, _p1_dist, p2_dist)) in &world {
             let _cursor = match tile {
-                0 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 50) as i32, "█"),
-                1 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 50) as i32, (distance % 10).to_string()),
-                2 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 50) as i32, "▒"),
-                _ => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 50) as i32, " ")
+                0 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, "█"),
+                1 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, (p2_dist % 10).to_string()),
+                2 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, "▒"),
+                _ => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, " ")
             };
         }
 
-        window.mvprintw((y + 25) as i32, (x + 50) as i32, ["^", ">", "v", "<"][facing]);
+        window.mvprintw((y + 25) as i32, (x + 25) as i32, ["^", ">", "v", "<"][facing]);
 
         window.refresh();
     }
@@ -359,9 +364,7 @@ fn part_1(program: Vec<i64>) -> io::Result<(i64)> {
 fn main() -> () {
     let program: Vec<i64> = INPUT_FILE.split(',').map(|register| register.parse::<i64>().expect("Parse fail")).collect();
 
-    let shortest_path = part_1(program.clone()).unwrap();
-
-    println!("[INFO] Part 1: {:?}", shortest_path);
+    part_1(program.clone()).unwrap();
 }
 
 #[cfg(test)]

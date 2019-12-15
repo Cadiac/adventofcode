@@ -5,4 +5,3 @@ authors = ["Jaakko Husso <jaakko.t.husso@gmail.com>"]
 
 [dependencies]
 pancurses = "0.16"
-rand = "0.7.2"
