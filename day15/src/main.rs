@@ -238,6 +238,12 @@ fn part_1(program: Vec<i64>) -> io::Result<()> {
     let window = initscr();
     pancurses::curs_set(0);
     window.keypad(true);
+    pancurses::start_color();
+
+    for i in 10..30 {
+        pancurses::init_color(i, 0, 1000 - (i-10)*40, 0);
+        pancurses::init_pair(i, i, pancurses::COLOR_WHITE);
+    }
 
     let mut facing = 3;
 
@@ -347,12 +353,19 @@ fn part_1(program: Vec<i64>) -> io::Result<()> {
         window.mvprintw(1, 16, &format!("[PART_2]: {}   ", part_2));
         window.mvprintw(2, 16, &format!("[OXYGEN]: ({}, {})", goal_x, goal_y));
         for (coords, (tile, _p1_dist, p2_dist)) in &world {
-            let _cursor = match tile {
-                0 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, "█"),
-                1 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, (p2_dist / 35).to_string()),
-                2 => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, "▒"),
-                _ => window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, " ")
-            };
+            if *tile == 0 {
+                window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, "█");
+            }
+            if *tile == 1 {
+                if *p2_dist != 99999 {
+                    window.attron(pancurses::COLOR_PAIR((p2_dist / 17) as u32 + 10));
+                    window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, "█");
+                    window.attroff(pancurses::COLOR_PAIR((p2_dist / 17) as u32 + 10));
+                }
+            }
+            if *tile == 2 {
+                window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, "▒");
+            }
         }
 
         window.mvprintw((y + 25) as i32, (x + 25) as i32, ["^", ">", "v", "<"][facing]);
