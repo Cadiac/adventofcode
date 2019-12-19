@@ -220,7 +220,7 @@ fn run_program(state: &mut ProgramState) -> Flag {
     }
 }
 
-fn part_1(program: Vec<i64>) -> usize {
+fn part_1(program: &Vec<i64>) -> usize {
     let mut memory = program.clone();
     memory.resize(MEMORY_SIZE, 0);
 
@@ -228,19 +228,8 @@ fn part_1(program: Vec<i64>) -> usize {
 
     for y in 0..50 {
         for x in 0..50 {
-            let mut state = ProgramState{
-                mem: memory.clone(),
-                input_buffer: VecDeque::from(vec![x,y]),
-                ..Default::default()
-            };
-
-            let flag = run_program(&mut state);
-        
-            if Flag::Halted == flag {
-                let output = state.output_buffer.pop_back().expect("output");
-                if output == 1 {
-                    affected_points += 1;
-                }
+            if is_in_beam(&memory, x, y) {
+                affected_points += 1;
             }
         }
     }
@@ -248,12 +237,51 @@ fn part_1(program: Vec<i64>) -> usize {
     return affected_points;
 }
 
+fn part_2(program: &Vec<i64>) -> i64 {
+    let mut memory = program.clone();
+    memory.resize(MEMORY_SIZE, 0);
+
+    let mut y = 100;
+
+    loop {
+        // Keep moving right until we hit the beam
+        let mut x = 0;
+
+        // Then move right until we're out of the beam
+        while !is_in_beam(&memory, x, y) {
+            x += 1;
+        }
+
+        // And check if the corner above this is inside the beam
+        if is_in_beam(&memory, x+99, y-99) {
+            return x*10000 + y-99;
+        }
+
+        y += 1;
+    }
+}
+
+fn is_in_beam(program: &Vec<i64>, x: i64, y: i64) -> bool {
+    let mut state = ProgramState{
+        mem: program.clone(),
+        input_buffer: VecDeque::from(vec![x,y]),
+        ..Default::default()
+    };
+
+    let _flag = run_program(&mut state);
+
+    let output = state.output_buffer.pop_back().expect("output");
+    return output == 1;
+}
+
 fn main() -> () {
     let program: Vec<i64> = INPUT_FILE.split(',').map(|register| register.parse::<i64>().expect("Parse fail")).collect();
 
-    let affected = part_1(program);
+    let affected = part_1(&program);
+    let corner = part_2(&program);
 
     println!("[PART1]: {}", affected);
+    println!("[PART2]: {}", corner);
 }
 
 #[cfg(test)]
