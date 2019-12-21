@@ -279,12 +279,70 @@ fn part_1(program: Vec<i64>) -> i64 {
     return 0;
 }
 
+fn part_2(program: Vec<i64>) -> i64 {
+    let mut memory = program.clone();
+    memory.resize(MEMORY_SIZE, 0);
+
+    // if there is a hole, the register will be false
+
+    // T, the temporary value register, and J, the jump register
+    // Both of these registers start with the value false.
+    
+    // There are only three instructions available in springscript:
+
+    // AND X Y sets Y to true if both X and Y are true; otherwise, it sets Y to false.
+    // OR X Y sets Y to true if at least one of X or Y is true; otherwise, it sets Y to false.
+    // NOT X Y sets Y to true if X is false; otherwise, it sets Y to false.
+
+    // In all three instructions, the second argument (Y) needs to be a writable register (either T or J).
+
+    let springscript_program =
+       ["NOT C T", // J=0, T=0, check from distant to close for holes, C
+        "OR H J", // J=0, T=1, Check if we can make the double jump
+        "AND T J", // J=1, T=1
+
+        "NOT B T", // J=1, T=1, check if B is hole
+        "OR T J", // J=1, T=1
+
+        "NOT A T", // J=1, T=1, check if A is hole
+        "OR T J", // J=1, T=1
+
+        "AND D J", // Make sure we're not jumping to hole at D
+        "RUN\n"].join("\n");
+
+    let ascii_routine: Vec<i64> = springscript_program
+        .as_bytes()
+        .iter()
+        .map(|character| *character as i64)
+        .collect();
+
+    let mut state = ProgramState{
+        mem: memory,
+        input_buffer: VecDeque::from(ascii_routine),
+        // input_buffer: VecDeque::new(),
+        ..Default::default()
+    };
+
+    let _flag = run_program(&mut state);
+
+    while let Some(output) = state.output_buffer.pop_front() {
+        if output > 255 {
+            return output; // TODO: We terminate here early and don't print anything for part 2
+        }
+        print!("{}", (output as u8) as char);
+    }
+
+    return 0;
+}
+
 fn main() -> () {
     let program: Vec<i64> = INPUT_FILE.split(',').map(|register| register.parse::<i64>().expect("Parse fail")).collect();
 
-    let damage = part_1(program.clone());
+    // let damage1 = part_1(program.clone());
+    let damage2 = part_2(program.clone());
 
-    println!("[PART1]: {}", damage);
+    // println!("[PART1]: {}", damage1);
+    println!("[PART2]: {}", damage2);
 }
 
 #[cfg(test)]
