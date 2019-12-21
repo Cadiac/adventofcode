@@ -44,7 +44,7 @@ in each solvers directory.
 ❄️ [Day 13](day13/src/main.rs)
 ❄️ [Day 14](day14/src/main.rs)
 ❄️ [Day 15](day15/src/main.rs)
-🧐[Day 16](day16/src/main.rs)
+❄️ [Day 16](day16/src/main.rs)
 ❄️ [Day 17](day17/src/main.rs)
 🎁 Day 18
 ❄️ [Day 19](day19/src/main.rs)
