@@ -338,10 +338,10 @@ fn part_2(program: Vec<i64>) -> i64 {
 fn main() -> () {
     let program: Vec<i64> = INPUT_FILE.split(',').map(|register| register.parse::<i64>().expect("Parse fail")).collect();
 
-    // let damage1 = part_1(program.clone());
+    let damage1 = part_1(program.clone());
     let damage2 = part_2(program.clone());
 
-    // println!("[PART1]: {}", damage1);
+    println!("[PART1]: {}", damage1);
     println!("[PART2]: {}", damage2);
 }
 
