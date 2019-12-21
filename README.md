@@ -49,7 +49,7 @@ in each solvers directory.
 🎁 Day 18
 ❄️ [Day 19](day19/src/main.rs)
 🎁 Day 20
-🎁 Day 21
+❄️ [Day 21](day21/src/main.rs)
 🎁 Day 22
 🎁 Day 23
 🎁 Day 24
