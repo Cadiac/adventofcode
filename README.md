@@ -50,6 +50,6 @@ in each solvers directory.
 ❄️ [Day 19](day19/src/main.rs)
 🎁 Day 20
 ❄️ [Day 21](day21/src/main.rs)
-🎁 Day 22
+🤔 [Day 22](day22/src/main.rs)
 🎁 Day 23
 🎁 Day 24
