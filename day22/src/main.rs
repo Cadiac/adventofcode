@@ -4,7 +4,7 @@ use std::collections::VecDeque;
 
 const INPUT_FILE: &str = include_str!("../input.txt");
 
-fn shuffle_deal_into_new_stack(deck: &mut VecDeque<usize>) {
+fn shuffle_deal_into_new_stack(deck: &mut VecDeque<u64>) {
     println!("shuffle_deal_into_new_stack");
     let end_swap_index = deck.len() / 2;
 
@@ -13,7 +13,7 @@ fn shuffle_deal_into_new_stack(deck: &mut VecDeque<usize>) {
     }
 }
 
-fn shuffle_cut_n(deck: &mut VecDeque<usize>, cuts: i64) {
+fn shuffle_cut_n(deck: &mut VecDeque<u64>, cuts: i64) {
     println!("shuffle_cut_n {}", cuts);
     if cuts > 0 {
         deck.rotate_left(cuts as usize);
@@ -22,7 +22,7 @@ fn shuffle_cut_n(deck: &mut VecDeque<usize>, cuts: i64) {
     }
 }
 
-fn shuffle_deal_with_increment_n(deck: &mut VecDeque<usize>, increment: usize) {
+fn shuffle_deal_with_increment_n(deck: &mut VecDeque<u64>, increment: usize) {
     println!("shuffle_deal_with_increment_n {}", increment);
     let deck_cards = deck.len();
     let mut new_deck = VecDeque::from(vec![0; deck_cards]);
@@ -37,7 +37,7 @@ fn shuffle_deal_with_increment_n(deck: &mut VecDeque<usize>, increment: usize) {
 }
 
 fn part_1(input: String) -> usize {
-    let mut deck: VecDeque<usize> = (0usize..10007).map(usize::from).collect();;
+    let mut deck: VecDeque<u64> = (0u64..10007).map(u64::from).collect();;
 
     let cut_regex = Regex::new(r"^cut (.+)").unwrap();
     let deal_with_increment_regex = Regex::new(r"^deal with increment (.+)$").unwrap();
@@ -58,8 +58,8 @@ fn part_1(input: String) -> usize {
    return deck.iter().position(|card| *card == 2019).unwrap();
 }
 
-fn part_2(input: String) -> usize {
-    let mut deck: VecDeque<usize> = (0usize..119315717514047).map(usize::from).collect();;
+fn part_2(input: String) -> u64 {
+    let mut deck: VecDeque<u64> = (0..119315717514047u64).map(u64::from).collect();;
 
     let cut_regex = Regex::new(r"^cut (.+)").unwrap();
     let deal_with_increment_regex = Regex::new(r"^deal with increment (.+)$").unwrap();
@@ -84,8 +84,10 @@ fn part_2(input: String) -> usize {
 
 fn main() -> () {
     let position = part_1(String::from(INPUT_FILE));
+    // let card = part_2(String::from(INPUT_FILE));
     
     println!("[INFO]: Part 1: {:?}", position);
+    // println!("[INFO]: Part 2: {:?}", card);
 }
 
 #[cfg(test)]
