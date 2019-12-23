@@ -2,23 +2,6 @@ language: rust
 rust:
   - 1.36.0
 
-env:
-  - TEST_DIR=day01
-  - TEST_DIR=day02
-  - TEST_DIR=day03
-  - TEST_DIR=day04
-  - TEST_DIR=day05
-  - TEST_DIR=day06
-  - TEST_DIR=day07
-  - TEST_DIR=day08
-  - TEST_DIR=day09
-  - TEST_DIR=day10
-  - TEST_DIR=day12
-  - TEST_DIR=day14
-  - TEST_DIR=day16
-  - TEST_DIR=day22
-
 script:
-  - cd $TEST_DIR
   - cargo build --verbose
   - cargo test --verbose

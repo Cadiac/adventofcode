@@ -1,0 +1,9 @@
+[package]
+name = "aoc"
+version = "0.1.0"
+authors = ["Jaakko Husso <jaakko.t.husso@gmail.com>"]
+
+[dependencies]
+permutohedron = "0.2.4"
+regex = "1"
+pancurses = "0.16"
