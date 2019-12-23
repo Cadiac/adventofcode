@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 #[derive(PartialEq, Debug)]
-enum Flag {
+pub enum Flag {
     InputRequired,
     Halted,
     Running,
@@ -9,13 +9,13 @@ enum Flag {
 }
 
 #[derive(Debug, Default)]
-struct IntcodeComputer {
-    mem: Vec<i64>,
-    program_counter: usize,
-    input_buffer: VecDeque<i64>,
-    output_buffer: VecDeque<i64>,
-    relative_base: i64,
-    halt: bool
+pub struct IntcodeComputer {
+    pub mem: Vec<i64>,
+    pub program_counter: usize,
+    pub input_buffer: VecDeque<i64>,
+    pub output_buffer: VecDeque<i64>,
+    pub relative_base: i64,
+    pub halt: bool
 }
 
 impl IntcodeComputer {
@@ -180,7 +180,7 @@ impl IntcodeComputer {
     }
     
     
-    fn run_program(&mut self) -> Flag {
+    pub fn run_program(&mut self) -> Flag {
         loop {
             let instruction = self.mem[self.program_counter];
             let opcode = instruction % 100;
