@@ -358,9 +358,9 @@ fn part_1(program: Vec<i64>) -> io::Result<()> {
             }
             if *tile == 1 {
                 if *p2_dist != 99999 {
-                    window.attron(pancurses::COLOR_PAIR((p2_dist / 17) as u32 + 10));
+                    window.attron(pancurses::COLOR_PAIR((p2_dist / 17) as pancurses::chtype + 10));
                     window.mvprintw((coords.1 + 25) as i32, (coords.0 + 25) as i32, "█");
-                    window.attroff(pancurses::COLOR_PAIR((p2_dist / 17) as u32 + 10));
+                    window.attroff(pancurses::COLOR_PAIR((p2_dist / 17) as pancurses::chtype + 10));
                 }
             }
             if *tile == 2 {
