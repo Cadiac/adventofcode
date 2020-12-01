@@ -1,8 +1,8 @@
-[![Build Status](https://travis-ci.org/Cadiac/adventofcode.svg?branch=2019)](https://travis-ci.org/Cadiac/adventofcode)
+[![Build Status](https://travis-ci.org/Cadiac/adventofcode.svg?branch=2020)](https://travis-ci.org/Cadiac/adventofcode)
 
-# 🎄🎄🎄 Advent of Code 2019 🎄🎄🎄  
+# 🎄🎄🎄 Advent of Code 2020 🎄🎄🎄  
 
-Solutions to [Advent of Code 2019](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
+Solutions to [Advent of Code 2020](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
 My goal is to try something new and learn a new language.
 
 ## Installing
