@@ -2,7 +2,7 @@
 name = "aoc20"
 version = "0.1.0"
 authors = ["Jaakko Husso <jaakko.t.husso@gmail.com>"]
-edition = "2020"
+edition = "2018"
 
 [dependencies]
 permutohedron = "0.2.4"
