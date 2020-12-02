@@ -3,7 +3,7 @@
 # 🎄🎄🎄 Advent of Code 2020 🎄🎄🎄  
 
 Solutions to [Advent of Code 2020](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
-My goal is to try something new and learn a new language.
+My goal is to learn more rust again this year.
 
 ## Installing
 
@@ -30,3 +30,4 @@ in root directory
 ## Solutions
 
 ❄️ [Day 01](src/bin/day01.rs)
+❄️ [Day 02](src/bin/day02.rs)
