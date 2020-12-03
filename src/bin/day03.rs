@@ -13,7 +13,7 @@ fn count_trees(
     let mut hits = 0;
 
     while current.1 < rows {
-        if trees.contains(&(current.0, current.1)) {
+        if trees.contains(&current) {
             hits = hits + 1;
         }
 
