@@ -127,50 +127,39 @@ fn country_id(input: &str) -> IResult<&str, Option<String>> {
     return Ok((unhandled, cid_string));
 }
 
+fn required_field(field: &'static str) -> Box<dyn Fn(&str) -> IResult<&str, &str>> {
+    Box::new(move |input| {
+        delimited(
+            multispace0,
+            preceded(tag(field), not_whitespace),
+            multispace0,
+        )(input)
+    })
+}
+
+fn optional_field(field: &'static str) -> Box<dyn Fn(&str) -> IResult<&str, Option<&str>>> {
+    Box::new(move |input| {
+        delimited(
+            multispace0,
+            opt(preceded(tag(field), not_whitespace)),
+            multispace0,
+        )(input)
+    })
+}
+
 fn parse_passport_part1(input: &str) -> IResult<&str, ()> {
     let (unhandled, _parsed) = permutation((
-        delimited(
-            multispace0,
-            preceded(tag("byr:"), not_whitespace),
-            multispace0,
-        ),
-        delimited(
-            multispace0,
-            preceded(tag("iyr:"), not_whitespace),
-            multispace0,
-        ),
-        delimited(
-            multispace0,
-            preceded(tag("eyr:"), not_whitespace),
-            multispace0,
-        ),
-        delimited(
-            multispace0,
-            preceded(tag("hgt:"), not_whitespace),
-            multispace0,
-        ),
-        delimited(
-            multispace0,
-            preceded(tag("hcl:"), not_whitespace),
-            multispace0,
-        ),
-        delimited(
-            multispace0,
-            preceded(tag("ecl:"), not_whitespace),
-            multispace0,
-        ),
-        delimited(
-            multispace0,
-            preceded(tag("pid:"), not_whitespace),
-            multispace0,
-        ),
-        delimited(
-            multispace0,
-            opt(preceded(tag("cid:"), not_whitespace)),
-            multispace0,
-        ),
+        required_field("byr:"),
+        required_field("iyr:"),
+        required_field("eyr:"),
+        required_field("hgt:"),
+        required_field("hcl:"),
+        required_field("ecl:"),
+        required_field("pid:"),
+        optional_field("cid:")
     ))(input)?;
 
+    // we only care about the amount of parsed
     Ok((unhandled, ()))
 }
 
