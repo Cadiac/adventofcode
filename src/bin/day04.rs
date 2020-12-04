@@ -20,25 +20,33 @@ struct Passport {
     cid: Option<String>,
 }
 
+fn is_char_hex_digit(c: char) -> bool {
+    c.is_ascii() && c.is_digit(16)
+}
+
+fn is_char_digit(c: char) -> bool {
+    return c.is_ascii() && c.is_digit(10);
+}
+
 fn not_whitespace(input: &str) -> IResult<&str, &str> {
     nom::bytes::complete::is_not(" \t\n")(input)
 }
 
-fn parse_byr(input: &str) -> IResult<&str, u32> {
+fn birth_year(input: &str) -> IResult<&str, u32> {
     map_res(
         delimited(multispace0, preceded(tag("byr:"), digit1), multispace0),
         |i: &str| u32::from_str_radix(i, 10),
     )(input)
 }
 
-fn parse_iyr(input: &str) -> IResult<&str, u32> {
+fn issue_year(input: &str) -> IResult<&str, u32> {
     map_res(
         delimited(multispace0, preceded(tag("iyr:"), digit1), multispace0),
         |i: &str| u32::from_str_radix(i, 10),
     )(input)
 }
 
-fn parse_eyr(input: &str) -> IResult<&str, u32> {
+fn expiration_year(input: &str) -> IResult<&str, u32> {
     map_res(
         delimited(multispace0, preceded(tag("eyr:"), digit1), multispace0),
         |i: &str| u32::from_str_radix(i, 10),
@@ -52,7 +60,7 @@ fn parse_centimeters(input: &str) -> IResult<&str, (u32, &str)> {
     )(input)
 }
 
-fn parse_hgt(input: &str) -> IResult<&str, (u32, &str)> {
+fn height(input: &str) -> IResult<&str, (u32, &str)> {
     delimited(
         multispace0,
         preceded(tag("hgt:"), parse_centimeters),
@@ -60,19 +68,11 @@ fn parse_hgt(input: &str) -> IResult<&str, (u32, &str)> {
     )(input)
 }
 
-fn is_char_hex_digit(c: char) -> bool {
-    c.is_ascii() && c.is_digit(16)
-}
-
-fn is_char_digit(c: char) -> bool {
-    return c.is_ascii() && c.is_digit(10);
-}
-
 fn parse_hex_color(input: &str) -> IResult<&str, &str> {
     preceded(tag("#"), take_while_m_n(6, 6, is_char_hex_digit))(input)
 }
 
-fn parse_hcl(input: &str) -> IResult<&str, &str> {
+fn hair_color(input: &str) -> IResult<&str, &str> {
     delimited(
         multispace0,
         preceded(tag("hcl:"), parse_hex_color),
@@ -92,7 +92,7 @@ fn parse_eye_color(input: &str) -> IResult<&str, &str> {
     ))(input)
 }
 
-fn parse_ecl(input: &str) -> IResult<&str, &str> {
+fn eye_color(input: &str) -> IResult<&str, &str> {
     delimited(
         multispace0,
         preceded(tag("ecl:"), parse_eye_color),
@@ -104,7 +104,7 @@ fn parse_passport_number(input: &str) -> IResult<&str, &str> {
     take_while_m_n(9, 9, is_char_digit)(input)
 }
 
-fn parse_pid(input: &str) -> IResult<&str, &str> {
+fn passport_id(input: &str) -> IResult<&str, &str> {
     delimited(
         multispace0,
         preceded(tag("pid:"), parse_passport_number),
@@ -112,46 +112,79 @@ fn parse_pid(input: &str) -> IResult<&str, &str> {
     )(input)
 }
 
-fn parse_cid(input: &str) -> IResult<&str, Option<&str>> {
-    delimited(
+fn country_id(input: &str) -> IResult<&str, Option<String>> {
+    let (unhandled, parsed) = delimited(
         multispace0,
         opt(preceded(tag("cid:"), not_whitespace)),
         multispace0,
-    )(input)
-}
+    )(input)?;
 
-// fn parse_passport_part1(input: &str) -> IResult<&str, Passport> {
-//     let (unhandled, (byr, iyr, eyr, hgt, hcl, ecl, pid, cid)) = permutation((
-//         parse_byr, parse_iyr, parse_eyr, parse_hgt, parse_hcl, parse_ecl, parse_pid, parse_cid,
-//     ))(input)?;
-
-//     let cid_str = match cid {
-//         Some(c) => Some(c.to_string()),
-//         None => None,
-//     };
-
-//     let passport = Passport {
-//         byr: String::from(byr),
-//         iyr: String::from(iyr),
-//         eyr: String::from(eyr),
-//         hgt: String::from(hgt),
-//         hcl: String::from(hcl),
-//         ecl: String::from(ecl),
-//         pid: String::from(pid),
-//         cid: cid_str,
-//     };
-//     return Ok((unhandled, passport));
-// }
-
-fn parse_passport_part2(input: &str) -> IResult<&str, Passport> {
-    let (unhandled, (byr, iyr, eyr, hgt, hcl, ecl, pid, cid)) = permutation((
-        parse_byr, parse_iyr, parse_eyr, parse_hgt, parse_hcl, parse_ecl, parse_pid, parse_cid,
-    ))(input)?;
-
-    let cid_str = match cid {
+    let cid_string = match parsed {
         Some(c) => Some(c.to_string()),
         None => None,
     };
+
+    return Ok((unhandled, cid_string));
+}
+
+fn parse_passport_part1(input: &str) -> IResult<&str, ()> {
+    let (unhandled, _parsed) = permutation((
+        delimited(
+            multispace0,
+            preceded(tag("byr:"), not_whitespace),
+            multispace0,
+        ),
+        delimited(
+            multispace0,
+            preceded(tag("iyr:"), not_whitespace),
+            multispace0,
+        ),
+        delimited(
+            multispace0,
+            preceded(tag("eyr:"), not_whitespace),
+            multispace0,
+        ),
+        delimited(
+            multispace0,
+            preceded(tag("hgt:"), not_whitespace),
+            multispace0,
+        ),
+        delimited(
+            multispace0,
+            preceded(tag("hcl:"), not_whitespace),
+            multispace0,
+        ),
+        delimited(
+            multispace0,
+            preceded(tag("ecl:"), not_whitespace),
+            multispace0,
+        ),
+        delimited(
+            multispace0,
+            preceded(tag("pid:"), not_whitespace),
+            multispace0,
+        ),
+        delimited(
+            multispace0,
+            opt(preceded(tag("cid:"), not_whitespace)),
+            multispace0,
+        ),
+    ))(input)?;
+
+    Ok((unhandled, ()))
+}
+
+fn parse_passport_part2(input: &str) -> IResult<&str, Passport> {
+    let (unhandled, (byr, iyr, eyr, hgt, hcl, ecl, pid, cid)) = permutation((
+        birth_year,
+        issue_year,
+        expiration_year,
+        height,
+        hair_color,
+        eye_color,
+        passport_id,
+        country_id,
+    ))(input)?;
 
     let passport = Passport {
         byr: byr,
@@ -161,20 +194,20 @@ fn parse_passport_part2(input: &str) -> IResult<&str, Passport> {
         hcl: String::from(hcl),
         ecl: String::from(ecl),
         pid: String::from(pid),
-        cid: cid_str,
+        cid: cid,
     };
     return Ok((unhandled, passport));
 }
 
-// fn part_1(input: &str) -> usize {
-//     let valid_passports = input
-//         .split("\n\n")
-//         .map(parse_passport_part1)
-//         .filter(|parsed| parsed.is_ok())
-//         .count();
+fn part_1(input: &str) -> usize {
+    let valid_passports = input
+        .split("\n\n")
+        .map(parse_passport_part1)
+        .filter(|parsed| parsed.is_ok())
+        .count();
 
-//     valid_passports
-// }
+    valid_passports
+}
 
 fn part_2(input: &str) -> usize {
     let valid_passports = input
@@ -214,10 +247,10 @@ fn part_2(input: &str) -> usize {
 }
 
 fn main() -> () {
-    // let part_1_result = part_1(INPUT_FILE);
+    let part_1_result = part_1(INPUT_FILE);
     let part_2_result = part_2(INPUT_FILE);
 
-    // println!("[INFO]: Part 1: {:?}", part_1_result);
+    println!("[INFO]: Part 1: {:?}", part_1_result);
     println!("[INFO]: Part 2: {:?}", part_2_result);
 }
 
@@ -225,90 +258,27 @@ fn main() -> () {
 mod tests {
     use super::*;
 
-    // #[test]
-    // fn it_parses_passports() {
-    //     assert_eq!(
-    //         parse_passport_part1(
-    //             "ecl:gry pid:860033327 eyr:2020 hcl:#fffffd\n\
-    //              byr:1937 iyr:2017 cid:147 hgt:183cm"
-    //         ),
-    //         Ok((
-    //             "",
-    //             Passport {
-    //                 ecl: String::from("gry"),
-    //                 pid: String::from("860033327"),
-    //                 eyr: String::from("2020"),
-    //                 hcl: String::from("#fffffd"),
-    //                 byr: String::from("1937"),
-    //                 iyr: String::from("2017"),
-    //                 cid: Some(String::from("147")),
-    //                 hgt: String::from("183cm")
-    //             }
-    //         ))
-    //     );
-
-    //     assert_eq!(
-    //         parse_passport_part1(
-    //             "iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884\n\
-    //              hcl:#cfa07d byr:1929"
-    //         )
-    //         .is_ok(),
-    //         false
-    //     );
-
-    //     assert_eq!(
-    //         parse_passport_part1(
-    //             "hcl:#ae17e1 iyr:2013\n\
-    //              eyr:2024\n\
-    //              ecl:brn pid:760753108 byr:1931\n\
-    //              hgt:179cm"
-    //         ),
-    //         Ok((
-    //             "",
-    //             Passport {
-    //                 hcl: String::from("#ae17e1"),
-    //                 iyr: String::from("2013"),
-    //                 eyr: String::from("2024"),
-    //                 ecl: String::from("brn"),
-    //                 pid: String::from("760753108"),
-    //                 byr: String::from("1931"),
-    //                 cid: None,
-    //                 hgt: String::from("179cm")
-    //             }
-    //         ))
-    //     );
-
-    //     assert_eq!(
-    //         parse_passport_part1(
-    //             "hcl:#cfa07d eyr:2025 pid:166559648\n\
-    //              iyr:2011 ecl:brn hgt:59in"
-    //         )
-    //         .is_ok(),
-    //         false
-    //     );
-    // }
-
-    // #[test]
-    // fn it_solves_part1_example() {
-    //     assert_eq!(
-    //         part_1(
-    //             "ecl:gry pid:860033327 eyr:2020 hcl:#fffffd\n\
-    //              byr:1937 iyr:2017 cid:147 hgt:183cm\n\
-    //              \n\
-    //              iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884\n\
-    //              hcl:#cfa07d byr:1929\n\
-    //              \n\
-    //              hcl:#ae17e1 iyr:2013\n\
-    //              eyr:2024\n\
-    //              ecl:brn pid:760753108 byr:1931\n\
-    //              hgt:179cm\n\
-    //              \n\
-    //              hcl:#cfa07d eyr:2025 pid:166559648\n\
-    //              iyr:2011 ecl:brn hgt:59in"
-    //         ),
-    //         2
-    //     );
-    // }
+    #[test]
+    fn it_solves_part1_example() {
+        assert_eq!(
+            part_1(
+                "ecl:gry pid:860033327 eyr:2020 hcl:#fffffd\n\
+                 byr:1937 iyr:2017 cid:147 hgt:183cm\n\
+                 \n\
+                 iyr:2013 ecl:amb cid:350 eyr:2023 pid:028048884\n\
+                 hcl:#cfa07d byr:1929\n\
+                 \n\
+                 hcl:#ae17e1 iyr:2013\n\
+                 eyr:2024\n\
+                 ecl:brn pid:760753108 byr:1931\n\
+                 hgt:179cm\n\
+                 \n\
+                 hcl:#cfa07d eyr:2025 pid:166559648\n\
+                 iyr:2011 ecl:brn hgt:59in"
+            ),
+            2
+        );
+    }
 
     #[test]
     fn it_solves_part2_examples() {
