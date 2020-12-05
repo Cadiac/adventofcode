@@ -127,27 +127,23 @@ fn country_id(input: &str) -> IResult<&str, Option<String>> {
     return Ok((unhandled, cid_string));
 }
 
-fn required_field(field: &'static str) -> Box<dyn Fn(&str) -> IResult<&str, &str>> {
-    Box::new(move |input| {
+fn parse_passport_part1(input: &str) -> IResult<&str, ()> {
+    let required_field = |field: &'static str| {
         delimited(
             multispace0,
             preceded(tag(field), not_whitespace),
             multispace0,
-        )(input)
-    })
-}
+        )
+    };
 
-fn optional_field(field: &'static str) -> Box<dyn Fn(&str) -> IResult<&str, Option<&str>>> {
-    Box::new(move |input| {
+    let optional_field = |field: &'static str| {
         delimited(
             multispace0,
             opt(preceded(tag(field), not_whitespace)),
             multispace0,
-        )(input)
-    })
-}
+        )
+    };
 
-fn parse_passport_part1(input: &str) -> IResult<&str, ()> {
     let (unhandled, _parsed) = permutation((
         required_field("byr:"),
         required_field("iyr:"),
