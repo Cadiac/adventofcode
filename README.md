@@ -37,3 +37,4 @@ in root directory
 ❄️ [Day 06](src/bin/day06.rs)
 ❄️ [Day 07](src/bin/day07.rs)
 ❄️ [Day 08](src/bin/day08.rs)
+❄️ [Day 09](src/bin/day09.rs)
