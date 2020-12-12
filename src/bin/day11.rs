@@ -107,8 +107,7 @@ impl GameOfSeats {
             Some('#') => true,
             Some('L') => false,
             Some('.') => self.occupied_at_direction(current, direction),
-            None => false,
-            Some(_unknown) => false,
+            _ => false
         }
     }
 
