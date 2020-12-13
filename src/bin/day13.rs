@@ -1,14 +1,14 @@
 const INPUT_FILE: &str = include_str!("../../inputs/day13.txt");
 
-fn find_first_after(freq: u64, earliest: u64) -> u64 {
+fn find_first_after(freq: i64, earliest: i64) -> i64 {
     let n = earliest / freq;
     return freq * (n + 1);
 }
 
-fn part_1(input: &str) -> u64 {
-    let time_of_leave = input.lines().nth(0).unwrap().parse::<u64>().unwrap();
+fn part_1(input: &str) -> i64 {
+    let time_of_leave = input.lines().nth(0).unwrap().parse::<i64>().unwrap();
 
-    let schedules: Vec<u64> = input
+    let schedules: Vec<i64> = input
         .lines()
         .nth(1)
         .unwrap()
@@ -17,7 +17,7 @@ fn part_1(input: &str) -> u64 {
             if bus == "x" {
                 return None;
             }
-            return Some(bus.parse::<u64>().unwrap());
+            return Some(bus.parse::<i64>().unwrap());
         })
         .collect();
 
@@ -31,11 +31,23 @@ fn part_1(input: &str) -> u64 {
     return earliest_bus * (find_first_after(*earliest_bus, time_of_leave) - time_of_leave);
 }
 
-fn part_2(input: &str) -> u64 {
-    let mut timestamp: u64 = 100000000000000;
-    // let mut timestamp: u64 = 0;
+// Modular inverse, taken from
+// https://rosettacode.org/wiki/Modular_inverse
+fn mod_inv(a: i64, module: i64) -> i64 {
+    let mut mn = (module, a);
+    let mut xy = (0, 1);
+    while mn.1 != 0 {
+        xy = (xy.1, xy.0 - (mn.0 / mn.1) * xy.1);
+        mn = (mn.1, mn.0 % mn.1);
+    }
+    while xy.0 < 0 {
+        xy.0 += module;
+    }
+    xy.0
+}
 
-    let schedules: Vec<(u64, u64)> = input
+fn part_2(input: &str) -> i64 {
+    let schedules: Vec<(i64, i64)> = input
         .lines()
         .nth(1)
         .unwrap()
@@ -45,30 +57,27 @@ fn part_2(input: &str) -> u64 {
             if freq == "x" {
                 return None;
             }
-            return Some((freq.parse::<u64>().unwrap(), offset as u64));
+            return Some((freq.parse::<i64>().unwrap(), offset as i64));
         })
         .collect();
 
-    // println!("[DEBUG] Found schedules {:?}", schedules);
+    // This problem is https://en.wikipedia.org/wiki/Chinese_remainder_theorem.
+    // I initially used an online solver https://www.dcode.fr/chinese-remainder to
+    // solve my input using the remainders and modulos I just printed out here.
+    // Afterwards I implemented the solver following an example from
+    // https://www.geeksforgeeks.org/chinese-remainder-theorem-set-2-implementation/
+    let prod: i64 = schedules.iter().map(|(freq, _offset)| freq).product();
+    let result: i64 = schedules
+        .iter()
+        .map(|(freq, offset)| {
+            let remainder = (freq - offset) % freq;
+            let pp = prod / freq;
 
-    'outer: loop {
-        // println!("[DEBUG] Timestamp {:?}", timestamp);
+            remainder * mod_inv(pp, *freq) * pp
+        })
+        .sum();
 
-        for (freq, offset) in schedules.iter() {
-            let t = timestamp + *offset;
-            // println!("[DEBUG] Timestamp {:?}, t {:?}", timestamp, t);
-            let is_scheduled_stop = t % freq == 0;
-
-            if !is_scheduled_stop {
-                // We can skip ahead to to next even - offset
-                let skip = find_first_after(*freq, t) - offset;
-                timestamp = skip;
-                // println!("[DEBUG] Not a scheduled stop for bus {:?}, skipping for {:?} to {:?}", freq, skip, timestamp);
-                continue 'outer;
-            }
-        }
-        return timestamp;
-    }
+    result % prod
 }
 
 fn main() -> () {
