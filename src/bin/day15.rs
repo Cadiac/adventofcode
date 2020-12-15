@@ -5,27 +5,24 @@ const INPUT_FILE: &str = include_str!("../../inputs/day15.txt");
 fn memory_game(input: &str, turns: u32) -> u32 {
     let mut mem: HashMap<u32, u32> = HashMap::new();
 
-    let mut t = 0;
+    let mut turn = 1;
     let mut next_spoken = 0;
 
-    // After the initial words the next spoken is still 0
+    // The initial words never seem to repeat
     for i in input.split(',') {
         let num = i.parse::<u32>().unwrap();
-        mem.insert(num, t);
-        // println!("Turn {:?}: The number spoken is a starting number, {:?}.", t+1, num);
-        t += 1;
+        mem.insert(num, turn);
+        turn += 1;
     }
 
-    while t < turns - 1 {
-        if let Some(last_spoken_at) = mem.insert(next_spoken, t) {
-            // println!("Turn {:?}: The number spoken is old, {:?}, last spoken at {:?}.", t+1, next_spoken, last_spoken_at);
-            next_spoken = t - last_spoken_at;
+    while turn < turns {
+        if let Some(last_spoken_at) = mem.insert(next_spoken, turn) {
+            next_spoken = turn - last_spoken_at;
         } else {
-            // println!("Turn {:?}: The number spoken is new, {:?}.", t+1, next_spoken);
             next_spoken = 0;
         }
 
-        t += 1;
+        turn += 1;
     }
 
     return next_spoken;
