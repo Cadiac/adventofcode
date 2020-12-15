@@ -2,8 +2,6 @@ extern crate regex;
 
 use regex::Regex;
 use std::collections::HashMap;
-use std::collections::HashSet;
-use std::iter::FromIterator;
 
 const INPUT_FILE: &str = include_str!("../../inputs/day14.txt");
 
@@ -60,7 +58,7 @@ fn part_1(input: &str) -> u64 {
 
 fn part_2(input: &str) -> u64 {
     let mut base_mask: u64 = 0x000000000;
-    let mut included_bits: u64 = 0xfffffffff;
+    let mut non_floating_bits: u64 = 0xfffffffff;
 
     let mut x_indices: Vec<usize> = Vec::new();
 
@@ -72,7 +70,7 @@ fn part_2(input: &str) -> u64 {
         if line.starts_with("mask") {
             let raw_mask = line.split(" = ").nth(1).unwrap();
 
-            let included_bits_str: String = raw_mask
+            let non_floating_bits_str: String = raw_mask
                 .chars()
                 .map(|c| match c {
                     'X' => '0',
@@ -80,7 +78,7 @@ fn part_2(input: &str) -> u64 {
                 })
                 .collect();
 
-            included_bits = u64::from_str_radix(&included_bits_str, 2).unwrap();
+            non_floating_bits = u64::from_str_radix(&non_floating_bits_str, 2).unwrap();
 
             x_indices = line
                 .chars()
@@ -103,13 +101,13 @@ fn part_2(input: &str) -> u64 {
             let addr = capture[1].parse::<u64>().unwrap();
             let value = capture[2].parse::<u64>().unwrap();
 
-            // With current masks x indices we can find 2^ their number combinations
             let x_combinations = 2usize.pow(x_indices.len() as u32);
 
             // Initialize a vector of masks. These will be modified to be the different combinations
             let mut masked_addrs: Vec<u64> =
                 // This time we want to keep bits that weren't set to 'X' from the original address
-                vec![(addr & included_bits) | base_mask; x_combinations];
+                // and or it with the base mask
+                vec![(addr & non_floating_bits) | base_mask; x_combinations];
 
             // Treat every combination as a number from 0..n.
             // This is to make iterating 'X' binary combinations easier, we can just iterate
@@ -128,21 +126,17 @@ fn part_2(input: &str) -> u64 {
 
             println!(
                 "[DEBUG]: decoded addr to {:?} addresses",
-                x_combinations
+                masked_addrs.len()
             );
 
             println!("[DEBUG]: addr:    {:#038b} (decimal {:?})", addr, addr);
             for masked_addr in masked_addrs.iter() {
-                assert_eq!(masked_addr < &2u64.pow(36), true);
                 println!(
                     "[DEBUG]: decoded: {:#038b} (decimal {:?})",
                     masked_addr, masked_addr
                 );
                 mem.insert(*masked_addr, value);
             }
-
-            let check_set: HashSet<&u64> = HashSet::from_iter(masked_addrs.iter());
-            assert_eq!(check_set.len(), masked_addrs.len());
         }
     }
 
