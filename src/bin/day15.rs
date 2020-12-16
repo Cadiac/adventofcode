@@ -52,6 +52,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn it_solves_part2_examples() {
         assert_eq!(memory_game("0,3,6", 30000000), 175594);
         assert_eq!(memory_game("1,3,2", 30000000), 2578);
