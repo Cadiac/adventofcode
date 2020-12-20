@@ -47,3 +47,4 @@ in root directory
 ❄️ [Day 16](src/bin/day16.rs)
 ❄️ [Day 17](src/bin/day17.rs)
 ❄️ [Day 18](src/bin/day18.rs)
+❄️ [Day 19](src/bin/day19.rs)
