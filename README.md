@@ -51,3 +51,4 @@ in root directory
 ❌ Day 20
 ❄️ [Day 21](src/bin/day21.rs)
 ❄️ [Day 22](src/bin/day22.rs)
+❄️ [Day 23](src/bin/day23.rs)
