@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/Cadiac/adventofcode.svg?branch=2021)](https://travis-ci.org/Cadiac/adventofcode)
-
 # 🎄🎄🎄 Advent of Code 2021 🎄🎄🎄  
 
 Solutions to [Advent of Code 2021](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
