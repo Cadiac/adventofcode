@@ -1,5 +1,3 @@
-[![Build Status](https://travis-ci.org/Cadiac/adventofcode.svg?branch=2020)](https://travis-ci.org/Cadiac/adventofcode)
-
 # 🎄🎄🎄 Advent of Code 2020 🎄🎄🎄  
 
 Solutions to [Advent of Code 2020](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
