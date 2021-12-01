@@ -1,47 +1,35 @@
 const INPUT_FILE: &str = include_str!("../../inputs/day01.txt");
 
-fn part_1(file: String) -> usize {
-    let input: Vec<usize> = file
-        .split("\n")
-        .map(|num| num.parse::<usize>().expect("parsing"))
-        .collect();
-
-    for first_idx in 0..(input.len() - 1) {
-        for second_idx in (first_idx + 1)..input.len() {
-            if input[first_idx] + input[second_idx] == 2020 {
-                return input[first_idx] * input[second_idx];
-            }
-        }
-    }
-
-    return 0;
+fn parse(input: &str) -> Vec<u32> {
+    input
+        .split('\n')
+        .map(|depth| depth.parse::<u32>().unwrap())
+        .collect()
 }
 
-fn part_2(file: String) -> usize {
-    let input: Vec<usize> = file
-        .split("\n")
-        .map(|num| num.parse::<usize>().expect("parsing"))
-        .collect();
-
-    for first_idx in 0..(input.len() - 2) {
-        for second_idx in (first_idx + 1)..(input.len() - 1) {
-            for third_idx in (second_idx + 1)..input.len() {
-                if input[first_idx] + input[second_idx] + input[third_idx] == 2020 {
-                    return input[first_idx] * input[second_idx] * input[third_idx];
-                }
-            }
-        }
-    }
-
-    return 0;
+fn part_1(input: &str) -> usize {
+    parse(input)
+        .windows(2)
+        .filter(|depths| depths[0] < depths[1])
+        .count()
 }
 
-fn main() -> () {
-    let part1_sum = part_1(String::from(INPUT_FILE));
-    let part2_sum = part_2(String::from(INPUT_FILE));
+fn part_2(input: &str) -> usize {
+    parse(input)
+        .windows(3)
+        .map(|depths| depths.iter().sum())
+        .collect::<Vec<u32>>()
+        .windows(2)
+        .filter(|depths| depths[0] < depths[1])
+        .count()
+}
 
-    println!("[INFO]: Part 1: {:?}", part1_sum);
-    println!("[INFO]: Part 1: {:?}", part2_sum);
+fn main() {
+    let part_1_result = part_1(INPUT_FILE);
+    println!("[INFO]: Part 1: {:?}", part_1_result);
+
+    let part_2_result = part_2(INPUT_FILE);
+    println!("[INFO]: Part 2: {:?}", part_2_result);
 }
 
 #[cfg(test)]
@@ -51,16 +39,38 @@ mod tests {
     #[test]
     fn it_solves_part1_example() {
         assert_eq!(
-            part_1(String::from("1721\n979\n366\n299\n675\n1456")),
-            514579
+            part_1(
+                "199\n\
+                    200\n\
+                    208\n\
+                    210\n\
+                    200\n\
+                    207\n\
+                    240\n\
+                    269\n\
+                    260\n\
+                    263"
+            ),
+            7
         );
     }
 
     #[test]
     fn it_solves_part2_example() {
         assert_eq!(
-            part_2(String::from("1721\n979\n366\n299\n675\n1456")),
-            241861950
+            part_2(
+                "199\n\
+                    200\n\
+                    208\n\
+                    210\n\
+                    200\n\
+                    207\n\
+                    240\n\
+                    269\n\
+                    260\n\
+                    263"
+            ),
+            5
         );
     }
 }
