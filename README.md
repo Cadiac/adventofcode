@@ -1,4 +1,6 @@
-# 🎄🎄🎄 Advent of Code 2021 🎄🎄🎄  
+![tests](https://github.com/cadiac/adventofcode/actions/workflows/tests.yml/badge.svg)
+
+# 🎄🎄🎄 Advent of Code 2021 🎄🎄🎄
 
 Solutions to [Advent of Code 2021](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
 

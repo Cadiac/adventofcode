@@ -2,7 +2,7 @@ const INPUT_FILE: &str = include_str!("../../inputs/day01.txt");
 
 fn parse(input: &str) -> Vec<u32> {
     input
-        .split('\n')
+        .lines()
         .map(|depth| depth.parse::<u32>().unwrap())
         .collect()
 }
