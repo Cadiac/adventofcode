@@ -18,7 +18,7 @@ You can run individual solutions with
 $ cargo run --bin day01
 ```
 
-or run single days tests with
+or run single day's tests with
 
 ```bash
 $ cargo test --bin day01
@@ -29,3 +29,4 @@ in root directory
 ## Solutions
 
 ❄️ [Day 01](src/bin/day01.rs)
+❄️ [Day 02](src/bin/day02.rs)

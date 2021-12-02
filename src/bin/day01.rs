@@ -1,21 +1,16 @@
 const INPUT_FILE: &str = include_str!("../../inputs/day01.txt");
 
-fn parse(input: &str) -> Vec<u32> {
-    input
-        .lines()
-        .map(|depth| depth.parse::<u32>().unwrap())
-        .collect()
-}
+use aoc::{parse_from_str};
 
 fn part_1(input: &str) -> usize {
-    parse(input)
+    parse_from_str::<u32>(input)
         .windows(2)
         .filter(|depths| depths[0] < depths[1])
         .count()
 }
 
 fn part_2(input: &str) -> usize {
-    parse(input)
+    parse_from_str(input)
         .windows(3)
         .map(|depths| depths.iter().sum())
         .collect::<Vec<u32>>()
