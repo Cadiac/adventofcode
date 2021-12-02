@@ -1,95 +1,40 @@
 const INPUT_FILE: &str = include_str!("../../inputs/day02.txt");
 
-use std::num::ParseIntError;
-use std::str::FromStr;
-
-use aoc::parse_from_str;
-
-struct CommandPart1 {
-    horizontal: i32,
-    vertical: i32,
-}
-
-impl FromStr for CommandPart1 {
-    type Err = ParseIntError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<&str> = s.split(' ').collect();
-        let movement = parts[1].parse::<i32>()?;
-
-        match parts[0] {
-            "forward" => Ok(CommandPart1 {
-                horizontal: movement,
-                vertical: 0,
-            }),
-            "down" => Ok(CommandPart1 {
-                horizontal: 0,
-                vertical: movement,
-            }),
-            "up" => Ok(CommandPart1 {
-                horizontal: 0,
-                vertical: -movement,
-            }),
-            _ => unimplemented!(),
-        }
-    }
-}
-
 fn part_1(input: &str) -> i32 {
-    let commands = parse_from_str::<CommandPart1>(input);
-    // horizontal, depth
     let mut position: (i32, i32) = (0, 0);
 
-    for command in commands {
-        position.0 += command.horizontal;
-        position.1 += command.vertical;
+    for command in input.lines() {
+        let parts: Vec<&str> = command.split(' ').collect();
+        let steps = parts[1].parse::<i32>().unwrap();
+
+        match parts[0] {
+            "forward" => position.0 += steps,
+            "down" => position.1 += steps,
+            "up" => position.1 -= steps,
+            _ => unimplemented!(),
+        }
     }
 
     position.0 * position.1
 }
 
-struct CommandPart2 {
-    aim: i32,
-    movement: i32,
-}
-
-impl FromStr for CommandPart2 {
-    type Err = ParseIntError;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let parts: Vec<&str> = s.split(' ').collect();
-        let steps = parts[1].parse::<i32>()?;
-
-        match parts[0] {
-            "forward" => Ok(CommandPart2 {
-                aim: 0,
-                movement: steps,
-            }),
-            "down" => Ok(CommandPart2 {
-                aim: steps,
-                movement: 0,
-            }),
-            "up" => Ok(CommandPart2 {
-                aim: -steps,
-                movement: 0,
-            }),
-            _ => unimplemented!(),
-        }
-    }
-}
-
 fn part_2(input: &str) -> i32 {
-    let commands = parse_from_str::<CommandPart2>(input);
-
-    // horizontal, depth
     let mut position: (i32, i32) = (0, 0);
     let mut aim = 0;
 
-    for command in commands {
-        aim += command.aim;
+    for command in input.lines() {
+        let parts: Vec<&str> = command.split(' ').collect();
+        let steps = parts[1].parse::<i32>().unwrap();
 
-        position.0 += command.movement;
-        position.1 += command.movement * aim;
+        match parts[0] {
+            "forward" => {
+                position.0 += steps;
+                position.1 += steps * aim;
+            }
+            "down" => aim += steps,
+            "up" => aim -= steps,
+            _ => unimplemented!(),
+        }
     }
 
     position.0 * position.1
