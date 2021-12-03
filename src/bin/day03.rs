@@ -57,20 +57,20 @@ fn filter_by_bit_criteria(mut candidates: Vec<Vec<u32>>, expected_value: u32) ->
 
     while candidates.len() > 1 {
         let one_bits_at_index: u32 = candidates.iter().map(|bits| bits[bit_index]).sum();
+        let total_bits_at_index = candidates.len() as u32;
 
-        // `1` is most common -> `0` is least common
-        if candidates.len() as u32 - one_bits_at_index <= one_bits_at_index {
-            candidates = candidates
-                .into_iter()
-                .filter(|bits| bits[bit_index] == expected_value)
-                .collect();
-        // `0` is most common -> `1` is least common
-        } else {
-            candidates = candidates
-                .into_iter()
-                .filter(|bits| bits[bit_index] != expected_value)
-                .collect();
-        }
+        candidates = candidates
+            .into_iter()
+            .filter(|bits| {
+                if total_bits_at_index - one_bits_at_index <= one_bits_at_index {
+                    // `1` is most common -> `0` is least common
+                    bits[bit_index] == expected_value
+                } else {
+                    // `0` is most common -> `1` is least common
+                    bits[bit_index] != expected_value
+                }
+            })
+            .collect();
 
         bit_index += 1;
     }
