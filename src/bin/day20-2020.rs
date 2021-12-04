@@ -5,6 +5,8 @@ use std::collections::HashMap;
 use std::num::ParseIntError;
 use std::str::FromStr;
 
+type Puzzle = HashMap<(i32, i32), Tile>;
+
 #[derive(Debug, Clone)]
 struct Tile {
     id: i64,
@@ -79,30 +81,143 @@ fn parse_tiles(input: &str) -> Vec<Tile> {
         .collect()
 }
 
-fn part_1(input: &str) -> i64 {
-    let tiles = parse_tiles(input);
+fn is_valid_tile(current_board: Puzzle, tile: Tile, cursor: (i32, i32)) -> bool {
+    // above
+    if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 - 1)) {
+        if tile.edges[0] != neighbour.edges[2].chars().rev().collect::<String>() {
+            return false;
+        }
+    }
 
-    let dimensions = (tiles.len() as f64).sqrt() as usize;
+    // below
+    if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 + 1)) {
+        if tile.edges[2] != neighbour.edges[0].chars().rev().collect::<String>() {
+            return false;
+        }
+    }
 
-    let current_tile = tiles[0].clone();
+    // to right
+    if let Some(neighbour) = current_board.get(&(cursor.0 + 1, cursor.1)) {
+        if tile.edges[1] != neighbour.edges[3].chars().rev().collect::<String>() {
+            return false;
+        }
+    }
 
-    loop {
-        // Pick one of tile tiles and use that as the corner?
-        // Then start looking for pieces that fit to its two edges? And move to edge[1]?
-        for tile in tiles.iter() {
-            if  current_tile.edges[0] == tile.edges[2].chars().rev().collect::<String>() &&
-                current_tile.edges[1] == tile.edges[3].chars().rev().collect::<String>() &&
-                current_tile.edges[2] == tile.edges[0].chars().rev().collect::<String>() &&
-                current_tile.edges[3] == tile.edges[1].chars().rev().collect::<String>() {
-                
-            } else {
-                // Rotate, flip?
+    // to left
+    if let Some(neighbour) = current_board.get(&(cursor.0 - 1, cursor.1)) {
+        if tile.edges[3] != neighbour.edges[1].chars().rev().collect::<String>() {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+fn find_next_cursor(size: usize, cursor: (i32, i32)) -> (i32, i32) {
+    if cursor.0 + 1 < size as i32 {
+        return (cursor.0 + 1, cursor.1);
+    }
+    // This will go over `size` on y-axis, but it should never actually be used like that
+    (0, cursor.1 + 1)
+}
+
+fn build_puzzle_recursive(
+    size: usize,
+    remaining_tiles: Vec<Tile>,
+    current_board: Puzzle,
+    cursor: (i32, i32),
+) -> Option<Puzzle> {
+    println!(
+        "Looking at cursor {:?}, currently found {:?} tiles, remaining {:?}",
+        cursor,
+        current_board.len(),
+        remaining_tiles.len()
+    );
+
+    if remaining_tiles.len() == 1 {
+        // for debugger
+        println!("Last remaining");
+    }
+
+    // Done, we managed to place all tiles somewhere
+    if remaining_tiles.is_empty() {
+        return Some(current_board);
+    }
+
+    // Otherwise try to fit some tile to current cursor
+    let next_cursor = find_next_cursor(size, cursor);
+
+    for tile in remaining_tiles.iter() {
+        // println!("Checking if tile {:?} fits to cursor {:?}", tile, cursor);
+        let rest: Vec<Tile> = remaining_tiles
+            .clone()
+            .into_iter()
+            .filter(|remaining| remaining.id != tile.id)
+            .collect();
+
+
+        for rotation in 0..4 {
+            let mut rotated_tile = tile.clone();
+            rotated_tile.rotate(rotation);
+
+            let mut next_board = current_board.clone();
+            if is_valid_tile(next_board.clone(), rotated_tile.clone(), cursor) {
+                // println!("Placing tile {:?} to cursor {:?}", tile, cursor);
+                next_board.insert(cursor, rotated_tile);
+
+                if let Some(puzzle) =
+                    build_puzzle_recursive(size, rest.clone(), next_board, next_cursor)
+                {
+                    println!("We succeeded, puzzle is");
+                    println!("{:?}", puzzle);
+                    return Some(puzzle);
+                }
             }
         }
 
+        // Also try the other side
+        let mut flipped_tile = tile.clone();
+        flipped_tile.flip();
+        // println!("Checking if flipped tile {:?} fits to cursor {:?}", flipped_tile, cursor);
+
+
+        for rotation in 0..4 {
+            let mut rotated_tile = flipped_tile.clone();
+            rotated_tile.rotate(rotation);
+
+            let mut next_board = current_board.clone();
+            if is_valid_tile(next_board.clone(), rotated_tile.clone(), cursor) {
+                // println!("Placing flipped tile {:?} to cursor {:?}", tile, cursor);
+                next_board.insert(cursor, rotated_tile);
+
+                if let Some(puzzle) =
+                    build_puzzle_recursive(size, rest.clone(), next_board, next_cursor)
+                {
+                    println!("We succeeded with flipped, puzzle is");
+                    println!("{:?}", puzzle);
+                    return Some(puzzle);
+                }
+            }
+        }
     }
 
-    unimplemented!();
+    // Nothing fit, abort this and go back to trying something else
+    return None;
+}
+
+fn part_1(input: &str) -> i64 {
+    let tiles = parse_tiles(input);
+
+    let size = (tiles.len() as f64).sqrt() as usize;
+
+    println!("Solving {:?} x {:?} puzzle", size, size);
+
+    if let Some(solution) = build_puzzle_recursive(size, tiles, HashMap::new(), (0, 0)) {
+        println!("Found solution to puzzle, ebin");
+        println!("{:?}", solution);
+    }
+
+    panic!("no solution :(");
 }
 
 fn main() {
@@ -116,8 +231,7 @@ mod tests {
 
     #[test]
     fn it_parses_tile() {
-        let tile_str =
-            "Tile 2311:\n\
+        let tile_str = "Tile 2311:\n\
             ..##.#..#.\n\
             ##..#.....\n\
             #...##..#.\n\
@@ -146,10 +260,7 @@ mod tests {
 
     #[test]
     fn it_rotates_tile() {
-        let tiles = parse_tiles(EXAMPLE_FILE);
-
-        let tile_str =
-            "Tile 2311:\n\
+        let tile_str = "Tile 2311:\n\
             ..##.#..#.\n\
             ##..#.....\n\
             #...##..#.\n\
@@ -176,10 +287,7 @@ mod tests {
 
     #[test]
     fn it_flips_tile() {
-        let tiles = parse_tiles(EXAMPLE_FILE);
-
-        let tile_str =
-            "Tile 2311:\n\
+        let tile_str = "Tile 2311:\n\
             ..##.#..#.\n\
             ##..#.....\n\
             #...##..#.\n\
