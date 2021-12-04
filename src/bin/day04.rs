@@ -1,6 +1,5 @@
 const INPUT_FILE: &str = include_str!("../../inputs/day04.txt");
 
-use std::cmp::Ordering;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
@@ -79,27 +78,19 @@ fn part_2(input: &str) -> usize {
     for number in numbers_input {
         drawn.insert(number);
 
-        match boards.len().cmp(&1) {
-            Ordering::Greater => {
-                boards = boards
-                    .into_iter()
-                    .filter(|board| !is_winner(board, &drawn, number))
-                    .collect();
-            }
-            Ordering::Equal => {
-                // Only the last winning board remains. To find its final score
-                // keep playing the game until it also wins
-                if is_winner(&boards[0], &drawn, number) {
-                    let unmarked = find_unmarked_numbers(&boards[0], &drawn);
-                    return unmarked.iter().sum::<usize>() * number;
-                }
-            }
-            Ordering::Less => {
-                // There were multiple winners on the final round.
-                // Don't bother dealing with this
-                unimplemented!();
-            }
+        let (winners, remaining): (Vec<Board>, Vec<Board>) = boards
+            .into_iter()
+            .partition(|board| is_winner(board, &drawn, number));
+
+        if remaining.is_empty() {
+            // No more boards playing, the last board just won.
+            // Assume that there was exactly one winner
+            let winner = winners.first().expect("at least one winner");
+            let unmarked = find_unmarked_numbers(winner, &drawn);
+            return unmarked.iter().sum::<usize>() * number;
         }
+
+        boards = remaining;
     }
 
     // No winners!
