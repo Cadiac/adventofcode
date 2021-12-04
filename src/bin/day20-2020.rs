@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Tile {
     id: i64,
     edges: Vec<String>,
@@ -50,8 +50,8 @@ impl FromStr for Tile {
         let edges: Vec<String> = vec![
             top_edge,
             right_edge.iter().collect(),
-            bottom_edge,
-            left_edge.iter().collect(),
+            bottom_edge.chars().rev().collect(),
+            left_edge.iter().rev().collect(),
         ];
 
         Ok(Tile { id, edges })
@@ -63,8 +63,12 @@ impl Tile {
         self.edges.rotate_right(turns);
     }
 
-    fn flip() {
-        unimplemented!();
+    fn flip(&mut self) {
+        self.edges = self
+            .edges
+            .iter()
+            .map(|edge| edge.chars().rev().collect())
+            .collect();
     }
 }
 
@@ -77,6 +81,27 @@ fn parse_tiles(input: &str) -> Vec<Tile> {
 
 fn part_1(input: &str) -> i64 {
     let tiles = parse_tiles(input);
+
+    let dimensions = (tiles.len() as f64).sqrt() as usize;
+
+    let current_tile = tiles[0].clone();
+
+    loop {
+        // Pick one of tile tiles and use that as the corner?
+        // Then start looking for pieces that fit to its two edges? And move to edge[1]?
+        for tile in tiles.iter() {
+            if  current_tile.edges[0] == tile.edges[2].chars().rev().collect::<String>() &&
+                current_tile.edges[1] == tile.edges[3].chars().rev().collect::<String>() &&
+                current_tile.edges[2] == tile.edges[0].chars().rev().collect::<String>() &&
+                current_tile.edges[3] == tile.edges[1].chars().rev().collect::<String>() {
+                
+            } else {
+                // Rotate, flip?
+            }
+        }
+
+    }
+
     unimplemented!();
 }
 
@@ -91,8 +116,8 @@ mod tests {
 
     #[test]
     fn it_parses_tile() {
-        let tile_str = 
-           "Tile 2311:\n\
+        let tile_str =
+            "Tile 2311:\n\
             ..##.#..#.\n\
             ##..#.....\n\
             #...##..#.\n\
@@ -107,12 +132,76 @@ mod tests {
         let parsed_tile = tile_str.parse::<Tile>().unwrap();
         assert_eq!(parsed_tile.id, 2311);
         assert_eq!(parsed_tile.edges.len(), 4);
+        assert_eq!(parsed_tile.edges[0], "..##.#..#.".to_owned());
+        assert_eq!(parsed_tile.edges[1], "...#.##..#".to_owned());
+        assert_eq!(parsed_tile.edges[2], "###..###..".to_owned());
+        assert_eq!(parsed_tile.edges[3], ".#..#####.".to_owned());
     }
 
     #[test]
     fn it_parses_tiles() {
         let tiles = parse_tiles(EXAMPLE_FILE);
         assert_eq!(tiles.len(), 9);
+    }
+
+    #[test]
+    fn it_rotates_tile() {
+        let tiles = parse_tiles(EXAMPLE_FILE);
+
+        let tile_str =
+            "Tile 2311:\n\
+            ..##.#..#.\n\
+            ##..#.....\n\
+            #...##..#.\n\
+            ####.#...#\n\
+            ##.##.###.\n\
+            ##...#.###\n\
+            .#.#.#..##\n\
+            ..#....#..\n\
+            ###...#.#.\n\
+            ..###..###";
+
+        let mut parsed_tile = tile_str.parse::<Tile>().unwrap();
+        parsed_tile.rotate(1);
+        assert_eq!(parsed_tile.edges[0], ".#..#####.".to_owned());
+        assert_eq!(parsed_tile.edges[1], "..##.#..#.".to_owned());
+        assert_eq!(parsed_tile.edges[2], "...#.##..#".to_owned());
+        assert_eq!(parsed_tile.edges[3], "###..###..".to_owned());
+        parsed_tile.rotate(3);
+        assert_eq!(parsed_tile.edges[0], "..##.#..#.".to_owned());
+        assert_eq!(parsed_tile.edges[1], "...#.##..#".to_owned());
+        assert_eq!(parsed_tile.edges[2], "###..###..".to_owned());
+        assert_eq!(parsed_tile.edges[3], ".#..#####.".to_owned());
+    }
+
+    #[test]
+    fn it_flips_tile() {
+        let tiles = parse_tiles(EXAMPLE_FILE);
+
+        let tile_str =
+            "Tile 2311:\n\
+            ..##.#..#.\n\
+            ##..#.....\n\
+            #...##..#.\n\
+            ####.#...#\n\
+            ##.##.###.\n\
+            ##...#.###\n\
+            .#.#.#..##\n\
+            ..#....#..\n\
+            ###...#.#.\n\
+            ..###..###";
+
+        let mut parsed_tile = tile_str.parse::<Tile>().unwrap();
+        parsed_tile.flip();
+        assert_eq!(parsed_tile.edges[0], ".#..#.##..".to_owned());
+        assert_eq!(parsed_tile.edges[1], "#..##.#...".to_owned());
+        assert_eq!(parsed_tile.edges[2], "..###..###".to_owned());
+        assert_eq!(parsed_tile.edges[3], ".#####..#.".to_owned());
+        parsed_tile.flip();
+        assert_eq!(parsed_tile.edges[0], "..##.#..#.".to_owned());
+        assert_eq!(parsed_tile.edges[1], "...#.##..#".to_owned());
+        assert_eq!(parsed_tile.edges[2], "###..###..".to_owned());
+        assert_eq!(parsed_tile.edges[3], ".#..#####.".to_owned());
     }
 
     #[test]
