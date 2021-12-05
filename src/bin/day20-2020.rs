@@ -352,10 +352,10 @@ mod tests {
         );
 
         parsed_tile.rotate(1);
-        assert_eq!(parsed_tile.edges[0], ".#..#####.".to_owned());
-        assert_eq!(parsed_tile.edges[1], "..##.#..#.".to_owned());
-        assert_eq!(parsed_tile.edges[2], "#..##.#...".to_owned());
-        assert_eq!(parsed_tile.edges[3], "..###..###".to_owned());
+        assert_eq!(parsed_tile.edges[0], "...#.##..#".to_owned());
+        assert_eq!(parsed_tile.edges[1], "###..###..".to_owned());
+        assert_eq!(parsed_tile.edges[2], ".#####..#.".to_owned());
+        assert_eq!(parsed_tile.edges[3], ".#..#.##..".to_owned());
 
         assert_eq!(
             parsed_tile.data,
