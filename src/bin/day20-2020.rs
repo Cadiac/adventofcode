@@ -1,5 +1,4 @@
 const INPUT_FILE: &str = include_str!("../../inputs/day20-2020.txt");
-const EXAMPLE_FILE: &str = include_str!("../../inputs/day20-2020-example.txt");
 
 use std::collections::HashMap;
 use std::num::ParseIntError;
@@ -89,7 +88,7 @@ fn parse_tiles(input: &str) -> Vec<Tile> {
         .collect()
 }
 
-fn is_valid_tile(current_board: Puzzle, tile: Tile, cursor: (i32, i32)) -> bool {
+fn is_valid_tile(current_board: &Puzzle, tile: &Tile, cursor: (i32, i32)) -> bool {
     // above
     if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 - 1)) {
         if tile.edges[0] != neighbour.edges[2] {
@@ -150,44 +149,30 @@ fn build_puzzle_recursive(
             .filter(|remaining| remaining.id != tile.id)
             .collect();
 
-        for rotation in 0..4 {
-            let mut rotated_tile = tile.clone();
-            rotated_tile.rotate(rotation);
-
-            let mut next_board = current_board.clone();
-            if is_valid_tile(next_board.clone(), rotated_tile.clone(), cursor) {
-                next_board.insert(cursor, rotated_tile);
-
-                if let Some(puzzle) =
-                    build_puzzle_recursive(size, rest.clone(), next_board, next_cursor)
-                {
-                    return Some(puzzle);
-                }
-            }
-        }
-
-        // Also try the other side
+        // Try both sides
         let mut flipped_tile = tile.clone();
         flipped_tile.flip();
 
-        for rotation in 0..4 {
-            let mut rotated_tile = flipped_tile.clone();
-            rotated_tile.rotate(rotation);
-
-            let mut next_board = current_board.clone();
-            if is_valid_tile(next_board.clone(), rotated_tile.clone(), cursor) {
-                next_board.insert(cursor, rotated_tile);
-
-                if let Some(puzzle) =
-                    build_puzzle_recursive(size, rest.clone(), next_board, next_cursor)
-                {
-                    return Some(puzzle);
+        for tile_side in [tile, &flipped_tile]  {
+            for rotation in 0..4 {
+                let mut rotated_tile = tile_side.clone();
+                rotated_tile.rotate(rotation);
+    
+                if is_valid_tile(&current_board, &rotated_tile, cursor) {
+                    let mut next_board = current_board.clone();
+                    next_board.insert(cursor, rotated_tile);
+    
+                    if let Some(solution) =
+                        build_puzzle_recursive(size, rest.clone(), next_board, next_cursor)
+                    {
+                        return Some(solution);
+                    }
                 }
             }
         }
     }
 
-    // Nothing fit, abort this and go back to trying something else
+    // No tile fit on board, abort this and go back to trying something else
     return None;
 }
 
@@ -217,10 +202,12 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    const EXAMPLE_FILE: &str = include_str!("../../inputs/day20-2020-example.txt");
 
     #[test]
     fn it_parses_tile() {
-        let tile_str = "Tile 2311:\n\
+        let tile_str = 
+            "Tile 2311:\n\
             ..##.#..#.\n\
             ##..#.....\n\
             #...##..#.\n\
@@ -249,7 +236,8 @@ mod tests {
 
     #[test]
     fn it_rotates_tile() {
-        let tile_str = "Tile 2311:\n\
+        let tile_str = 
+            "Tile 2311:\n\
             ..##.#..#.\n\
             ##..#.....\n\
             #...##..#.\n\
@@ -276,7 +264,8 @@ mod tests {
 
     #[test]
     fn it_flips_tile() {
-        let tile_str = "Tile 2311:\n\
+        let tile_str =
+            "Tile 2311:\n\
             ..##.#..#.\n\
             ##..#.....\n\
             #...##..#.\n\
