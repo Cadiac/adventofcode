@@ -7,38 +7,42 @@ fn parse(input: &str) -> Vec<usize> {
         .collect()
 }
 
+// Each fish produces offspring independent of other fish, so each fish
+// with a certain initial timer end up producing the same number of total fish.
+// Similarly, at any given day each fish with equal current timers will end up
+// producing the same amount of total fish, so only the counts of fish with
+// each different timer need to be considered.
 fn solve(input: &str, days: usize) -> i64 {
-    let mut fish_after_days_by_initial_timer: [i64; 9] = [0; 9];
+    let mut fish_by_timer: [i64; 9] = [0; 9];
 
-    for initial_timer in 0..=8 {
-        let mut count_by_timer: [i64; 9] = [0; 9];
-        count_by_timer[initial_timer] = 1;
-
-        for _day in 0..days { 
-            let mut next_count_by_timer = count_by_timer.clone();
-
-            for timer in 0..count_by_timer.len() {
-                let count = count_by_timer[timer];
-
-                if timer == 0 {
-                    next_count_by_timer[8] += count;
-                    next_count_by_timer[6] += count;
-                } else {
-                    next_count_by_timer[timer - 1] += count;
-                }
-
-                next_count_by_timer[timer] -= count;
-            }
-
-            count_by_timer = next_count_by_timer;
-        }
-
-        fish_after_days_by_initial_timer[initial_timer] = count_by_timer.iter().sum();
+    for initial_timer in parse(input).into_iter() {
+        fish_by_timer[initial_timer] += 1;
     }
 
-    parse(input).into_iter()
-        .map(|initial_timer| fish_after_days_by_initial_timer[initial_timer])
-        .sum()
+    for _day in 0..days {
+        let mut next_fish_by_timer = fish_by_timer;
+
+        for timer in 0..fish_by_timer.len() {
+            let count = fish_by_timer[timer];
+
+            if timer == 0 {
+                // The fish are ready to produce offspring -
+                // after this day each fish with this internal timer resets to 6,
+                // and they each create a new lanternfish with an internal timer of 8.
+                next_fish_by_timer[6] += count;
+                next_fish_by_timer[8] += count;
+            } else {
+                // Normally their internal timer just decreases by one
+                next_fish_by_timer[timer - 1] += count;
+            }
+
+            next_fish_by_timer[timer] -= count;
+        }
+
+        fish_by_timer = next_fish_by_timer;
+    }
+
+    fish_by_timer.iter().sum()
 }
 
 fn main() {
