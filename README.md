@@ -34,3 +34,4 @@ in root directory
 ❄️ [Day 04](src/bin/day04.rs)
 ❄️ [Day 05](src/bin/day05.rs)
 ❄️ [Day 06](src/bin/day06.rs)
+❄️ [Day 07](src/bin/day07.rs)

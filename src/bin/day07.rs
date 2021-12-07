@@ -11,13 +11,12 @@ fn part_1(input: &str) -> usize {
     let depths = parse(input);
 
     let max_depth = *depths.iter().max().unwrap_or(&0);
-    let min_depth = 0;
 
     let mut costs = vec![vec![0; max_depth + 1]; max_depth + 1];
 
     for (index, initial) in depths.into_iter().enumerate() {
-        for target in min_depth..=max_depth {
-            costs[target][index] = if target > initial {
+        for (target, cost) in costs.iter_mut().enumerate().take(max_depth + 1) {
+            cost[index] = if target > initial {
                 target - initial
             } else {
                 initial - target
@@ -27,7 +26,7 @@ fn part_1(input: &str) -> usize {
 
     costs
         .iter()
-        .map(|cost| cost.into_iter().sum())
+        .map(|cost| cost.iter().sum())
         .min()
         .unwrap_or(0)
 }
@@ -36,25 +35,24 @@ fn part_2(input: &str) -> usize {
     let depths = parse(input);
 
     let max_depth = *depths.iter().max().unwrap_or(&0);
-    let min_depth = 0;
 
     let mut costs = vec![vec![0; max_depth + 1]; max_depth + 1];
 
     for (index, initial) in depths.into_iter().enumerate() {
-        for target in min_depth..=max_depth {
+        for (target, cost) in costs.iter_mut().enumerate().take(max_depth + 1) {
             let n = if target > initial {
                 target - initial
             } else {
                 initial - target
             };
-
-            costs[target][index] = n * (n + 1) / 2;
+            // https://en.wikipedia.org/wiki/Triangular_number
+            cost[index] = n * (n + 1) / 2;
         }
     }
 
     costs
         .iter()
-        .map(|cost| cost.into_iter().sum())
+        .map(|cost| cost.iter().sum())
         .min()
         .unwrap_or(0)
 }
