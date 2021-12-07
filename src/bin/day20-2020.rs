@@ -15,6 +15,34 @@ struct Tile {
     data: Vec<Vec<char>>,
 }
 
+fn rotate_left<T>(data: Vec<Vec<T>>) -> Vec<Vec<T>> {
+    // reverse every row + transpose rotates the data counter-clockwise 90 degrees.
+    // we could probably live with that
+    // Transpose the data
+    let size = data.len();
+
+    let mut line_iters: Vec<_> = data
+        .into_iter()
+        .map(|line| line.into_iter().rev())
+        .collect();
+
+    (0..size)
+        .map(|_| {
+            line_iters
+                .iter_mut()
+                .map(|line| line.next().unwrap())
+                .collect::<Vec<T>>()
+        })
+        .collect()
+}
+
+fn flip<T>(data: Vec<Vec<T>>) -> Vec<Vec<T>> {
+    data
+        .into_iter()
+        .map(|line| line.into_iter().rev().collect())
+        .collect()
+}
+
 impl FromStr for Tile {
     type Err = ParseIntError;
 
@@ -80,23 +108,8 @@ impl Tile {
                 self.edges[0].chars().rev().collect(),
             ];
 
-            // reverse every row + transpose rotates the data counter-clockwise 90 degrees.
-            // we could probably live with that
-            // Transpose the data
-            let mut line_iters: Vec<_> = self
-                .data
-                .clone()
-                .into_iter()
-                .map(|line| line.into_iter().rev())
-                .collect();
-            self.data = (0..8)
-                .map(|_| {
-                    line_iters
-                        .iter_mut()
-                        .map(|line| line.next().unwrap())
-                        .collect::<Vec<char>>()
-                })
-                .collect();
+            // TODO: how to avoid cloning?
+            self.data = rotate_left(self.data.clone());
         }
     }
 
@@ -109,12 +122,8 @@ impl Tile {
             self.edges[1].clone(),
         ];
 
-        self.data = self
-            .data
-            .iter()
-            .cloned()
-            .map(|line| line.into_iter().rev().collect())
-            .collect();
+        // TODO: how to avoid cloning?
+        self.data = flip(self.data.clone());
     }
 }
 
@@ -225,6 +234,60 @@ fn build_puzzle_recursive(
     return None;
 }
 
+fn check_for_sea_monsters(data: &mut Vec<Vec<(char, bool)>>) {
+    //                   # 
+    // #    ##    ##    ###
+    //  #  #  #  #  #  #   
+
+    let height = data.len();
+
+    for y in 0..height {
+        let width = data[y].len();
+
+        if y+2 >= height {
+            break;
+        }
+
+        for x in 0..width {
+            if x+19 >= width {
+                break;
+            }
+
+            if data[y][x+18].0 == '#' &&
+                data[y+1][x].0 == '#' && data[y+1][x+5].0 == '#' && data[y+1][x+6].0 == '#' && data[y+1][x+11].0 == '#' && data[y+1][x+12].0 == '#' && data[y+1][x+17].0 == '#' && data[y+1][x+18].0 == '#' && data[y+1][x+19].0 == '#' &&
+                data[y+2][x+1].0 == '#' && data[y+2][x+4].0 == '#' && data[y+2][x+7].0 == '#' && data[y+2][x+10].0 == '#' && data[y+2][x+13].0 == '#' && data[y+2][x+16].0 == '#' {
+                // We found a sea monster!
+                println!("Found a sea monster, starting from ({}, {})", x, y);
+
+                for yy in 0..3 {
+                    for xx in 0..20 {
+                        print!("{}", data[y+yy][x+xx].0);
+                    }
+                    print!("\n");
+                }
+
+                data[y][x+18].1 = true;
+                
+                data[y+1][x].1 = true;
+                data[y+1][x+5].1 = true;
+                data[y+1][x+6].1 = true;
+                data[y+1][x+11].1 = true;
+                data[y+1][x+12].1 = true;
+                data[y+1][x+17].1 = true;
+                data[y+1][x+18].1 = true;
+                data[y+1][x+19].1 = true;
+
+                data[y+2][x+1].1 = true;
+                data[y+2][x+4].1 = true;
+                data[y+2][x+7].1 = true;
+                data[y+2][x+10].1 = true;
+                data[y+2][x+13].1 = true;
+                data[y+2][x+16].1 = true;
+            }
+        }
+    }
+}
+
 fn part_1(input: &str) -> i64 {
     let tiles = parse_tiles(input);
 
@@ -235,7 +298,7 @@ fn part_1(input: &str) -> i64 {
     if let Some(puzzle) = build_puzzle_recursive(size, tiles, HashMap::new(), (0, 0)) {
         println!("Found solution to puzzle!");
 
-        let mut full_data: Vec<Vec<char>> = vec![];
+        let mut full_data: Vec<Vec<(char, bool)>> = vec![];
 
         for y in 0..size as i32 {
             let mut rows = vec![vec![]; 8];
@@ -245,35 +308,51 @@ fn part_1(input: &str) -> i64 {
 
                 print!(" {} ", tile.id);
 
-                rows[0].append(&mut tile.data[0]);
-                rows[0].push(' ');
-                rows[1].append(&mut tile.data[1]);
-                rows[1].push(' ');
-                rows[2].append(&mut tile.data[2]);
-                rows[2].push(' ');
-                rows[3].append(&mut tile.data[3]);
-                rows[3].push(' ');
-                rows[4].append(&mut tile.data[4]);
-                rows[4].push(' ');
-                rows[5].append(&mut tile.data[5]);
-                rows[5].push(' ');
-                rows[6].append(&mut tile.data[6]);
-                rows[6].push(' ');
-                rows[7].append(&mut tile.data[7]);
-                rows[7].push(' ');
+                rows[0].append(&mut tile.data[0].iter().cloned().map(|c| (c, false)).collect());
+                rows[1].append(&mut tile.data[1].iter().cloned().map(|c| (c, false)).collect());
+                rows[2].append(&mut tile.data[2].iter().cloned().map(|c| (c, false)).collect());
+                rows[3].append(&mut tile.data[3].iter().cloned().map(|c| (c, false)).collect());
+                rows[4].append(&mut tile.data[4].iter().cloned().map(|c| (c, false)).collect());
+                rows[5].append(&mut tile.data[5].iter().cloned().map(|c| (c, false)).collect());
+                rows[6].append(&mut tile.data[6].iter().cloned().map(|c| (c, false)).collect());
+                rows[7].append(&mut tile.data[7].iter().cloned().map(|c| (c, false)).collect());
             }
 
-            println!("");
-
             full_data.append(&mut rows);
-            full_data.push(vec![]);
         }
 
         println!("Gathered total {} rows", full_data.len());
 
-        for row in full_data {
-            println!("{}", row.iter().collect::<String>());
+        for row in full_data.iter() {
+            println!("{}", row.iter().map(|(c, _)| c).collect::<String>());
         }
+
+        check_for_sea_monsters(&mut full_data);
+        full_data = rotate_left(full_data.clone());
+        check_for_sea_monsters(&mut full_data);
+        full_data = rotate_left(full_data.clone());
+        check_for_sea_monsters(&mut full_data);
+        full_data = rotate_left(full_data.clone());
+        check_for_sea_monsters(&mut full_data);
+
+        full_data = flip(full_data.clone());
+        check_for_sea_monsters(&mut full_data);
+        full_data = rotate_left(full_data.clone());
+        check_for_sea_monsters(&mut full_data);
+        full_data = rotate_left(full_data.clone());
+        check_for_sea_monsters(&mut full_data);
+        full_data = rotate_left(full_data.clone());
+        check_for_sea_monsters(&mut full_data);
+
+        let not_monsters: usize = full_data
+            .iter()
+            .map(|line| line
+                .iter()
+                .filter(|(c, is_monster)| *c == '#' && !is_monster)
+                .count())
+            .sum();
+
+        println!("[INFO]: Part 2: {}", not_monsters);
 
         return puzzle.get(&(0, 0)).unwrap().id
             * puzzle.get(&(0, size as i32 - 1)).unwrap().id
@@ -285,7 +364,7 @@ fn part_1(input: &str) -> i64 {
 }
 
 fn main() {
-    let part_1_result = part_1(EXAMPLE_FILE);
+    let part_1_result = part_1(INPUT_FILE);
     println!("[INFO]: Part 1: {:?}", part_1_result);
 }
 
