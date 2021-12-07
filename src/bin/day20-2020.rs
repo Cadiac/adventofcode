@@ -2,15 +2,14 @@ const INPUT_FILE: &str = include_str!("../../inputs/day20-2020.txt");
 const EXAMPLE_FILE: &str = include_str!("../../inputs/day20-2020-example.txt");
 
 use std::collections::HashMap;
-use std::fmt::{self, Display, Formatter};
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-type Puzzle = HashMap<(i32, i32), Tile>;
+type Puzzle = HashMap<(usize, usize), Tile>;
 
 #[derive(Debug, Clone)]
 struct Tile {
-    id: i64,
+    id: u64,
     edges: [String; 4],
     data: Vec<Vec<char>>,
 }
@@ -37,8 +36,7 @@ fn rotate_left<T>(data: Vec<Vec<T>>) -> Vec<Vec<T>> {
 }
 
 fn flip<T>(data: Vec<Vec<T>>) -> Vec<Vec<T>> {
-    data
-        .into_iter()
+    data.into_iter()
         .map(|line| line.into_iter().rev().collect())
         .collect()
 }
@@ -53,7 +51,7 @@ impl FromStr for Tile {
             Some(row) => {
                 let parts: Vec<&str> = row.split(' ').collect();
                 let id_part: Vec<&str> = parts[1].split(':').collect();
-                id_part[0].parse::<i64>().unwrap()
+                id_part[0].parse::<u64>().unwrap()
             }
             None => 0,
         };
@@ -127,20 +125,6 @@ impl Tile {
     }
 }
 
-impl Display for Tile {
-    // `f` is a buffer, and this method must write the formatted string into it
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
-        let output = self
-            .data
-            .iter()
-            .map(|pixel_row| pixel_row.iter().collect::<String>())
-            .collect::<Vec<_>>()
-            .join("\n");
-
-        write!(f, "{}", output)
-    }
-}
-
 fn parse_tiles(input: &str) -> Vec<Tile> {
     input
         .split("\n\n")
@@ -148,11 +132,13 @@ fn parse_tiles(input: &str) -> Vec<Tile> {
         .collect()
 }
 
-fn is_valid_tile(current_board: &Puzzle, tile: &Tile, cursor: (i32, i32)) -> bool {
+fn is_valid_tile(current_board: &Puzzle, tile: &Tile, cursor: (usize, usize)) -> bool {
     // above
-    if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 - 1)) {
-        if tile.edges[0] != neighbour.edges[2] {
-            return false;
+    if cursor.1 > 0 {
+        if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 - 1)) {
+            if tile.edges[0] != neighbour.edges[2] {
+                return false;
+            }
         }
     }
 
@@ -171,28 +157,31 @@ fn is_valid_tile(current_board: &Puzzle, tile: &Tile, cursor: (i32, i32)) -> boo
     }
 
     // to left
-    if let Some(neighbour) = current_board.get(&(cursor.0 - 1, cursor.1)) {
-        if tile.edges[3] != neighbour.edges[1] {
-            return false;
+    if cursor.0 > 0 {
+        if let Some(neighbour) = current_board.get(&(cursor.0 - 1, cursor.1)) {
+            if tile.edges[3] != neighbour.edges[1] {
+                return false;
+            }
         }
     }
 
     return true;
 }
 
-fn find_next_cursor(size: usize, cursor: (i32, i32)) -> (i32, i32) {
-    if cursor.0 + 1 < size as i32 {
+fn find_next_cursor(size: usize, cursor: (usize, usize)) -> (usize, usize) {
+    if cursor.0 + 1 < size {
         return (cursor.0 + 1, cursor.1);
     }
     // This will go over `size` on y-axis, but it should never actually be used like that
     (0, cursor.1 + 1)
 }
 
+// TODO: Add cache
 fn build_puzzle_recursive(
     size: usize,
     remaining_tiles: Vec<Tile>,
     current_board: Puzzle,
-    cursor: (i32, i32),
+    cursor: (usize, usize),
 ) -> Option<Puzzle> {
     // Done, we managed to place all tiles somewhere
     if remaining_tiles.is_empty() {
@@ -235,60 +224,58 @@ fn build_puzzle_recursive(
 }
 
 fn check_for_sea_monsters(data: &mut Vec<Vec<(char, bool)>>) {
-    //                   # 
+    //                   #
     // #    ##    ##    ###
-    //  #  #  #  #  #  #   
+    //  #  #  #  #  #  #
+    let sea_monster_coordinates: Vec<(usize, usize)> = vec![
+        (18, 0),
+        (0, 1), (5, 1), (6, 1), (11, 1), (12, 1), (17, 1), (18, 1), (19, 1),
+        (1, 2), (4, 2), (7, 2), (10, 2), (13, 2), (16, 2)
+    ];
 
     let height = data.len();
 
     for y in 0..height {
-        let width = data[y].len();
-
-        if y+2 >= height {
+        if y + 2 >= height {
             break;
         }
 
+        let width = data[y].len();
         for x in 0..width {
-            if x+19 >= width {
+            if x + 19 >= width {
                 break;
             }
 
-            if data[y][x+18].0 == '#' &&
-                data[y+1][x].0 == '#' && data[y+1][x+5].0 == '#' && data[y+1][x+6].0 == '#' && data[y+1][x+11].0 == '#' && data[y+1][x+12].0 == '#' && data[y+1][x+17].0 == '#' && data[y+1][x+18].0 == '#' && data[y+1][x+19].0 == '#' &&
-                data[y+2][x+1].0 == '#' && data[y+2][x+4].0 == '#' && data[y+2][x+7].0 == '#' && data[y+2][x+10].0 == '#' && data[y+2][x+13].0 == '#' && data[y+2][x+16].0 == '#' {
+            let is_sea_monster = sea_monster_coordinates
+                .iter()
+                .all(|(window_x, window_y)| data[y + window_y][x + window_x].0 == '#');
+
+            if is_sea_monster {
                 // We found a sea monster!
                 println!("Found a sea monster, starting from ({}, {})", x, y);
 
+                for (window_x, window_y) in sea_monster_coordinates.iter() {
+                    data[y + window_y][x + window_x].1 = true;
+                }
+
+                // Debug prints
                 for yy in 0..3 {
                     for xx in 0..20 {
-                        print!("{}", data[y+yy][x+xx].0);
+                        if data[y + yy][x + xx].1 {
+                            print!("{}", 'O');
+                        } else {
+                            print!("{}", data[y + yy][x + xx].0);
+                        }
                     }
                     print!("\n");
                 }
-
-                data[y][x+18].1 = true;
-                
-                data[y+1][x].1 = true;
-                data[y+1][x+5].1 = true;
-                data[y+1][x+6].1 = true;
-                data[y+1][x+11].1 = true;
-                data[y+1][x+12].1 = true;
-                data[y+1][x+17].1 = true;
-                data[y+1][x+18].1 = true;
-                data[y+1][x+19].1 = true;
-
-                data[y+2][x+1].1 = true;
-                data[y+2][x+4].1 = true;
-                data[y+2][x+7].1 = true;
-                data[y+2][x+10].1 = true;
-                data[y+2][x+13].1 = true;
-                data[y+2][x+16].1 = true;
+                print!("\n");
             }
         }
     }
 }
 
-fn part_1(input: &str) -> i64 {
+fn part_1(input: &str) -> u64 {
     let tiles = parse_tiles(input);
 
     let size = (tiles.len() as f64).sqrt() as usize;
@@ -297,75 +284,87 @@ fn part_1(input: &str) -> i64 {
 
     if let Some(puzzle) = build_puzzle_recursive(size, tiles, HashMap::new(), (0, 0)) {
         println!("Found solution to puzzle!");
+        return puzzle.get(&(0, 0)).unwrap().id
+            * puzzle.get(&(0, size - 1)).unwrap().id
+            * puzzle.get(&(size - 1, size - 1)).unwrap().id
+            * puzzle.get(&(size - 1, 0)).unwrap().id;
+    }
 
+    panic!("[ERROR]: No solution to Part 1!");
+}
+
+fn part_2(input: &str) -> usize {
+    let tiles = parse_tiles(input);
+
+    let size = (tiles.len() as f64).sqrt() as usize;
+
+    println!("Solving {:?} x {:?} puzzle", size, size);
+
+    if let Some(puzzle) = build_puzzle_recursive(size, tiles, HashMap::new(), (0, 0)) {
+        println!("Found solution to puzzle!");
         let mut full_data: Vec<Vec<(char, bool)>> = vec![];
 
-        for y in 0..size as i32 {
+        for y in 0..size {
             let mut rows = vec![vec![]; 8];
 
-            for x in 0..size as i32 {
-                let mut tile = puzzle.get(&(x, y)).unwrap().clone();
+            for x in 0..size {
+                let tile = puzzle.get(&(x, y)).unwrap().clone();
 
                 print!(" {} ", tile.id);
 
-                rows[0].append(&mut tile.data[0].iter().cloned().map(|c| (c, false)).collect());
-                rows[1].append(&mut tile.data[1].iter().cloned().map(|c| (c, false)).collect());
-                rows[2].append(&mut tile.data[2].iter().cloned().map(|c| (c, false)).collect());
-                rows[3].append(&mut tile.data[3].iter().cloned().map(|c| (c, false)).collect());
-                rows[4].append(&mut tile.data[4].iter().cloned().map(|c| (c, false)).collect());
-                rows[5].append(&mut tile.data[5].iter().cloned().map(|c| (c, false)).collect());
-                rows[6].append(&mut tile.data[6].iter().cloned().map(|c| (c, false)).collect());
-                rows[7].append(&mut tile.data[7].iter().cloned().map(|c| (c, false)).collect());
+                for row in 0..8 {
+                    rows[row]
+                        .append(&mut tile.data[row].iter().cloned().map(|c| (c, false)).collect());
+                }
             }
+
+            print!("\n");
 
             full_data.append(&mut rows);
         }
 
+        print!("\n");
         println!("Gathered total {} rows", full_data.len());
 
         for row in full_data.iter() {
             println!("{}", row.iter().map(|(c, _)| c).collect::<String>());
         }
 
-        check_for_sea_monsters(&mut full_data);
-        full_data = rotate_left(full_data.clone());
-        check_for_sea_monsters(&mut full_data);
-        full_data = rotate_left(full_data.clone());
-        check_for_sea_monsters(&mut full_data);
-        full_data = rotate_left(full_data.clone());
-        check_for_sea_monsters(&mut full_data);
+        print!("\n");
+
+        for _rotation in 0..4 {
+            check_for_sea_monsters(&mut full_data);
+            full_data = rotate_left(full_data.clone());
+        }
 
         full_data = flip(full_data.clone());
-        check_for_sea_monsters(&mut full_data);
-        full_data = rotate_left(full_data.clone());
-        check_for_sea_monsters(&mut full_data);
-        full_data = rotate_left(full_data.clone());
-        check_for_sea_monsters(&mut full_data);
-        full_data = rotate_left(full_data.clone());
-        check_for_sea_monsters(&mut full_data);
+
+        for _rotation in 0..4 {
+            check_for_sea_monsters(&mut full_data);
+            full_data = rotate_left(full_data.clone());
+        }
 
         let not_monsters: usize = full_data
             .iter()
-            .map(|line| line
-                .iter()
-                .filter(|(c, is_monster)| *c == '#' && !is_monster)
-                .count())
+            .map(|line| {
+                line.iter()
+                    .filter(|(c, is_monster)| *c == '#' && !is_monster)
+                    .count()
+            })
             .sum();
 
-        println!("[INFO]: Part 2: {}", not_monsters);
-
-        return puzzle.get(&(0, 0)).unwrap().id
-            * puzzle.get(&(0, size as i32 - 1)).unwrap().id
-            * puzzle.get(&(size as i32 - 1, size as i32 - 1)).unwrap().id
-            * puzzle.get(&(size as i32 - 1, 0)).unwrap().id;
+        return not_monsters;
     }
 
-    panic!("no solution :(");
+    panic!("[ERROR]: No solution to Part 2!");
 }
 
 fn main() {
     let part_1_result = part_1(INPUT_FILE);
     println!("[INFO]: Part 1: {:?}", part_1_result);
+
+    let part_2_result = part_2(INPUT_FILE);
+    println!("[INFO]: Part 2: {:?}", part_2_result);
 }
 
 #[cfg(test)]
@@ -545,5 +544,10 @@ mod tests {
     #[test]
     fn it_solves_part1_example() {
         assert_eq!(part_1(EXAMPLE_FILE), 20899048083289);
+    }
+
+    #[test]
+    fn it_solves_part2_example() {
+        assert_eq!(part_2(EXAMPLE_FILE), 273);
     }
 }
