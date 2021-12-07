@@ -12,11 +12,11 @@ fn part_1(input: &str) -> usize {
 
     let max_depth = *depths.iter().max().unwrap_or(&0);
 
-    let mut costs = vec![vec![0; max_depth + 1]; max_depth + 1];
+    let mut costs = vec![0; max_depth + 1];
 
-    for (index, initial) in depths.into_iter().enumerate() {
+    for initial in depths {
         for (target, cost) in costs.iter_mut().enumerate().take(max_depth + 1) {
-            cost[index] = if target > initial {
+            *cost += if target > initial {
                 target - initial
             } else {
                 initial - target
@@ -24,11 +24,7 @@ fn part_1(input: &str) -> usize {
         }
     }
 
-    costs
-        .iter()
-        .map(|cost| cost.iter().sum())
-        .min()
-        .unwrap_or(0)
+    costs.into_iter().min().unwrap_or(0)
 }
 
 fn part_2(input: &str) -> usize {
@@ -36,9 +32,9 @@ fn part_2(input: &str) -> usize {
 
     let max_depth = *depths.iter().max().unwrap_or(&0);
 
-    let mut costs = vec![vec![0; max_depth + 1]; max_depth + 1];
+    let mut costs = vec![0; max_depth + 1];
 
-    for (index, initial) in depths.into_iter().enumerate() {
+    for initial in depths {
         for (target, cost) in costs.iter_mut().enumerate().take(max_depth + 1) {
             let n = if target > initial {
                 target - initial
@@ -46,15 +42,11 @@ fn part_2(input: &str) -> usize {
                 initial - target
             };
             // https://en.wikipedia.org/wiki/Triangular_number
-            cost[index] = n * (n + 1) / 2;
+            *cost += n * (n + 1) / 2;
         }
     }
 
-    costs
-        .iter()
-        .map(|cost| cost.iter().sum())
-        .min()
-        .unwrap_or(0)
+    costs.into_iter().min().unwrap_or(0)
 }
 
 fn main() {
@@ -70,7 +62,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn it_solves_part1_example2() {
+    fn it_solves_part1_example() {
         assert_eq!(part_1("16,1,2,0,4,2,7,1,2,14"), 37);
     }
 
