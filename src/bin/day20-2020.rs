@@ -1,6 +1,7 @@
 const INPUT_FILE: &str = include_str!("../../inputs/day20-2020.txt");
 
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::num::ParseIntError;
 use std::str::FromStr;
 
@@ -11,6 +12,16 @@ struct Tile {
     id: u64,
     edges: [String; 4],
     data: Vec<Vec<char>>,
+    rotation: Rotation,
+    is_flipped: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+enum Rotation {
+    North,
+    East,
+    South,
+    West
 }
 
 fn rotate_left<T>(data: Vec<Vec<T>>) -> Vec<Vec<T>> {
@@ -90,7 +101,7 @@ impl FromStr for Tile {
             left_edge.iter().collect(),
         ];
 
-        Ok(Tile { id, edges, data })
+        Ok(Tile { id, edges, data, rotation: Rotation::North, is_flipped: false })
     }
 }
 
@@ -122,174 +133,204 @@ impl Tile {
     }
 }
 
-fn parse_tiles(input: &str) -> Vec<Tile> {
-    input
-        .split("\n\n")
-        .map(|tile_str| tile_str.parse::<Tile>().unwrap())
-        .collect()
-}
-
-fn is_valid_tile(current_board: &Puzzle, tile: &Tile, cursor: (usize, usize)) -> bool {
-    // above
-    if cursor.1 > 0 {
-        if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 - 1)) {
-            if tile.edges[0] != neighbour.edges[2] {
-                return false;
-            }
-        }
-    }
-
-    // below
-    if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 + 1)) {
-        if tile.edges[2] != neighbour.edges[0] {
-            return false;
-        }
-    }
-
-    // to right
-    if let Some(neighbour) = current_board.get(&(cursor.0 + 1, cursor.1)) {
-        if tile.edges[1] != neighbour.edges[3] {
-            return false;
-        }
-    }
-
-    // to left
-    if cursor.0 > 0 {
-        if let Some(neighbour) = current_board.get(&(cursor.0 - 1, cursor.1)) {
-            if tile.edges[3] != neighbour.edges[1] {
-                return false;
-            }
-        }
-    }
-
-    return true;
-}
-
-fn find_next_cursor(size: usize, cursor: (usize, usize)) -> (usize, usize) {
-    if cursor.0 + 1 < size {
-        return (cursor.0 + 1, cursor.1);
-    }
-    // This will go over `size` on y-axis, but it should never actually be used like that
-    (0, cursor.1 + 1)
-}
-
-// TODO: Add cache
-fn build_puzzle_recursive(
+struct Solver {
+    tiles: Vec<Tile>,
+    // TODO: Add a cache to this, perhaps keeping track of ... 
+    // puzzle tile ids + coords + rotations + flips in puzzle
+    cache: HashSet<(Vec<u64>, (usize, usize), Rotation, bool)>,
     size: usize,
-    remaining_tiles: Vec<Tile>,
-    current_board: Puzzle,
-    cursor: (usize, usize),
-) -> Option<Puzzle> {
-    // Done, we managed to place all tiles somewhere
-    if remaining_tiles.is_empty() {
-        return Some(current_board);
-    }
-
-    // Otherwise try to fit some tile to current cursor
-    let next_cursor = find_next_cursor(size, cursor);
-
-    for tile in remaining_tiles.iter() {
-        let rest: Vec<Tile> = remaining_tiles
-            .clone()
-            .into_iter()
-            .filter(|remaining| remaining.id != tile.id)
-            .collect();
-
-        // Try both sides
-        let mut flipped_tile = tile.clone();
-        flipped_tile.flip();
-
-        for tile_side in [tile, &flipped_tile] {
-            for rotation in 0..4 {
-                let mut rotated_tile = tile_side.clone();
-                rotated_tile.rotate(rotation);
-                if is_valid_tile(&current_board, &rotated_tile, cursor) {
-                    let mut next_board = current_board.clone();
-                    next_board.insert(cursor, rotated_tile);
-                    if let Some(solution) =
-                        build_puzzle_recursive(size, rest.clone(), next_board, next_cursor)
-                    {
-                        return Some(solution);
-                    }
-                }
-            }
-        }
-    }
-
-    // No tile fit on board, abort this and go back to trying something else
-    return None;
+    puzzle: Puzzle
 }
 
-fn check_for_sea_monsters(data: &mut Vec<Vec<(char, bool)>>) {
-    // A sea monster will look like this:
-    //                   #
-    // #    ##    ##    ###
-    //  #  #  #  #  #  #
-    #[rustfmt::skip]
-    let sea_monster_pattern: Vec<(usize, usize)> = vec![
-                                                              (18, 0),
-        (0, 1),   (5, 1),(6, 1),   (11, 1),(12, 1),   (17, 1),(18, 1),(19, 1),
-         (1, 2), (4, 2),  (7, 2), (10, 2),  (13, 2), (16, 2),
-    ];
+impl Solver {
+    fn new(input: &str) -> Solver {
+        let tiles: Vec<Tile> = Self::parse_input(input);
 
-    let height = data.len();
+        let size = (tiles.len() as f64).sqrt() as usize;
 
-    for y in 0..height {
-        if y + 2 >= height {
-            break;
+        println!("[DEBUG]: Solving {:?} x {:?} puzzle", size, size);
+
+        Solver {
+            tiles,
+            size,
+            cache: HashSet::new(),
+            puzzle: HashMap::new(),
+        }
+    }
+
+    fn parse_input(input: &str) -> Vec<Tile> {
+        input
+            .split("\n\n")
+            .map(|tile_str| tile_str.parse::<Tile>().unwrap())
+            .collect()
+    }
+    
+    fn is_valid_tile(current_board: &Puzzle, tile: &Tile, cursor: (usize, usize)) -> bool {
+        // above
+        if cursor.1 > 0 {
+            if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 - 1)) {
+                if tile.edges[0] != neighbour.edges[2] {
+                    return false;
+                }
+            }
+        }
+    
+        // below
+        if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 + 1)) {
+            if tile.edges[2] != neighbour.edges[0] {
+                return false;
+            }
+        }
+    
+        // to right
+        if let Some(neighbour) = current_board.get(&(cursor.0 + 1, cursor.1)) {
+            if tile.edges[1] != neighbour.edges[3] {
+                return false;
+            }
+        }
+    
+        // to left
+        if cursor.0 > 0 {
+            if let Some(neighbour) = current_board.get(&(cursor.0 - 1, cursor.1)) {
+                if tile.edges[3] != neighbour.edges[1] {
+                    return false;
+                }
+            }
+        }
+    
+        return true;
+    }
+
+    fn find_next_cursor(&self, cursor: (usize, usize)) -> (usize, usize) {
+        if cursor.0 + 1 < self.size {
+            return (cursor.0 + 1, cursor.1);
+        }
+        // This will go over `size` on y-axis, but it should never actually be used like that
+        (0, cursor.1 + 1)
+    }
+
+    // TODO: Add cache
+    fn build_puzzle_recursive(
+        &self,
+        remaining_tiles: Vec<Tile>,
+        current_board: Puzzle,
+        cursor: (usize, usize),
+    ) -> Option<Puzzle> {
+        if self.cache.contains((
+            current_board.values().map(|tile| tile.id),
+            cursor,
+            //TODO
+
+        ))
+
+        // Done, we managed to place all tiles somewhere
+        if remaining_tiles.is_empty() {
+            return Some(current_board);
         }
 
-        let width = data[y].len();
-        for x in 0..width {
-            if x + 19 >= width {
-                break;
-            }
+        // Otherwise try to fit some tile to current cursor
+        let next_cursor = self.find_next_cursor(cursor);
 
-            let is_sea_monster = sea_monster_pattern
-                .iter()
-                .all(|(offset_x, offset_y)| data[y + offset_y][x + offset_x].0 == '#');
+        for tile in remaining_tiles.iter() {
+            let rest: Vec<Tile> = remaining_tiles
+                .clone()
+                .into_iter()
+                .filter(|remaining| remaining.id != tile.id)
+                .collect();
 
-            if is_sea_monster {
-                // We've found a sea monster!
-                println!("[DEBUG]: Found a sea monster, starting from ({}, {}):", x, y);
+            // Try both sides
+            let mut flipped_tile = tile.clone();
+            flipped_tile.flip();
 
-                // Save that we've found monster from these pixels
-                for (offset_x, offset_y) in sea_monster_pattern.iter() {
-                    data[y + offset_y][x + offset_x].1 = true;
-                }
-
-                // Debug prints
-                for yy in 0..3 {
-                    print!("[DEBUG]: ");
-                    for xx in 0..20 {
-                        if data[y + yy][x + xx].1 {
-                            print!("{}", 'O');
-                        } else {
-                            print!("{}", data[y + yy][x + xx].0);
+            for tile_side in [tile, &flipped_tile] {
+                for rotation in 0..4 {
+                    let mut rotated_tile = tile_side.clone();
+                    rotated_tile.rotate(rotation);
+                    if Self::is_valid_tile(&current_board, &rotated_tile, cursor) {
+                        let mut next_board = current_board.clone();
+                        next_board.insert(cursor, rotated_tile);
+                        if let Some(solution) =
+                            self.build_puzzle_recursive(rest.clone(), next_board, next_cursor)
+                        {
+                            return Some(solution);
                         }
                     }
-                    print!("\n");
                 }
             }
         }
+
+        // No tile fit on board, abort this and go back to trying something else
+        return None;
     }
+
+    fn check_for_sea_monsters(data: &mut Vec<Vec<(char, bool)>>) {
+        // A sea monster will look like this:
+        //                   #
+        // #    ##    ##    ###
+        //  #  #  #  #  #  #
+        #[rustfmt::skip]
+        let sea_monster_pattern: Vec<(usize, usize)> = vec![
+                                                                  (18, 0),
+            (0, 1),   (5, 1),(6, 1),   (11, 1),(12, 1),   (17, 1),(18, 1),(19, 1),
+             (1, 2), (4, 2),  (7, 2), (10, 2),  (13, 2), (16, 2),
+        ];
+    
+        let height = data.len();
+    
+        for y in 0..height {
+            if y + 2 >= height {
+                break;
+            }
+    
+            let width = data[y].len();
+            for x in 0..width {
+                if x + 19 >= width {
+                    break;
+                }
+    
+                let is_sea_monster = sea_monster_pattern
+                    .iter()
+                    .all(|(offset_x, offset_y)| data[y + offset_y][x + offset_x].0 == '#');
+    
+                if is_sea_monster {
+                    // We've found a sea monster!
+                    println!("[DEBUG]: Found a sea monster, starting from ({}, {}):", x, y);
+    
+                    // Save that we've found monster from these pixels
+                    for (offset_x, offset_y) in sea_monster_pattern.iter() {
+                        data[y + offset_y][x + offset_x].1 = true;
+                    }
+    
+                    // Debug prints
+                    for yy in 0..3 {
+                        print!("[DEBUG]: ");
+                        for xx in 0..20 {
+                            if data[y + yy][x + xx].1 {
+                                print!("{}", 'O');
+                            } else {
+                                print!("{}", data[y + yy][x + xx].0);
+                            }
+                        }
+                        print!("\n");
+                    }
+                }
+            }
+        }
+    }    
 }
 
+
 fn part_1(input: &str) -> u64 {
-    let tiles = parse_tiles(input);
-
-    let size = (tiles.len() as f64).sqrt() as usize;
-
-    println!("[DEBUG]: Solving {:?} x {:?} puzzle", size, size);
+    let solver = Solver::new(input);
 
     let four_corner_tiles_product =
-        match build_puzzle_recursive(size, tiles, HashMap::new(), (0, 0)) {
+        match solver.build_puzzle_recursive(solver.tiles.clone(), HashMap::new(), (0, 0)) {
             Some(puzzle) => {
                 println!("[DEBUG]: Found solution to puzzle!");
                 puzzle.get(&(0, 0)).unwrap().id
-                    * puzzle.get(&(0, size - 1)).unwrap().id
-                    * puzzle.get(&(size - 1, size - 1)).unwrap().id
-                    * puzzle.get(&(size - 1, 0)).unwrap().id
+                    * puzzle.get(&(0, solver.size - 1)).unwrap().id
+                    * puzzle.get(&(solver.size - 1, solver.size - 1)).unwrap().id
+                    * puzzle.get(&(solver.size - 1, 0)).unwrap().id
             }
             None => panic!("[ERROR]: No puzzle solution to Part 1!"),
         };
@@ -298,20 +339,16 @@ fn part_1(input: &str) -> u64 {
 }
 
 fn part_2(input: &str) -> usize {
-    let tiles = parse_tiles(input);
+    let solver = Solver::new(input);
 
-    let size = (tiles.len() as f64).sqrt() as usize;
-
-    println!("[DEBUG]: Solving {:?} x {:?} puzzle", size, size);
-
-    let sea_roughness = match build_puzzle_recursive(size, tiles, HashMap::new(), (0, 0)) {
+    let sea_roughness = match solver.build_puzzle_recursive(solver.tiles.clone(), HashMap::new(), (0, 0)) {
         Some(puzzle) => {
             println!("[DEBUG]: Found solution to puzzle!");
             let mut full_data: Vec<Vec<(char, bool)>> = vec![];
-            for y in 0..size {
+            for y in 0..solver.size {
                 let mut rows = vec![vec![]; 8];
                 print!("[DEBUG]: ");
-                for x in 0..size {
+                for x in 0..solver.size {
                     let tile = puzzle.get(&(x, y)).unwrap().clone();
                     print!("{}  ", tile.id);
                     for row in 0..8 {
@@ -335,12 +372,12 @@ fn part_2(input: &str) -> usize {
                 );
             }
             for _rotation in 0..4 {
-                check_for_sea_monsters(&mut full_data);
+                Solver::check_for_sea_monsters(&mut full_data);
                 full_data = rotate_left(full_data.clone());
             }
             full_data = flip(full_data.clone());
             for _rotation in 0..4 {
-                check_for_sea_monsters(&mut full_data);
+                Solver::check_for_sea_monsters(&mut full_data);
                 full_data = rotate_left(full_data.clone());
             }
             full_data
@@ -396,8 +433,8 @@ mod tests {
 
     #[test]
     fn it_parses_tiles() {
-        let tiles = parse_tiles(EXAMPLE_FILE);
-        assert_eq!(tiles.len(), 9);
+        let solver = Solver::new(EXAMPLE_FILE);
+        assert_eq!(solver.tiles.len(), 9);
     }
 
     #[test]
