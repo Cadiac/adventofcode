@@ -188,7 +188,7 @@ impl Solver {
                 }
             }
         }
-        return true;
+        true
     }
 
     fn find_next_cursor(&self, cursor: (usize, usize)) -> (usize, usize) {
@@ -244,7 +244,7 @@ impl Solver {
         }
 
         // No tile fit on board, abort this and go back to trying something else
-        return None;
+        None
     }
 
     fn check_for_sea_monsters(data: &mut Vec<Vec<(char, bool)>>) {
@@ -286,12 +286,12 @@ impl Solver {
                         print!("[DEBUG]: ");
                         for xx in 0..20 {
                             if data[y + yy][x + xx].1 {
-                                print!("{}", 'O');
+                                print!("0");
                             } else {
                                 print!("{}", data[y + yy][x + xx].0);
                             }
                         }
-                        print!("\n");
+                        println!();
                     }
                 }
             }
@@ -324,43 +324,49 @@ fn part_2(input: &str) -> usize {
         match solver.build_puzzle_recursive((0, 0)) {
             Some(puzzle) => {
                 println!("[DEBUG]: Found solution to puzzle!");
-                let mut full_data: Vec<Vec<(char, bool)>> = vec![];
-                for y in 0..solver.size {
+                let mut pixels: Vec<Vec<(char, bool)>> = vec![];
+                for tile_y in 0..solver.size {
                     let mut rows = vec![vec![]; 8];
                     print!("[DEBUG]: ");
-                    for x in 0..solver.size {
-                        let tile = puzzle.get(&(x, y)).unwrap().clone();
+                    for tile_x in 0..solver.size {
+                        let tile = puzzle.get(&(tile_x, tile_y)).unwrap().clone();
                         print!("{}  ", tile.id);
-                        for row in 0..8 {
-                            rows[row].append(
-                                &mut tile.data[row].iter().cloned().map(|c| (c, false)).collect(),
+                        for (y, row) in rows.iter_mut().enumerate().take(8) {
+                            row.append(
+                                &mut tile.data[y].iter().cloned().map(|c| (c, false)).collect(),
                             );
                         }
                     }
-                    print!("\n");
-                    full_data.append(&mut rows);
+                    println!();
+                    pixels.append(&mut rows);
                 }
                 println!(
                     "[DEBUG]: Gathered total {}x{} pixels",
-                    full_data.len(),
-                    full_data.len()
+                    pixels.len(),
+                    pixels.len()
                 );
-                for row in full_data.iter() {
+                for row in pixels.iter() {
                     println!(
                         "[DEBUG]: {}",
                         row.iter().map(|(c, _)| c).collect::<String>()
                     );
                 }
+
+                // Search for sea monsters in all rotations and on both sides
                 for _rotation in 0..4 {
-                    Solver::check_for_sea_monsters(&mut full_data);
-                    full_data = rotate_left(full_data.clone());
+                    Solver::check_for_sea_monsters(&mut pixels);
+                    pixels = rotate_left(pixels.clone());
                 }
-                full_data = flip(full_data.clone());
-                for _rotation in 0..4 {
-                    Solver::check_for_sea_monsters(&mut full_data);
-                    full_data = rotate_left(full_data.clone());
+
+                pixels = flip(pixels.clone());
+                
+                for _flipped_rotation in 0..4 {
+                    Solver::check_for_sea_monsters(&mut pixels);
+                    pixels = rotate_left(pixels.clone());
                 }
-                full_data
+
+                // Count the pixels with sea monsters
+                pixels
                     .iter()
                     .map(|line| {
                         line.iter()
