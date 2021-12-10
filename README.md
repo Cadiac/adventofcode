@@ -7,6 +7,11 @@ My goal is to learn more rust again this year. Previous and future years can be 
 
 Follow [Rust](https://www.rust-lang.org/en-US/install.html) installation instructions.
 
+```
+$ rustc --version
+rustc 1.56.1 (59eed8a2a 2021-11-01)
+```
+
 ## Running solutions
 
 The project is split into separate binaries within one cargo project.
