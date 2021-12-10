@@ -6,7 +6,7 @@ use nom::{
     combinator::{cut, opt},
     error::{convert_error, VerboseError, VerboseErrorKind::Char},
     multi::many1,
-    sequence::{preceded, terminated},
+    sequence::preceded,
     Err, IResult,
 };
 
@@ -19,55 +19,32 @@ enum ParseResult {
 }
 
 fn parse(input: &str) -> ParseResult {
-    let mut unhandled_input = input;
-
-    loop {
-        match chunks(unhandled_input) {
-            Err(Err::Incomplete(_needed)) => unimplemented!(),
-            Err(Err::Error(e)) | Err(Err::Failure(e)) => {
-                // println!("{}", convert_error(input, e.clone()));
-                let (unhandled, error_kind) = e.errors[0].clone();
-                let expected = match error_kind {
-                    Char(expected_char) => expected_char,
-                    _ => unimplemented!(),
-                };
-                if let Some(illegal) = unhandled.chars().next() {
-                    return ParseResult::Corrupted { illegal };
-                } else {
-                    return ParseResult::Incomplete { expected };
-                }
+    match chunks(input) {
+        Err(Err::Incomplete(_needed)) => unimplemented!(),
+        Err(Err::Error(e)) | Err(Err::Failure(e)) => {
+            // println!("{}", convert_error(input, e.clone()));
+            let (unhandled, error_kind) = e.errors[0].clone();
+            let expected = match error_kind {
+                Char(expected_char) => expected_char,
+                _ => unimplemented!(),
+            };
+            if let Some(illegal) = unhandled.chars().next() {
+                ParseResult::Corrupted { illegal }
+            } else {
+                ParseResult::Incomplete { expected }
             }
-            Ok((unhandled, _)) => {
-                if unhandled.is_empty() {
-                    return ParseResult::Ok;
-                } else {
-                    // I'm sure there's a better way to error if everything is not handled
-                    unhandled_input = unhandled;
-                }
-            }
-        };
+        }
+        Ok(_) => ParseResult::Ok,
     }
 }
 
 fn chunks(input: &str) -> IResult<&str, (), VerboseError<&str>> {
-    let (unhandled, _parsed) = alt((
-        many1(preceded(
-            char('('),
-            cut(terminated(opt(chunks), preceded(opt(chunks), char(')')))),
-        )),
-        many1(preceded(
-            char('['),
-            cut(terminated(opt(chunks), preceded(opt(chunks), char(']')))),
-        )),
-        many1(preceded(
-            char('{'),
-            cut(terminated(opt(chunks), preceded(opt(chunks), char('}')))),
-        )),
-        many1(preceded(
-            char('<'),
-            cut(terminated(opt(chunks), preceded(opt(chunks), char('>')))),
-        )),
-    ))(input)?;
+    let (unhandled, _parsed) = many1(alt((
+        preceded(char('('), cut(preceded(opt(chunks), char(')')))),
+        preceded(char('['), cut(preceded(opt(chunks), char(']')))),
+        preceded(char('{'), cut(preceded(opt(chunks), char('}')))),
+        preceded(char('<'), cut(preceded(opt(chunks), char('>')))),
+    )))(input)?;
 
     // We're only checking what is left unhandled
     Ok((unhandled, ()))
