@@ -1,7 +1,7 @@
 const INPUT_FILE: &str = include_str!("../../inputs/day20-2020.txt");
 
 use std::collections::HashMap;
-use std::collections::HashSet;
+use std::collections::VecDeque;
 use std::num::ParseIntError;
 use std::str::FromStr;
 
@@ -104,20 +104,17 @@ impl FromStr for Tile {
 }
 
 impl Tile {
-    // counter clockwise
-    fn rotate(&mut self, turns: usize) {
-        for _turn in 0..turns {
-            self.edges = [
-                self.edges[1].clone(),
-                self.edges[2].chars().rev().collect(),
-                self.edges[3].clone(),
-                self.edges[0].chars().rev().collect(),
-            ];
+    fn rotate_left(&mut self) {
+        self.edges = [
+            self.edges[1].clone(),
+            self.edges[2].chars().rev().collect(),
+            self.edges[3].clone(),
+            self.edges[0].chars().rev().collect(),
+        ];
 
-            self.rotation = (self.rotation + 1) % 4;
+        self.rotation = (self.rotation + 1) % 4;
 
-            self.data = rotate_left(std::mem::take(&mut self.data));
-        }
+        self.data = rotate_left(std::mem::take(&mut self.data));
     }
 
     // flip vertically
@@ -136,16 +133,14 @@ impl Tile {
 }
 
 struct Solver {
-    tiles: Vec<Tile>,
-    // Cache for solving the puzzle efficiently
-    // (id, coordinates, rotation, is_flip)
-    cache: HashSet<Vec<(u64, (usize, usize), u8, bool)>>,
+    tiles: VecDeque<Tile>,
+    puzzle: Puzzle,
     size: usize,
 }
 
 impl Solver {
     fn new(input: &str) -> Solver {
-        let tiles: Vec<Tile> = Self::parse_input(input);
+        let tiles: VecDeque<Tile> = Self::parse_input(input);
 
         let size = (tiles.len() as f64).sqrt() as usize;
 
@@ -154,40 +149,40 @@ impl Solver {
         Solver {
             tiles,
             size,
-            cache: HashSet::new(),
+            puzzle: HashMap::new(),
         }
     }
 
-    fn parse_input(input: &str) -> Vec<Tile> {
+    fn parse_input(input: &str) -> VecDeque<Tile> {
         input
             .split("\n\n")
             .map(|tile_str| tile_str.parse::<Tile>().unwrap())
             .collect()
     }
-    fn is_valid_tile(current_board: &Puzzle, tile: &Tile, cursor: (usize, usize)) -> bool {
+    fn is_tile_valid_at_cursor(&self, tile: &Tile, cursor: (usize, usize)) -> bool {
         // above
         if cursor.1 > 0 {
-            if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 - 1)) {
+            if let Some(neighbour) = self.puzzle.get(&(cursor.0, cursor.1 - 1)) {
                 if tile.edges[0] != neighbour.edges[2] {
                     return false;
                 }
             }
         }
         // below
-        if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 + 1)) {
+        if let Some(neighbour) = self.puzzle.get(&(cursor.0, cursor.1 + 1)) {
             if tile.edges[2] != neighbour.edges[0] {
                 return false;
             }
         }
         // to right
-        if let Some(neighbour) = current_board.get(&(cursor.0 + 1, cursor.1)) {
+        if let Some(neighbour) = self.puzzle.get(&(cursor.0 + 1, cursor.1)) {
             if tile.edges[1] != neighbour.edges[3] {
                 return false;
             }
         }
         // to left
         if cursor.0 > 0 {
-            if let Some(neighbour) = current_board.get(&(cursor.0 - 1, cursor.1)) {
+            if let Some(neighbour) = self.puzzle.get(&(cursor.0 - 1, cursor.1)) {
                 if tile.edges[3] != neighbour.edges[1] {
                     return false;
                 }
@@ -206,56 +201,46 @@ impl Solver {
 
     fn build_puzzle_recursive(
         &mut self,
-        remaining_tiles: Vec<Tile>,
-        current_board: Puzzle,
         cursor: (usize, usize),
     ) -> Option<Puzzle> {
-        if !self.cache.insert(
-            current_board
-                .iter()
-                .map(|(coords, tile)| (tile.id, *coords, tile.rotation, tile.is_flipped))
-                .collect(),
-        ) {
-            // Already known, skip this branch
-            return None;
-        }
-
         // Done, we managed to place all tiles somewhere
-        if remaining_tiles.is_empty() {
-            return Some(current_board);
+        if self.tiles.is_empty() {
+            return Some(self.puzzle.clone());
         }
 
         // Otherwise try to fit some tile to current cursor
         let next_cursor = self.find_next_cursor(cursor);
 
-        for tile in remaining_tiles.iter() {
-            let rest: Vec<Tile> = remaining_tiles
-                .clone()
-                .into_iter()
-                .filter(|remaining| remaining.id != tile.id)
-                .collect();
+        for _ in 0..self.tiles.len() {
+            // Take a tile out of remaining tiles
+            let original_tile = self.tiles.pop_front().unwrap();
 
             // Try both sides
-            let mut flipped_tile = tile.clone();
+            let mut flipped_tile = original_tile.clone();
             flipped_tile.flip();
 
-            for tile_side in [tile, &flipped_tile] {
-                for rotation in 0..4 {
-                    let mut rotated_tile = tile_side.clone();
-                    rotated_tile.rotate(rotation);
+            for tile in [&original_tile, &flipped_tile] {
+                let mut rotated_tile = tile.clone();
 
-                    if Self::is_valid_tile(&current_board, &rotated_tile, cursor) {
-                        let mut next_board = current_board.clone();
-                        next_board.insert(cursor, rotated_tile);
+                for _rotation in 0..4 {
+                    rotated_tile.rotate_left();
 
-                        if let Some(solution) =
-                            self.build_puzzle_recursive(rest.clone(), next_board, next_cursor)
-                        {
-                            return Some(solution);
+                    if self.is_tile_valid_at_cursor(&rotated_tile, cursor) {
+                        self.puzzle.insert(cursor, rotated_tile.clone());
+
+                        let solution = self.build_puzzle_recursive(next_cursor);
+                        if solution.is_some() {
+                            // One solution is all we need
+                            return solution;
                         }
+
+                        self.puzzle.remove(&cursor);
                     }
                 }
             }
+
+            // Put the tile back in
+            self.tiles.push_back(original_tile);
         }
 
         // No tile fit on board, abort this and go back to trying something else
@@ -318,7 +303,7 @@ fn part_1(input: &str) -> u64 {
     let mut solver = Solver::new(input);
 
     let four_corner_tiles_product =
-        match solver.build_puzzle_recursive(solver.tiles.clone(), HashMap::new(), (0, 0)) {
+        match solver.build_puzzle_recursive((0, 0)) {
             Some(puzzle) => {
                 println!("[DEBUG]: Found solution to puzzle!");
                 puzzle.get(&(0, 0)).unwrap().id
@@ -336,7 +321,7 @@ fn part_2(input: &str) -> usize {
     let mut solver = Solver::new(input);
 
     let sea_roughness =
-        match solver.build_puzzle_recursive(solver.tiles.clone(), HashMap::new(), (0, 0)) {
+        match solver.build_puzzle_recursive((0, 0)) {
             Some(puzzle) => {
                 println!("[DEBUG]: Found solution to puzzle!");
                 let mut full_data: Vec<Vec<(char, bool)>> = vec![];
@@ -461,7 +446,7 @@ mod tests {
             ]
         );
 
-        parsed_tile.rotate(1);
+        parsed_tile.rotate_left();
         assert_eq!(parsed_tile.edges[0], "...#.##..#".to_owned());
         assert_eq!(parsed_tile.edges[1], "###..###..".to_owned());
         assert_eq!(parsed_tile.edges[2], ".#####..#.".to_owned());
@@ -481,7 +466,9 @@ mod tests {
             ]
         );
 
-        parsed_tile.rotate(3);
+        parsed_tile.rotate_left();
+        parsed_tile.rotate_left();
+        parsed_tile.rotate_left();
         assert_eq!(parsed_tile.edges[0], "..##.#..#.".to_owned());
         assert_eq!(parsed_tile.edges[1], "...#.##..#".to_owned());
         assert_eq!(parsed_tile.edges[2], "..###..###".to_owned());
