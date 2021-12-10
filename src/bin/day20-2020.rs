@@ -12,16 +12,8 @@ struct Tile {
     id: u64,
     edges: [String; 4],
     data: Vec<Vec<char>>,
-    rotation: Rotation,
+    rotation: u8,
     is_flipped: bool,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-enum Rotation {
-    North,
-    East,
-    South,
-    West
 }
 
 fn rotate_left<T>(data: Vec<Vec<T>>) -> Vec<Vec<T>> {
@@ -101,7 +93,13 @@ impl FromStr for Tile {
             left_edge.iter().collect(),
         ];
 
-        Ok(Tile { id, edges, data, rotation: Rotation::North, is_flipped: false })
+        Ok(Tile {
+            id,
+            edges,
+            data,
+            rotation: 0,
+            is_flipped: false,
+        })
     }
 }
 
@@ -116,6 +114,8 @@ impl Tile {
                 self.edges[0].chars().rev().collect(),
             ];
 
+            self.rotation = (self.rotation + 1) % 4;
+
             self.data = rotate_left(std::mem::take(&mut self.data));
         }
     }
@@ -129,17 +129,18 @@ impl Tile {
             self.edges[1].clone(),
         ];
 
+        self.is_flipped = !self.is_flipped;
+
         self.data = flip(std::mem::take(&mut self.data));
     }
 }
 
 struct Solver {
     tiles: Vec<Tile>,
-    // TODO: Add a cache to this, perhaps keeping track of ... 
-    // puzzle tile ids + coords + rotations + flips in puzzle
-    cache: HashSet<(Vec<u64>, (usize, usize), Rotation, bool)>,
+    // Cache for solving the puzzle efficiently
+    // (id, coordinates, rotation, is_flip)
+    cache: HashSet<Vec<(u64, (usize, usize), u8, bool)>>,
     size: usize,
-    puzzle: Puzzle
 }
 
 impl Solver {
@@ -154,7 +155,6 @@ impl Solver {
             tiles,
             size,
             cache: HashSet::new(),
-            puzzle: HashMap::new(),
         }
     }
 
@@ -164,7 +164,6 @@ impl Solver {
             .map(|tile_str| tile_str.parse::<Tile>().unwrap())
             .collect()
     }
-    
     fn is_valid_tile(current_board: &Puzzle, tile: &Tile, cursor: (usize, usize)) -> bool {
         // above
         if cursor.1 > 0 {
@@ -174,21 +173,18 @@ impl Solver {
                 }
             }
         }
-    
         // below
         if let Some(neighbour) = current_board.get(&(cursor.0, cursor.1 + 1)) {
             if tile.edges[2] != neighbour.edges[0] {
                 return false;
             }
         }
-    
         // to right
         if let Some(neighbour) = current_board.get(&(cursor.0 + 1, cursor.1)) {
             if tile.edges[1] != neighbour.edges[3] {
                 return false;
             }
         }
-    
         // to left
         if cursor.0 > 0 {
             if let Some(neighbour) = current_board.get(&(cursor.0 - 1, cursor.1)) {
@@ -197,7 +193,6 @@ impl Solver {
                 }
             }
         }
-    
         return true;
     }
 
@@ -209,19 +204,21 @@ impl Solver {
         (0, cursor.1 + 1)
     }
 
-    // TODO: Add cache
     fn build_puzzle_recursive(
-        &self,
+        &mut self,
         remaining_tiles: Vec<Tile>,
         current_board: Puzzle,
         cursor: (usize, usize),
     ) -> Option<Puzzle> {
-        if self.cache.contains((
-            current_board.values().map(|tile| tile.id),
-            cursor,
-            //TODO
-
-        ))
+        if !self.cache.insert(
+            current_board
+                .iter()
+                .map(|(coords, tile)| (tile.id, *coords, tile.rotation, tile.is_flipped))
+                .collect(),
+        ) {
+            // Already known, skip this branch
+            return None;
+        }
 
         // Done, we managed to place all tiles somewhere
         if remaining_tiles.is_empty() {
@@ -246,9 +243,11 @@ impl Solver {
                 for rotation in 0..4 {
                     let mut rotated_tile = tile_side.clone();
                     rotated_tile.rotate(rotation);
+
                     if Self::is_valid_tile(&current_board, &rotated_tile, cursor) {
                         let mut next_board = current_board.clone();
                         next_board.insert(cursor, rotated_tile);
+
                         if let Some(solution) =
                             self.build_puzzle_recursive(rest.clone(), next_board, next_cursor)
                         {
@@ -274,33 +273,29 @@ impl Solver {
             (0, 1),   (5, 1),(6, 1),   (11, 1),(12, 1),   (17, 1),(18, 1),(19, 1),
              (1, 2), (4, 2),  (7, 2), (10, 2),  (13, 2), (16, 2),
         ];
-    
         let height = data.len();
-    
         for y in 0..height {
             if y + 2 >= height {
                 break;
             }
-    
             let width = data[y].len();
             for x in 0..width {
                 if x + 19 >= width {
                     break;
                 }
-    
                 let is_sea_monster = sea_monster_pattern
                     .iter()
                     .all(|(offset_x, offset_y)| data[y + offset_y][x + offset_x].0 == '#');
-    
                 if is_sea_monster {
                     // We've found a sea monster!
-                    println!("[DEBUG]: Found a sea monster, starting from ({}, {}):", x, y);
-    
+                    println!(
+                        "[DEBUG]: Found a sea monster, starting from ({}, {}):",
+                        x, y
+                    );
                     // Save that we've found monster from these pixels
                     for (offset_x, offset_y) in sea_monster_pattern.iter() {
                         data[y + offset_y][x + offset_x].1 = true;
                     }
-    
                     // Debug prints
                     for yy in 0..3 {
                         print!("[DEBUG]: ");
@@ -316,12 +311,11 @@ impl Solver {
                 }
             }
         }
-    }    
+    }
 }
 
-
 fn part_1(input: &str) -> u64 {
-    let solver = Solver::new(input);
+    let mut solver = Solver::new(input);
 
     let four_corner_tiles_product =
         match solver.build_puzzle_recursive(solver.tiles.clone(), HashMap::new(), (0, 0)) {
@@ -339,58 +333,59 @@ fn part_1(input: &str) -> u64 {
 }
 
 fn part_2(input: &str) -> usize {
-    let solver = Solver::new(input);
+    let mut solver = Solver::new(input);
 
-    let sea_roughness = match solver.build_puzzle_recursive(solver.tiles.clone(), HashMap::new(), (0, 0)) {
-        Some(puzzle) => {
-            println!("[DEBUG]: Found solution to puzzle!");
-            let mut full_data: Vec<Vec<(char, bool)>> = vec![];
-            for y in 0..solver.size {
-                let mut rows = vec![vec![]; 8];
-                print!("[DEBUG]: ");
-                for x in 0..solver.size {
-                    let tile = puzzle.get(&(x, y)).unwrap().clone();
-                    print!("{}  ", tile.id);
-                    for row in 0..8 {
-                        rows[row].append(
-                            &mut tile.data[row].iter().cloned().map(|c| (c, false)).collect(),
-                        );
+    let sea_roughness =
+        match solver.build_puzzle_recursive(solver.tiles.clone(), HashMap::new(), (0, 0)) {
+            Some(puzzle) => {
+                println!("[DEBUG]: Found solution to puzzle!");
+                let mut full_data: Vec<Vec<(char, bool)>> = vec![];
+                for y in 0..solver.size {
+                    let mut rows = vec![vec![]; 8];
+                    print!("[DEBUG]: ");
+                    for x in 0..solver.size {
+                        let tile = puzzle.get(&(x, y)).unwrap().clone();
+                        print!("{}  ", tile.id);
+                        for row in 0..8 {
+                            rows[row].append(
+                                &mut tile.data[row].iter().cloned().map(|c| (c, false)).collect(),
+                            );
+                        }
                     }
+                    print!("\n");
+                    full_data.append(&mut rows);
                 }
-                print!("\n");
-                full_data.append(&mut rows);
-            }
-            println!(
-                "[DEBUG]: Gathered total {}x{} pixels",
-                full_data.len(),
-                full_data.len()
-            );
-            for row in full_data.iter() {
                 println!(
-                    "[DEBUG]: {}",
-                    row.iter().map(|(c, _)| c).collect::<String>()
+                    "[DEBUG]: Gathered total {}x{} pixels",
+                    full_data.len(),
+                    full_data.len()
                 );
+                for row in full_data.iter() {
+                    println!(
+                        "[DEBUG]: {}",
+                        row.iter().map(|(c, _)| c).collect::<String>()
+                    );
+                }
+                for _rotation in 0..4 {
+                    Solver::check_for_sea_monsters(&mut full_data);
+                    full_data = rotate_left(full_data.clone());
+                }
+                full_data = flip(full_data.clone());
+                for _rotation in 0..4 {
+                    Solver::check_for_sea_monsters(&mut full_data);
+                    full_data = rotate_left(full_data.clone());
+                }
+                full_data
+                    .iter()
+                    .map(|line| {
+                        line.iter()
+                            .filter(|(c, is_monster)| *c == '#' && !is_monster)
+                            .count()
+                    })
+                    .sum()
             }
-            for _rotation in 0..4 {
-                Solver::check_for_sea_monsters(&mut full_data);
-                full_data = rotate_left(full_data.clone());
-            }
-            full_data = flip(full_data.clone());
-            for _rotation in 0..4 {
-                Solver::check_for_sea_monsters(&mut full_data);
-                full_data = rotate_left(full_data.clone());
-            }
-            full_data
-                .iter()
-                .map(|line| {
-                    line.iter()
-                        .filter(|(c, is_monster)| *c == '#' && !is_monster)
-                        .count()
-                })
-                .sum()
-        }
-        None => panic!("[ERROR]: No puzzle solution to Part 2!"),
-    };
+            None => panic!("[ERROR]: No puzzle solution to Part 2!"),
+        };
 
     sea_roughness
 }
