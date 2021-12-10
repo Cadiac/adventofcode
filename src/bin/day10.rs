@@ -37,16 +37,15 @@ fn parse(input: &str) -> ParseResult {
     }
 }
 
-fn chunks(input: &str) -> IResult<&str, (), VerboseError<&str>> {
-    let (unhandled, _parsed) = many1(alt((
+fn chunks(input: &str) -> IResult<&str, Vec<char>, VerboseError<&str>> {
+    let (unhandled, parsed) = many1(alt((
         preceded(char('('), cut(preceded(opt(chunks), char(')')))),
         preceded(char('['), cut(preceded(opt(chunks), char(']')))),
         preceded(char('{'), cut(preceded(opt(chunks), char('}')))),
         preceded(char('<'), cut(preceded(opt(chunks), char('>')))),
     )))(input)?;
 
-    // We're only checking what is left unhandled
-    Ok((unhandled, ()))
+    Ok((unhandled, parsed))
 }
 
 fn score_syntax_error(parsed: ParseResult) -> usize {
@@ -114,11 +113,11 @@ fn part_2(input: &str) -> usize {
         .map(score_autocomplete)
         .collect();
 
-    scores.sort();
+    scores.sort_unstable();
     scores[scores.len() / 2]
 }
 
-fn main() -> () {
+fn main() {
     let part_1_result = part_1(INPUT_FILE);
     println!("[INFO]: Part 1: {:?}", part_1_result);
 
