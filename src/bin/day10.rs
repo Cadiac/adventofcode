@@ -4,7 +4,7 @@ use nom::{
     branch::alt,
     character::complete::char,
     combinator::{cut, opt},
-    error::{convert_error, VerboseError, VerboseErrorKind::Char},
+    error::{VerboseError, VerboseErrorKind::Char},
     multi::many1,
     sequence::preceded,
     Err, IResult,
@@ -22,8 +22,7 @@ fn parse(input: &str) -> ParseResult {
     match chunks(input) {
         Err(Err::Incomplete(_needed)) => unimplemented!(),
         Err(Err::Error(e)) | Err(Err::Failure(e)) => {
-            // println!("{}", convert_error(input, e.clone()));
-            let (unhandled, error_kind) = e.errors[0].clone();
+            let (unhandled, error_kind) = e.errors.first().unwrap().clone();
             let expected = match error_kind {
                 Char(expected_char) => expected_char,
                 _ => unimplemented!(),
@@ -50,12 +49,15 @@ fn chunks(input: &str) -> IResult<&str, (), VerboseError<&str>> {
     Ok((unhandled, ()))
 }
 
-fn score_syntax_error(found_illegal: char) -> usize {
-    match found_illegal {
-        ')' => 3,
-        ']' => 57,
-        '}' => 1197,
-        '>' => 25137,
+fn score_syntax_error(parsed: ParseResult) -> usize {
+    match parsed {
+        ParseResult::Corrupted { illegal } => match illegal {
+            ')' => 3,
+            ']' => 57,
+            '}' => 1197,
+            '>' => 25137,
+            _ => 0,
+        },
         _ => 0,
     }
 }
@@ -80,7 +82,7 @@ fn score_autocomplete(completion: Vec<char>) -> usize {
     })
 }
 
-fn complete_input(input: &str) -> Option<Vec<char>> {
+fn parse_with_autocomplete(input: &str) -> Option<Vec<char>> {
     let mut completion: Vec<char> = Vec::new();
     let mut completed_input = String::from(input);
 
@@ -94,6 +96,7 @@ fn complete_input(input: &str) -> Option<Vec<char>> {
                 return Some(completion);
             }
             ParseResult::Corrupted { .. } => {
+                // Discard the corrupted lines
                 return None;
             }
         };
@@ -101,20 +104,13 @@ fn complete_input(input: &str) -> Option<Vec<char>> {
 }
 
 fn part_1(input: &str) -> usize {
-    input
-        .lines()
-        .map(parse)
-        .map(|result| match result {
-            ParseResult::Corrupted { illegal } => score_syntax_error(illegal),
-            _ => 0,
-        })
-        .sum()
+    input.lines().map(parse).map(score_syntax_error).sum()
 }
 
 fn part_2(input: &str) -> usize {
     let mut scores: Vec<usize> = input
         .lines()
-        .flat_map(complete_input)
+        .flat_map(parse_with_autocomplete)
         .map(score_autocomplete)
         .collect();
 
