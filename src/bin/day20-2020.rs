@@ -106,9 +106,9 @@ impl FromStr for Tile {
 impl Tile {
     fn rotate_left(&mut self) {
         self.edges = [
-            self.edges[1].clone(),
+            std::mem::take(&mut self.edges[1]),
             self.edges[2].chars().rev().collect(),
-            self.edges[3].clone(),
+            std::mem::take(&mut self.edges[3]),
             self.edges[0].chars().rev().collect(),
         ];
 
@@ -121,9 +121,9 @@ impl Tile {
     fn flip(&mut self) {
         self.edges = [
             self.edges[0].chars().rev().collect(),
-            self.edges[3].clone(),
+            std::mem::take(&mut self.edges[3]),
             self.edges[2].chars().rev().collect(),
-            self.edges[1].clone(),
+            std::mem::take(&mut self.edges[1]),
         ];
 
         self.is_flipped = !self.is_flipped;
@@ -199,10 +199,7 @@ impl Solver {
         (0, cursor.1 + 1)
     }
 
-    fn build_puzzle_recursive(
-        &mut self,
-        cursor: (usize, usize),
-    ) -> Option<Puzzle> {
+    fn build_puzzle(&mut self, cursor: (usize, usize)) -> Option<Puzzle> {
         // Done, we managed to place all tiles somewhere
         if self.tiles.is_empty() {
             return Some(self.puzzle.clone());
@@ -212,35 +209,31 @@ impl Solver {
         let next_cursor = self.find_next_cursor(cursor);
 
         for _ in 0..self.tiles.len() {
-            // Take a tile out of remaining tiles
-            let original_tile = self.tiles.pop_front().unwrap();
+            // Take a tile out of remaining tiles and check if it fits
+            let mut tile = self.tiles.pop_front().unwrap();
 
-            // Try both sides
-            let mut flipped_tile = original_tile.clone();
-            flipped_tile.flip();
+            for rotation in 0..8 {
+                if rotation == 4 {
+                    // Try both sides
+                    tile.flip();
+                }
+                tile.rotate_left();
 
-            for tile in [&original_tile, &flipped_tile] {
-                let mut rotated_tile = tile.clone();
+                if self.is_tile_valid_at_cursor(&tile, cursor) {
+                    self.puzzle.insert(cursor, tile);
 
-                for _rotation in 0..4 {
-                    rotated_tile.rotate_left();
-
-                    if self.is_tile_valid_at_cursor(&rotated_tile, cursor) {
-                        self.puzzle.insert(cursor, rotated_tile.clone());
-
-                        let solution = self.build_puzzle_recursive(next_cursor);
-                        if solution.is_some() {
-                            // One solution is all we need
-                            return solution;
-                        }
-
-                        self.puzzle.remove(&cursor);
+                    let solution = self.build_puzzle(next_cursor);
+                    if solution.is_some() {
+                        // One solution is all we need
+                        return solution;
                     }
+
+                    tile = self.puzzle.remove(&cursor).unwrap();
                 }
             }
 
-            // Put the tile back in
-            self.tiles.push_back(original_tile);
+            // Tile didn't fit, put it back in and try another
+            self.tiles.push_back(tile);
         }
 
         // No tile fit on board, abort this and go back to trying something else
@@ -303,7 +296,7 @@ fn part_1(input: &str) -> u64 {
     let mut solver = Solver::new(input);
 
     let four_corner_tiles_product =
-        match solver.build_puzzle_recursive((0, 0)) {
+        match solver.build_puzzle((0, 0)) {
             Some(puzzle) => {
                 println!("[DEBUG]: Found solution to puzzle!");
                 puzzle.get(&(0, 0)).unwrap().id
@@ -321,7 +314,7 @@ fn part_2(input: &str) -> usize {
     let mut solver = Solver::new(input);
 
     let sea_roughness =
-        match solver.build_puzzle_recursive((0, 0)) {
+        match solver.build_puzzle((0, 0)) {
             Some(puzzle) => {
                 println!("[DEBUG]: Found solution to puzzle!");
                 let mut pixels: Vec<Vec<(char, bool)>> = vec![];
@@ -329,7 +322,7 @@ fn part_2(input: &str) -> usize {
                     let mut rows = vec![vec![]; 8];
                     print!("[DEBUG]: ");
                     for tile_x in 0..solver.size {
-                        let tile = puzzle.get(&(tile_x, tile_y)).unwrap().clone();
+                        let tile = puzzle.get(&(tile_x, tile_y)).unwrap();
                         print!("{}  ", tile.id);
                         for (y, row) in rows.iter_mut().enumerate().take(8) {
                             row.append(
@@ -355,14 +348,14 @@ fn part_2(input: &str) -> usize {
                 // Search for sea monsters in all rotations and on both sides
                 for _rotation in 0..4 {
                     Solver::check_for_sea_monsters(&mut pixels);
-                    pixels = rotate_left(pixels.clone());
+                    pixels = rotate_left(pixels);
                 }
 
-                pixels = flip(pixels.clone());
+                pixels = flip(pixels);
                 
                 for _flipped_rotation in 0..4 {
                     Solver::check_for_sea_monsters(&mut pixels);
-                    pixels = rotate_left(pixels.clone());
+                    pixels = rotate_left(pixels);
                 }
 
                 // Count the pixels with sea monsters
