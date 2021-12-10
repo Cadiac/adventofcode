@@ -5,5 +5,5 @@ authors = ["Jaakko Husso <jaakko.t.husso@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-regex = "1"
-nom = "6.0.1"
+regex = "1.5.4"
+nom = "7.1.0"
