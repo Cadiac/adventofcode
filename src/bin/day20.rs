@@ -1,4 +1,4 @@
-const INPUT_FILE: &str = include_str!("../../inputs/day20-2020.txt");
+const INPUT_FILE: &str = include_str!("../../inputs/day20.txt");
 
 use std::collections::HashMap;
 use std::collections::VecDeque;
@@ -385,7 +385,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
-    const EXAMPLE_FILE: &str = include_str!("../../inputs/day20-2020-example.txt");
+    const EXAMPLE_FILE: &str = include_str!("../../inputs/day20-example.txt");
 
     #[test]
     fn it_parses_tile() {

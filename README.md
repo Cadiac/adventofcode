@@ -1,7 +1,7 @@
 # 🎄🎄🎄 Advent of Code 2020 🎄🎄🎄  
 
 Solutions to [Advent of Code 2020](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
-My goal is to learn more rust again this year.
+My goal is to learn more rust again this year. Previous and future years can be found from their respective branches.
 
 ## Installing
 
@@ -46,7 +46,7 @@ in root directory
 ❄️ [Day 17](src/bin/day17.rs)
 ❄️ [Day 18](src/bin/day18.rs)
 ❄️ [Day 19](src/bin/day19.rs)
-❌ Day 20
+❄️ [Day 20](src/bin/day20.rs)
 ❄️ [Day 21](src/bin/day21.rs)
 ❄️ [Day 22](src/bin/day22.rs)
 ❄️ [Day 23](src/bin/day23.rs)
