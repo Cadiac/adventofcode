@@ -2,6 +2,13 @@ use std::collections::HashSet;
 
 const INPUT_FILE: &str = include_str!("../../inputs/day11.txt");
 
+#[rustfmt::skip]
+const NEIGHBOUR_OFFSETS: [(i8, i8); 8] = [
+    (-1, 1), (0, 1), (1, 1),
+    (-1, 0),         (1, 0),
+    (-1,-1), (0,-1), (1,-1),
+];
+
 fn parse(input: &str) -> Vec<Vec<u32>> {
     input
         .lines()
@@ -28,6 +35,9 @@ fn simulate_step(mut octopuses: Vec<Vec<u32>>) -> (Vec<Vec<u32>>, usize) {
 
         for y in 0..octopuses.len() {
             for x in 0..octopuses[y].len() {
+                let width = octopuses[y].len() as i8;
+                let height = octopuses.len() as i8;
+
                 // Then, any octopus with an energy level greater than 9 flashes.
                 if octopuses[y][x] > 9 {
                     // An octopus can only flash at most once per step.
@@ -37,33 +47,18 @@ fn simulate_step(mut octopuses: Vec<Vec<u32>>) -> (Vec<Vec<u32>>, usize) {
                         // This increases the energy level of all adjacent octopuses by 1,
                         // including octopuses that are diagonally adjacent.
                         // If this causes an octopus to have an energy level greater than 9, it also flashes.
+                        let neighbours = NEIGHBOUR_OFFSETS
+                            .iter()
+                            .map(|(offset_x, offset_y)| (offset_x + x as i8, offset_y + y as i8))
+                            .filter(|(neighbour_x, neighbour_y)| {
+                                *neighbour_x >= 0
+                                    && *neighbour_x < width
+                                    && *neighbour_y >= 0
+                                    && *neighbour_y < height
+                            });
 
-                        if y > 0 {
-                            octopuses[y - 1][x] += 1;
-                            if x > 0 {
-                                octopuses[y - 1][x - 1] += 1;
-                            }
-                            if x + 1 < octopuses[y - 1].len() {
-                                octopuses[y - 1][x + 1] += 1;
-                            }
-                        }
-
-                        if y + 1 < octopuses.len() {
-                            octopuses[y + 1][x] += 1;
-                            if x > 0 {
-                                octopuses[y + 1][x - 1] += 1;
-                            }
-                            if x + 1 < octopuses[y + 1].len() {
-                                octopuses[y + 1][x + 1] += 1;
-                            }
-                        }
-
-                        if x > 0 {
-                            octopuses[y][x - 1] += 1;
-                        }
-
-                        if x + 1 < octopuses[y].len() {
-                            octopuses[y][x + 1] += 1;
+                        for (neighbour_x, neighbour_y) in neighbours {
+                            octopuses[neighbour_y as usize][neighbour_x as usize] += 1;
                         }
                     }
                 }
