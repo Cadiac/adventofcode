@@ -199,10 +199,10 @@ impl Solver {
         (0, cursor.1 + 1)
     }
 
-    fn build_puzzle(&mut self, cursor: (usize, usize)) -> Option<Puzzle> {
+    fn build_puzzle(&mut self, cursor: (usize, usize)) -> bool {
         // Done, we managed to place all tiles somewhere
         if self.tiles.is_empty() {
-            return Some(self.puzzle.clone());
+            return true;
         }
 
         // Otherwise try to fit some tile to current cursor
@@ -222,10 +222,9 @@ impl Solver {
                 if self.is_tile_valid_at_cursor(&tile, cursor) {
                     self.puzzle.insert(cursor, tile);
 
-                    let solution = self.build_puzzle(next_cursor);
-                    if solution.is_some() {
+                    if self.build_puzzle(next_cursor) {
                         // One solution is all we need
-                        return solution;
+                        return true;
                     }
 
                     tile = self.puzzle.remove(&cursor).unwrap();
@@ -237,7 +236,7 @@ impl Solver {
         }
 
         // No tile fit on board, abort this and go back to trying something else
-        None
+        false
     }
 
     fn check_for_sea_monsters(data: &mut Vec<Vec<(char, bool)>>) {
@@ -274,112 +273,97 @@ impl Solver {
                     for (offset_x, offset_y) in sea_monster_pattern.iter() {
                         data[y + offset_y][x + offset_x].1 = true;
                     }
-                    // Debug prints
-                    for yy in 0..3 {
-                        print!("[DEBUG]: ");
-                        for xx in 0..20 {
-                            if data[y + yy][x + xx].1 {
-                                print!("0");
-                            } else {
-                                print!("{}", data[y + yy][x + xx].0);
-                            }
-                        }
-                        println!();
-                    }
                 }
             }
         }
     }
 }
 
-fn part_1(input: &str) -> u64 {
-    let mut solver = Solver::new(input);
-
-    let four_corner_tiles_product =
-        match solver.build_puzzle((0, 0)) {
-            Some(puzzle) => {
-                println!("[DEBUG]: Found solution to puzzle!");
-                puzzle.get(&(0, 0)).unwrap().id
-                    * puzzle.get(&(0, solver.size - 1)).unwrap().id
-                    * puzzle.get(&(solver.size - 1, solver.size - 1)).unwrap().id
-                    * puzzle.get(&(solver.size - 1, 0)).unwrap().id
-            }
-            None => panic!("[ERROR]: No puzzle solution to Part 1!"),
-        };
-
-    four_corner_tiles_product
+fn part_1(solver: &Solver) -> u64 {
+    solver.puzzle.get(&(0, 0)).unwrap().id
+        * solver.puzzle.get(&(0, solver.size - 1)).unwrap().id
+        * solver.puzzle.get(&(solver.size - 1, solver.size - 1)).unwrap().id
+        * solver.puzzle.get(&(solver.size - 1, 0)).unwrap().id
 }
 
-fn part_2(input: &str) -> usize {
-    let mut solver = Solver::new(input);
-
-    let sea_roughness =
-        match solver.build_puzzle((0, 0)) {
-            Some(puzzle) => {
-                println!("[DEBUG]: Found solution to puzzle!");
-                let mut pixels: Vec<Vec<(char, bool)>> = vec![];
-                for tile_y in 0..solver.size {
-                    let mut rows = vec![vec![]; 8];
-                    print!("[DEBUG]: ");
-                    for tile_x in 0..solver.size {
-                        let tile = puzzle.get(&(tile_x, tile_y)).unwrap();
-                        print!("{}  ", tile.id);
-                        for (y, row) in rows.iter_mut().enumerate().take(8) {
-                            row.append(
-                                &mut tile.data[y].iter().cloned().map(|c| (c, false)).collect(),
-                            );
-                        }
-                    }
-                    println!();
-                    pixels.append(&mut rows);
-                }
-                println!(
-                    "[DEBUG]: Gathered total {}x{} pixels",
-                    pixels.len(),
-                    pixels.len()
+fn part_2(solver: &Solver) -> usize {
+    let mut pixels: Vec<Vec<(char, bool)>> = vec![];
+    for tile_y in 0..solver.size {
+        let mut rows = vec![vec![]; 8];
+        print!("[DEBUG]: ");
+        for tile_x in 0..solver.size {
+            let tile = solver.puzzle.get(&(tile_x, tile_y)).unwrap();
+            print!("{}  ", tile.id);
+            for (y, row) in rows.iter_mut().enumerate().take(8) {
+                row.append(
+                    &mut tile.data[y].iter().cloned().map(|c| (c, false)).collect(),
                 );
-                for row in pixels.iter() {
-                    println!(
-                        "[DEBUG]: {}",
-                        row.iter().map(|(c, _)| c).collect::<String>()
-                    );
-                }
-
-                // Search for sea monsters in all rotations and on both sides
-                for _rotation in 0..4 {
-                    Solver::check_for_sea_monsters(&mut pixels);
-                    pixels = rotate_left(pixels);
-                }
-
-                pixels = flip(pixels);
-                
-                for _flipped_rotation in 0..4 {
-                    Solver::check_for_sea_monsters(&mut pixels);
-                    pixels = rotate_left(pixels);
-                }
-
-                // Count the pixels with sea monsters
-                pixels
-                    .iter()
-                    .map(|line| {
-                        line.iter()
-                            .filter(|(c, is_monster)| *c == '#' && !is_monster)
-                            .count()
-                    })
-                    .sum()
             }
-            None => panic!("[ERROR]: No puzzle solution to Part 2!"),
-        };
+        }
+        println!();
+        pixels.append(&mut rows);
+    }
+    println!(
+        "[DEBUG]: Gathered total {}x{} pixels",
+        pixels.len(),
+        pixels.len()
+    );
+    for row in pixels.iter() {
+        println!(
+            "[DEBUG]: {}",
+            row.iter().map(|(c, _)| c).collect::<String>()
+        );
+    }
 
-    sea_roughness
+    // Search for sea monsters in all rotations and on both sides
+    for _rotation in 0..4 {
+        Solver::check_for_sea_monsters(&mut pixels);
+        pixels = rotate_left(pixels);
+    }
+
+
+    pixels = flip(pixels);
+    
+    for _flipped_rotation in 0..4 {
+        Solver::check_for_sea_monsters(&mut pixels);
+        pixels = rotate_left(pixels);
+    }
+
+    // Rotate once more to get nicer debug prints
+    pixels = rotate_left(pixels);
+    for pixel_row in &pixels {
+        print!("[DEBUG]: ");
+        for pixel in pixel_row.iter() {
+            if pixel.1 {
+                print!("0");
+            } else {
+                print!(" ");
+            }
+        }
+        println!();
+    }
+
+    // Count the pixels with sea monsters
+    pixels
+        .iter()
+        .map(|line| {
+            line.iter()
+                .filter(|(c, is_monster)| *c == '#' && !is_monster)
+                .count()
+        })
+            .sum()
 }
 
 fn main() {
-    let part_1_result = part_1(INPUT_FILE);
-    println!("[INFO]: Part 1: {:?}", part_1_result);
+    let mut solver = Solver::new(INPUT_FILE);
+    if solver.build_puzzle((0,0)) {
+        println!("[DEBUG]: Found a solution to the puzzle!");
 
-    let part_2_result = part_2(INPUT_FILE);
-    println!("[INFO]: Part 2: {:?}", part_2_result);
+        let part_1_result = part_1(&solver);
+        let part_2_result = part_2(&solver);
+        println!("[INFO]: Part 1: {:?}", part_1_result);
+        println!("[INFO]: Part 2: {:?}", part_2_result);
+    }
 }
 
 #[cfg(test)]
@@ -561,11 +545,15 @@ mod tests {
 
     #[test]
     fn it_solves_part1_example() {
-        assert_eq!(part_1(EXAMPLE_FILE), 20899048083289);
+        let mut solver = Solver::new(EXAMPLE_FILE);
+        solver.build_puzzle((0,0));
+        assert_eq!(part_1(&solver), 20899048083289);
     }
 
     #[test]
     fn it_solves_part2_example() {
-        assert_eq!(part_2(EXAMPLE_FILE), 273);
+        let mut solver = Solver::new(EXAMPLE_FILE);
+        solver.build_puzzle((0,0));
+        assert_eq!(part_2(&solver), 273);
     }
 }
