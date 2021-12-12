@@ -2,104 +2,86 @@ use std::collections::HashMap;
 
 const INPUT_FILE: &str = include_str!("../../inputs/day12.txt");
 
-#[derive(Debug)]
-struct Cave {
-    neighbours: Vec<String>,
-    is_small: bool,
-}
-
-fn parse(input: &str) -> HashMap<String, Cave> {
-    let mut caves: HashMap<String, Cave> = HashMap::new();
+fn parse(input: &str) -> HashMap<&str, Vec<&str>> {
+    let mut caves: HashMap<&str, Vec<&str>> = HashMap::new();
     for line in input.lines() {
         let parts: Vec<&str> = line.split('-').collect();
-        let name = String::from(parts[0]);
-        let neighbour = String::from(parts[1]);
+        let name = parts[0];
+        let neighbour = parts[1];
 
-        let cave = caves.entry(name.clone()).or_insert(Cave {
-            neighbours: vec![],
-            is_small: name.chars().any(|c| c.is_ascii_lowercase()),
-        });
-
-        cave.neighbours.push(neighbour.clone());
-
-        let neighbour_cave = caves.entry(neighbour.clone()).or_insert(Cave {
-            neighbours: vec![],
-            is_small: neighbour.chars().any(|c| c.is_ascii_lowercase()),
-        });
-
-        neighbour_cave.neighbours.push(name.clone());
+        caves.entry(name).or_insert(vec![]).push(neighbour);
+        caves.entry(neighbour).or_insert(vec![]).push(name);
     }
 
     caves
 }
 
-fn search_paths(
-    caves: &HashMap<String, Cave>,
-    current: String,
-    mut path: Vec<String>,
-) -> Vec<Vec<String>> {
-    path.push(current.clone());
+fn search_paths<'a>(
+    caves: &HashMap<&str, Vec<&str>>,
+    current: &'a str,
+    mut path: Vec<&'a str>,
+) -> usize {
+    path.push(current);
 
-    if current == *"end" {
-        return vec![path];
+    if current == "end" {
+        return 1;
     }
 
-    let current_cave = caves.get(&current).unwrap();
+    let neighbours = caves.get(&current).unwrap();
 
-    let mut paths_to_end = vec![];
-    for neighbour in current_cave.neighbours.iter() {
+    let mut paths_to_end = 0;
+    for neighbour in neighbours.iter() {
         let neighbour_is_small = neighbour.chars().any(|c| c.is_ascii_lowercase());
 
         if neighbour_is_small && path.contains(neighbour) {
             continue;
         }
 
-        paths_to_end.append(&mut search_paths(caves, neighbour.clone(), path.clone()));
+        paths_to_end += search_paths(caves, neighbour.clone(), path.clone());
     }
 
     paths_to_end
 }
 
-fn search_paths_part2(
-    caves: &HashMap<String, Cave>,
-    current: String,
-    mut path: Vec<String>,
+fn search_paths_part2<'a>(
+    caves: &HashMap<&str, Vec<&str>>,
+    current: &'a str,
+    mut path: Vec<&'a str>,
     is_some_small_visited_twice: bool,
-) -> Vec<Vec<String>> {
-    path.push(current.clone());
+) -> usize {
+    path.push(current);
 
-    if current == *"end" {
-        return vec![path];
+    if current == "end" {
+        return 1;
     }
 
-    let cave = caves.get(&current).unwrap();
+    let neighbours = caves.get(&current).unwrap();
 
-    let mut paths_to_end = vec![];
-    for neighbour in cave.neighbours.iter() {
-        let neighbour_is_small = neighbour.chars().any(|c| c.is_ascii_lowercase());
-
-        if *neighbour == *"start" {
+    let mut paths_to_end = 0;
+    for neighbour in neighbours.iter() {
+        if *neighbour == "start" {
             continue;
         }
 
-        if neighbour_is_small && path.contains(neighbour) {
+        let is_neighbour_small = neighbour.chars().any(|c| c.is_ascii_lowercase());
+        if is_neighbour_small && path.contains(neighbour) {
             if is_some_small_visited_twice {
                 continue;
             } else {
-                paths_to_end.append(&mut search_paths_part2(
+                paths_to_end += search_paths_part2(
                     caves,
                     neighbour.clone(),
                     path.clone(),
                     true,
-                ));
+                );
             }
         } else {
-            paths_to_end.append(&mut search_paths_part2(
+            paths_to_end += search_paths_part2(
                 caves,
                 neighbour.clone(),
                 path.clone(),
                 is_some_small_visited_twice,
-            ));
+            );
         }
     }
 
@@ -108,16 +90,12 @@ fn search_paths_part2(
 
 fn part_1(input: &str) -> usize {
     let caves = parse(input);
-    let paths = search_paths(&caves, "start".to_owned(), vec![]);
-
-    paths.len()
+    search_paths(&caves, "start", vec![])
 }
 
 fn part_2(input: &str) -> usize {
     let caves = parse(input);
-    let paths = search_paths_part2(&caves, "start".to_owned(), vec![], false);
-
-    paths.len()
+    search_paths_part2(&caves, "start", vec![], false)
 }
 
 fn main() {
