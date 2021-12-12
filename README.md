@@ -39,3 +39,4 @@ in root directory
 ❄️ [Day 09](src/bin/day09.rs)
 ❄️ [Day 10](src/bin/day10.rs)
 ❄️ [Day 11](src/bin/day11.rs)
+❄️ [Day 12](src/bin/day12.rs)
