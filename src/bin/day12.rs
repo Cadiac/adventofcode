@@ -9,8 +9,8 @@ fn parse(input: &str) -> HashMap<&str, Vec<&str>> {
         let name = parts[0];
         let neighbour = parts[1];
 
-        caves.entry(name).or_insert(vec![]).push(neighbour);
-        caves.entry(neighbour).or_insert(vec![]).push(name);
+        caves.entry(name).or_insert_with(Vec::new).push(neighbour);
+        caves.entry(neighbour).or_insert_with(Vec::new).push(name);
     }
 
     caves
@@ -37,7 +37,7 @@ fn search_paths<'a>(
             continue;
         }
 
-        paths_to_end += search_paths(caves, neighbour.clone(), path.clone());
+        paths_to_end += search_paths(caves, neighbour, path.clone());
     }
 
     paths_to_end
@@ -70,7 +70,7 @@ fn search_paths_part2<'a>(
             } else {
                 paths_to_end += search_paths_part2(
                     caves,
-                    neighbour.clone(),
+                    neighbour,
                     path.clone(),
                     true,
                 );
@@ -78,7 +78,7 @@ fn search_paths_part2<'a>(
         } else {
             paths_to_end += search_paths_part2(
                 caves,
-                neighbour.clone(),
+                neighbour,
                 path.clone(),
                 is_some_small_visited_twice,
             );
