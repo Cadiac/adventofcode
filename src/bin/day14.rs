@@ -5,7 +5,8 @@ const INPUT_FILE: &str = include_str!("../../inputs/day14.txt");
 fn parse(input: &str) -> (Vec<char>, HashMap<[char; 2], char>) {
     let mut lines = input.lines();
     let polymer_template = lines.next().unwrap().chars().collect();
-    // Discard the empty line
+
+    // Discard the empty line between template and rules
     lines.next();
 
     let pair_insertion_rules: HashMap<[char; 2], char> = lines
@@ -29,13 +30,25 @@ fn parse(input: &str) -> (Vec<char>, HashMap<[char; 2], char>) {
     (polymer_template, pair_insertion_rules)
 }
 
-fn solve_part_1(input: &str, steps: usize) -> usize {
-    let (mut polymer_template, pair_insertion_rules) = parse(input);
+fn polymer_counts_by_element(polymer: Vec<char>) -> HashMap<char, usize> {
+    let mut counts_by_element: HashMap<char, usize> = HashMap::new();
 
-    let last = *polymer_template.last().unwrap();
+    for element in polymer {
+        *counts_by_element.entry(element).or_insert(0) += 1;
+    }
+
+    counts_by_element
+}
+
+fn element_counts_after_steps(
+    mut polymer: Vec<char>,
+    pair_insertion_rules: &HashMap<[char; 2], char>,
+    steps: usize,
+) -> Vec<char> {
+    let last = *polymer.last().unwrap();
 
     for _step in 0..steps {
-        polymer_template = polymer_template
+        polymer = polymer
             .windows(2)
             .flat_map(|pair| {
                 if let Some(element) = pair_insertion_rules.get(&[pair[0], pair[1]]) {
@@ -43,31 +56,25 @@ fn solve_part_1(input: &str, steps: usize) -> usize {
                 }
                 vec![pair[0]]
             })
+            // Add the last element into the polymer, it never changes
+            .chain(std::iter::once(last))
             .collect();
-        polymer_template.push(last);
     }
 
-    let mut counts_by_element: HashMap<char, usize> = HashMap::new();
-
-    for element in polymer_template {
-        *counts_by_element.entry(element).or_insert(0) += 1;
-    }
-
-    let most_common_count = counts_by_element.values().max().unwrap_or(&0);
-    let least_common_count = counts_by_element.values().min().unwrap_or(&0);
-
-    most_common_count - least_common_count
+    polymer
 }
 
-fn solve_part_2(input: &str, steps: usize) -> usize {
-    // Approach: Consider all rules invidually (NN, NC, CB...) and see what they procude after halfway of steps.
-    // Each pair of elements will always produce the same amount of elements over steps
+fn solve(input: &str, steps: usize) -> usize {
+    // Approach: Consider all rules individually (NN, NC, CB...) and see what they procude after half of the steps.
+    // Each pair of elements will always individually produce the same amount of elements over steps as other similar pairs.
 
     // Then, after constructing the elements after half steps for each rule, simulate the polymer for half steps
-    // (which seems to be easily doable at steps = 40)
+    // (which seems to be easily doable at steps = 40 / 2)
 
-    // Take the polymer at after half steps, split it to pairs and look up what each pair produces after another
+    // Take the simulated polymer after half steps, split it into pairs and look up what each pair produces after another
     // half steps.
+
+    // This could perhaps further be improved by doing something similar a few times?
 
     let (mut polymer_template, pair_insertion_rules) = parse(input);
 
@@ -75,51 +82,20 @@ fn solve_part_2(input: &str, steps: usize) -> usize {
 
     let mut counts_by_element_by_rule: HashMap<[char; 2], HashMap<char, usize>> = HashMap::new();
 
-    for rule in pair_insertion_rules.keys() {
+    for rule in pair_insertion_rules.keys().cloned() {
         let mut polymer = vec![rule[0], rule[1]];
-        let last = rule[1];
+        polymer = element_counts_after_steps(polymer, &pair_insertion_rules, halfway);
 
-        for _step in 0..halfway {
-            polymer = polymer
-                .windows(2)
-                .flat_map(|pair| {
-                    if let Some(element) = pair_insertion_rules.get(&[pair[0], pair[1]]) {
-                        return vec![pair[0], *element];
-                    }
-                    vec![pair[0]]
-                })
-                .collect();
-            polymer.push(last);
-        }
-
-        let mut counts_by_element: HashMap<char, usize> = HashMap::new();
-
-        for element in polymer {
-            *counts_by_element.entry(element).or_insert(0) += 1;
-        }
-
-        counts_by_element_by_rule.insert(*rule, counts_by_element);
+        let counts_by_element = polymer_counts_by_element(polymer);
+        counts_by_element_by_rule.insert(rule, counts_by_element);
     }
 
-    let last = *polymer_template.last().unwrap();
-
-    // Run the original polymer template for half steps
-    for _step in 0..halfway {
-        polymer_template = polymer_template
-            .windows(2)
-            .flat_map(|pair| {
-                if let Some(element) = pair_insertion_rules.get(&[pair[0], pair[1]]) {
-                    return vec![pair[0], *element];
-                }
-                vec![pair[0]]
-            })
-            .collect();
-        polymer_template.push(last);
-    }
+    // Run the original polymer template simulation for half steps
+    polymer_template = element_counts_after_steps(polymer_template, &pair_insertion_rules, halfway);
 
     let mut final_counts_by_element: HashMap<char, usize> = HashMap::new();
 
-    // And then check what counts the current windows produce
+    // And then check what counts the 2-length windows produce by rules
     let mut is_first = true;
     polymer_template.windows(2).for_each(|pair| {
         if let Some(counts) = counts_by_element_by_rule.get(&[pair[0], pair[1]]) {
@@ -135,7 +111,7 @@ fn solve_part_2(input: &str, steps: usize) -> usize {
                 *final_counts_by_element.entry(pair[0]).or_insert(0) -= 1;
             }
         } else {
-            // We should know a rule for every pair
+            // We should always know a rule for every pair
             unreachable!();
         }
     });
@@ -147,10 +123,10 @@ fn solve_part_2(input: &str, steps: usize) -> usize {
 }
 
 fn main() {
-    let part_1_result = solve_part_1(INPUT_FILE, 10);
+    let part_1_result = solve(INPUT_FILE, 10);
     println!("[INFO]: Part 1: {:?}", part_1_result);
 
-    let part_2_result = solve_part_2(INPUT_FILE, 40);
+    let part_2_result = solve(INPUT_FILE, 40);
     println!("[INFO]: Part 2: {:?}", part_2_result);
 }
 
@@ -161,7 +137,7 @@ mod tests {
     #[test]
     fn it_solves_part1_example() {
         assert_eq!(
-            solve_part_1(
+            solve(
                 "NNCB\n\
                  \n\
                  CH -> B\n\
@@ -189,7 +165,7 @@ mod tests {
     #[test]
     fn it_solves_part1_small_example_with_part2() {
         assert_eq!(
-            solve_part_2(
+            solve(
                 "NNCB\n\
                  \n\
                  CH -> B\n\
@@ -217,7 +193,7 @@ mod tests {
     #[test]
     fn it_solves_part1_example_with_part2() {
         assert_eq!(
-            solve_part_2(
+            solve(
                 "NNCB\n\
                  \n\
                  CH -> B\n\
@@ -245,7 +221,7 @@ mod tests {
     #[test]
     fn it_solves_part2_example() {
         assert_eq!(
-            solve_part_2(
+            solve(
                 "NNCB\n\
                  \n\
                  CH -> B\n\
