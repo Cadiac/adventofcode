@@ -4,66 +4,43 @@ use std::collections::BinaryHeap;
 const INPUT_FILE: &str = include_str!("../../inputs/day15.txt");
 const NEIGHBOUR_OFFSETS: [(i32, i32); 4] = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
-fn parse(input: &str) -> Vec<Vec<u32>> {
+fn parse_repeating(input: &str, repeats: usize) -> Vec<Vec<u32>> {
+    let height = input.lines().count();
+    let width = input.lines().next().unwrap().len();
+
     input
         .lines()
         .map(|input_row| {
             input_row
                 .chars()
-                .map(|risk_level| risk_level.to_digit(10).unwrap())
+                .map(|i| i.to_digit(10).unwrap())
+                .cycle()
+                .take(repeats * width)
+                .enumerate()
+                .map(|(i, risk_level)| {
+                    let repetition = (i / width) as u32;
+                    if risk_level + repetition > 9 {
+                        return risk_level + repetition - 9;
+                    }
+                    risk_level + repetition
+                })
+                .collect()
+        })
+        .cycle()
+        .take(repeats * height)
+        .enumerate()
+        .map(|(i, row): (usize, Vec<_>)| {
+            let repetition = (i / height) as u32;
+            row.iter()
+                .map(move |risk_level| {
+                    if risk_level + repetition > 9 {
+                        return risk_level + repetition - 9;
+                    }
+                    risk_level + repetition
+                })
                 .collect()
         })
         .collect()
-}
-
-fn parse_part_2(input: &str) -> Vec<Vec<u32>> {
-    let expanded_horizontal: Vec<Vec<u32>> = input
-        .lines()
-        .map(|input_row| {
-            let columns: Vec<u32> = input_row.chars().map(|i| i.to_digit(10).unwrap()).collect();
-            let mut expanded = vec![columns];
-            for _ in 0..4 {
-                let next_columns: Vec<u32> = expanded
-                    .last()
-                    .unwrap()
-                    .iter()
-                    .map(|risk_level| {
-                        if *risk_level == 9 {
-                            return 1;
-                        }
-                        return risk_level + 1;
-                    })
-                    .collect();
-
-                expanded.push(next_columns);
-            }
-
-            expanded.into_iter().flatten().collect()
-        })
-        .collect();
-
-    let mut full = vec![expanded_horizontal];
-
-    for _ in 0..4 {
-        let next_row: Vec<Vec<u32>> = full
-            .last()
-            .unwrap()
-            .iter()
-            .map(|row| {
-                row.iter()
-                    .map(|risk_level| {
-                        if *risk_level == 9 {
-                            return 1;
-                        }
-                        return risk_level + 1;
-                    })
-                    .collect()
-            })
-            .collect();
-        full.push(next_row);
-    }
-
-    full.into_iter().flatten().collect()
 }
 
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -106,7 +83,7 @@ fn dijkstra(grid: Vec<Vec<u32>>, source: (usize, usize), target: (usize, usize))
             return Some(dist[coords.1][coords.0]);
         }
 
-        // we've already found a better way - does this actually happen?
+        // we've already found a better way
         if risk_level > dist[coords.1][coords.0] {
             continue;
         }
@@ -131,37 +108,24 @@ fn dijkstra(grid: Vec<Vec<u32>>, source: (usize, usize), target: (usize, usize))
     None
 }
 
-fn part_1(input: &str) -> u32 {
-    let grid = parse(input);
-
+fn solve(grid: Vec<Vec<u32>>) -> u32 {
     let source = (0, 0);
     let target = (grid[0].len() - 1, grid.len() - 1);
 
     if let Some(risk_level) = dijkstra(grid, source, target) {
-        return risk_level
+        return risk_level;
     }
 
-    panic!("[ERROR]: No path found for part 1!");
-}
-
-fn part_2(input: &str) -> u32 {
-    let grid = parse_part_2(input);
-
-    let source = (0, 0);
-    let target = (grid[0].len() - 1, grid.len() - 1);
-
-    if let Some(risk_level) = dijkstra(grid, source, target) {
-        return risk_level
-    }
-
-    panic!("[ERROR]: No path found for part 1!");
+    panic!("[ERROR]: No path found!");
 }
 
 fn main() {
-    let part_1_result = part_1(INPUT_FILE);
+    let part_1_grid = parse_repeating(INPUT_FILE, 1);
+    let part_1_result = solve(part_1_grid);
     println!("[INFO]: Part 1: {:?}", part_1_result);
 
-    let part_2_result = part_2(INPUT_FILE);
+    let part_2_grid = parse_repeating(INPUT_FILE, 5);
+    let part_2_result = solve(part_2_grid);
     println!("[INFO]: Part 2: {:?}", part_2_result);
 }
 
@@ -171,19 +135,20 @@ mod tests {
 
     #[test]
     fn it_solves_part1_example() {
+        let grid = parse_repeating(
+            "1163751742\n\
+             1381373672\n\
+             2136511328\n\
+             3694931569\n\
+             7463417111\n\
+             1319128137\n\
+             1359912421\n\
+             3125421639\n\
+             1293138521\n\
+             2311944581", 1);
+
         assert_eq!(
-            part_1(
-                "1163751742\n\
-                 1381373672\n\
-                 2136511328\n\
-                 3694931569\n\
-                 7463417111\n\
-                 1319128137\n\
-                 1359912421\n\
-                 3125421639\n\
-                 1293138521\n\
-                 2311944581"
-            ),
+            solve(grid),
             40
         );
     }
@@ -191,7 +156,7 @@ mod tests {
     #[test]
     fn it_parses_simple_part2_correctly() {
         assert_eq!(
-            parse_part_2("8"),
+            parse_repeating("8", 5),
             vec![
                 vec![8, 9, 1, 2, 3],
                 vec![9, 1, 2, 3, 4],
@@ -206,7 +171,7 @@ mod tests {
     #[rustfmt::skip]
     fn it_parses_complex_part2_correctly() {
         assert_eq!(
-            parse_part_2(
+            parse_repeating(
                 "1163751742\n\
                  1381373672\n\
                  2136511328\n\
@@ -216,7 +181,8 @@ mod tests {
                  1359912421\n\
                  3125421639\n\
                  1293138521\n\
-                 2311944581"
+                 2311944581",
+                 5
             ),
             vec![
                 vec![1,1,6,3,7,5,1,7,4,2,2,2,7,4,8,6,2,8,5,3,3,3,8,5,9,7,3,9,6,4,4,4,9,6,1,8,4,1,7,5,5,5,1,7,2,9,5,2,8,6],
@@ -275,19 +241,20 @@ mod tests {
 
     #[test]
     fn it_solves_part2_example() {
+        let grid = parse_repeating(
+            "1163751742\n\
+             1381373672\n\
+             2136511328\n\
+             3694931569\n\
+             7463417111\n\
+             1319128137\n\
+             1359912421\n\
+             3125421639\n\
+             1293138521\n\
+             2311944581", 5);
+
         assert_eq!(
-            part_2(
-                "1163751742\n\
-                 1381373672\n\
-                 2136511328\n\
-                 3694931569\n\
-                 7463417111\n\
-                 1319128137\n\
-                 1359912421\n\
-                 3125421639\n\
-                 1293138521\n\
-                 2311944581"
-            ),
+            solve(grid),
             315
         );
     }
