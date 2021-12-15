@@ -1,7 +1,8 @@
-use std::collections::HashMap;
-use std::collections::HashSet;
+use std::cmp::Ordering;
+use std::collections::BinaryHeap;
 
 const INPUT_FILE: &str = include_str!("../../inputs/day15.txt");
+const NEIGHBOUR_OFFSETS: [(i32, i32); 4] = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
 fn parse(input: &str) -> Vec<Vec<u32>> {
     input
@@ -19,15 +20,12 @@ fn parse_part_2(input: &str) -> Vec<Vec<u32>> {
     let expanded_horizontal: Vec<Vec<u32>> = input
         .lines()
         .map(|input_row| {
-            let columns: Vec<u32> = input_row
-                .chars()
-                .map(|i| i.to_digit(10).unwrap())
-                .collect();
-            
+            let columns: Vec<u32> = input_row.chars().map(|i| i.to_digit(10).unwrap()).collect();
             let mut expanded = vec![columns];
-            
             for _ in 0..4 {
-                let next_columns: Vec<u32> = expanded.last().unwrap()
+                let next_columns: Vec<u32> = expanded
+                    .last()
+                    .unwrap()
                     .iter()
                     .map(|risk_level| {
                         if *risk_level == 9 {
@@ -47,16 +45,19 @@ fn parse_part_2(input: &str) -> Vec<Vec<u32>> {
     let mut full = vec![expanded_horizontal];
 
     for _ in 0..4 {
-        let next_row: Vec<Vec<u32>> = full.last().unwrap()
+        let next_row: Vec<Vec<u32>> = full
+            .last()
+            .unwrap()
             .iter()
             .map(|row| {
-                row.iter().map(|risk_level| {
-                    if *risk_level == 9 {
-                        return 1;
-                    }
-                    return risk_level + 1;
-                })
-                .collect()
+                row.iter()
+                    .map(|risk_level| {
+                        if *risk_level == 9 {
+                            return 1;
+                        }
+                        return risk_level + 1;
+                    })
+                    .collect()
             })
             .collect();
         full.push(next_row);
@@ -65,76 +66,69 @@ fn parse_part_2(input: &str) -> Vec<Vec<u32>> {
     full.into_iter().flatten().collect()
 }
 
-fn dijkstra(grid: Vec<Vec<u32>>, source: (usize, usize), target: (usize, usize)) -> u32 {
-    let mut dist: Vec<Vec<u32>> = vec![vec![u32::MAX; grid[0].len()]; grid.len()];
-    let mut queue: HashSet<(usize, usize)> = HashSet::new();
+#[derive(Copy, Clone, Eq, PartialEq)]
+struct Search {
+    risk_level: u32,
+    coords: (usize, usize), // (x, y)
+}
 
-    for y in 0..grid.len() {
-        for x in 0..grid[y].len() {
-            queue.insert((x, y));
-        }
+impl Ord for Search {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other
+            .risk_level
+            .cmp(&self.risk_level)
+            .then_with(|| self.coords.0.cmp(&other.coords.0))
+            .then_with(|| self.coords.1.cmp(&other.coords.1))
     }
+}
 
-    let max_x = grid[0].len() - 1;
-    let max_y = grid.len() - 1;
+impl PartialOrd for Search {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+fn dijkstra(grid: Vec<Vec<u32>>, source: (usize, usize), target: (usize, usize)) -> Option<u32> {
+    let mut dist: Vec<Vec<u32>> = vec![vec![u32::MAX; grid[0].len()]; grid.len()];
+    let mut heap: BinaryHeap<Search> = BinaryHeap::new();
+
+    let width = grid[0].len() as i32;
+    let height = grid.len() as i32;
 
     dist[source.1][source.0] = 0;
+    heap.push(Search {
+        risk_level: 0,
+        coords: source,
+    });
 
-    while !queue.is_empty() {
-        let u = queue
-            .iter()
-            .min_by(|a, b| dist[a.1][a.0].cmp(&dist[b.1][b.0]))
-            .unwrap()
-            .clone();
-
-        if u == target {
-            return dist[u.1][u.0];
+    while let Some(Search { coords, risk_level }) = heap.pop() {
+        if coords == target {
+            return Some(dist[coords.1][coords.0]);
         }
 
-        queue.remove(&u);
-
-        // for each neighbour still in queue
-        if u.0 > 0 {
-            let v = (u.0 - 1, u.1);
-            if queue.contains(&v) {
-                let alt = dist[u.1][u.0] + grid[v.1][v.0];
-                if alt < dist[v.1][v.0] {
-                    dist[v.1][v.0] = alt;
-                }
-            }
+        // we've already found a better way - does this actually happen?
+        if risk_level > dist[coords.1][coords.0] {
+            continue;
         }
 
-        if u.1 > 0 {
-            let v = (u.0, u.1 - 1);
-            if queue.contains(&v) {
-                let alt = dist[u.1][u.0] + grid[v.1][v.0];
-                if alt < dist[v.1][v.0] {
-                    dist[v.1][v.0] = alt;
-                }
-            }
-        }
+        for offset in NEIGHBOUR_OFFSETS {
+            let c: (i32, i32) = (coords.0 as i32 + offset.0, coords.1 as i32 + offset.1);
+            if c.0 >= 0 && c.1 >= 0 && c.0 < width && c.1 < height {
+                let neighbour = (c.0 as usize, c.1 as usize);
+                let next = Search {
+                    risk_level: risk_level + grid[neighbour.1][neighbour.0],
+                    coords: neighbour,
+                };
 
-        if u.0 < max_x {
-            let v = (u.0 + 1, u.1);
-            if queue.contains(&v) {
-                let alt = dist[u.1][u.0] + grid[v.1][v.0];
-                if alt < dist[v.1][v.0] {
-                    dist[v.1][v.0] = alt;
-                }
-            }
-        }
-
-        if u.1 < max_y {
-            let v = (u.0, u.1 + 1);
-            if queue.contains(&v) {
-                let alt = dist[u.1][u.0] + grid[v.1][v.0];
-                if alt < dist[v.1][v.0] {
-                    dist[v.1][v.0] = alt;
+                if next.risk_level < dist[neighbour.1][neighbour.0] {
+                    heap.push(next);
+                    dist[neighbour.1][neighbour.0] = next.risk_level;
                 }
             }
         }
     }
-    unreachable!();
+
+    None
 }
 
 fn part_1(input: &str) -> u32 {
@@ -143,9 +137,11 @@ fn part_1(input: &str) -> u32 {
     let source = (0, 0);
     let target = (grid[0].len() - 1, grid.len() - 1);
 
-    let risk_level = dijkstra(grid, source, target);
+    if let Some(risk_level) = dijkstra(grid, source, target) {
+        return risk_level
+    }
 
-    risk_level
+    panic!("[ERROR]: No path found for part 1!");
 }
 
 fn part_2(input: &str) -> u32 {
@@ -154,9 +150,11 @@ fn part_2(input: &str) -> u32 {
     let source = (0, 0);
     let target = (grid[0].len() - 1, grid.len() - 1);
 
-    let risk_level = dijkstra(grid, source, target);
+    if let Some(risk_level) = dijkstra(grid, source, target) {
+        return risk_level
+    }
 
-    risk_level
+    panic!("[ERROR]: No path found for part 1!");
 }
 
 fn main() {
@@ -193,20 +191,19 @@ mod tests {
     #[test]
     fn it_parses_simple_part2_correctly() {
         assert_eq!(
-            parse_part_2(
-                "8"
-            ),
+            parse_part_2("8"),
             vec![
-                vec![8,9,1,2,3],
-                vec![9,1,2,3,4],
-                vec![1,2,3,4,5],
-                vec![2,3,4,5,6],
-                vec![3,4,5,6,7],
+                vec![8, 9, 1, 2, 3],
+                vec![9, 1, 2, 3, 4],
+                vec![1, 2, 3, 4, 5],
+                vec![2, 3, 4, 5, 6],
+                vec![3, 4, 5, 6, 7],
             ]
         );
     }
 
     #[test]
+    #[rustfmt::skip]
     fn it_parses_complex_part2_correctly() {
         assert_eq!(
             parse_part_2(
