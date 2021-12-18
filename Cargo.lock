@@ -8,6 +8,7 @@ version = "0.1.0"
 dependencies = [
  "itertools",
  "nom",
+ "serde_scan",
 ]
 
 [[package]]
@@ -46,6 +47,21 @@ dependencies = [
  "memchr",
  "minimal-lexical",
  "version_check",
+]
+
+[[package]]
+name = "serde"
+version = "1.0.132"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b9875c23cf305cd1fd7eb77234cbb705f21ea6a72c637a5c6db5fe4b8e7f008"
+
+[[package]]
+name = "serde_scan"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c328aed355674cef5038b201b14b24eb877213462edb7ba28801c6bdd0ac5597"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

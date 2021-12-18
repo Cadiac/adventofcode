@@ -3,7 +3,7 @@
     // Hover to view descriptions of existing attributes.
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
-    "configurations": [
+    "configurations": [    
         {
             "type": "lldb",
             "request": "launch",
@@ -368,6 +368,25 @@
                 ],
                 "filter": {
                     "name": "day16",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'day17'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=day17",
+                    "--package=aoc"
+                ],
+                "filter": {
+                    "name": "day17",
                     "kind": "bin"
                 }
             },
