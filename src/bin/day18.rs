@@ -1,3 +1,8 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+use std::rc::Weak;
+use std::collections::HashSet;
+
 const INPUT_FILE: &str = include_str!("../../inputs/day18.txt");
 
 #[derive(Debug, PartialEq, Clone)]
@@ -6,72 +11,200 @@ enum Op {
     Value(u32),
 }
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, Clone)]
 struct BTNode {
-    left: Option<Box<BTNode>>,
-    right: Option<Box<BTNode>>,
+    parent: Option<Weak<RefCell<BTNode>>>,
+    left: Option<Rc<RefCell<BTNode>>>,
+    right: Option<Rc<RefCell<BTNode>>>,
     op: Op,
 }
 
 impl BTNode {
-    fn new_empty_pair() -> BTNode {
-        BTNode {
+    fn new_empty_pair() -> Rc<RefCell<BTNode>> {
+        Rc::new(RefCell::new(BTNode {
+            parent: None,
             left: None,
             right: None,
             op: Op::Pair,
-        }
+        }))
     }
-    fn new_value(value: u32) -> BTNode {
-        BTNode {
+    fn new_pair(
+        left: Option<Rc<RefCell<BTNode>>>,
+        right: Option<Rc<RefCell<BTNode>>>,
+    ) -> Rc<RefCell<BTNode>> {
+        Rc::new(RefCell::new(BTNode {
+            parent: None,
+            left,
+            right,
+            op: Op::Pair,
+        }))
+    }
+    fn new_value(value: u32) -> Rc<RefCell<BTNode>> {
+        Rc::new(RefCell::new(BTNode {
+            parent: None,
             left: None,
             right: None,
             op: Op::Value(value),
-        }
+        }))
     }
 }
 
-#[derive(Debug, PartialEq, Clone)]
+impl PartialEq for BTNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.left == other.left && self.right == other.right && self.op == other.op
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 struct BinaryTree {
-    head: BTNode,
+    head: Option<Rc<RefCell<BTNode>>>,
+}
+
+impl BinaryTree {
+    fn new(head: Option<Rc<RefCell<BTNode>>>) -> BinaryTree {
+        BinaryTree { head }
+    }
+
+    fn addition(a: BinaryTree, b: BinaryTree) -> BinaryTree {
+        let head = BTNode::new_pair(a.head, b.head);
+        head.borrow_mut().left.as_ref().unwrap().borrow_mut().parent = Some(Rc::downgrade(&head));
+        head.borrow_mut().right.as_ref().unwrap().borrow_mut().parent = Some(Rc::downgrade(&head));
+
+        BinaryTree::new(Some(head))
+    }
+
+    fn find_nearest_value_left(binary_tree: BinaryTree, node: Rc<RefCell<BTNode>>) -> Option<Rc<RefCell<BTNode>>> {
+        None
+    }
+
+    fn find_nearest_value_right(binary_tree: BinaryTree, node: Rc<RefCell<BTNode>>) -> Option<Rc<RefCell<BTNode>>> {
+        None
+    }
+
+    fn reduce(&mut self) {
+        unimplemented!();
+    }
+
+    fn explode(_binary_tree: BinaryTree, pair: &Rc<RefCell<BTNode>>) -> BinaryTree {
+        let pair_left = pair.borrow().left.clone();
+        let pair_right = pair.borrow().right.clone();
+
+
+        // Traverse the tree looking for value on left
+        // let mut current = pair;
+        // while let Some(parent) = current.borrow().parent {
+        //     let parent_left = parent.borrow().left.clone();
+        //     let parent_right = parent.borrow().right.clone();
+
+        //     if parent_left == Some(Rc::downgrade(current)) {
+        //         current = parent.clone();
+        //     } else {
+        //         current = parent.clone();
+        //     }
+
+        // }
+
+        // Traverse the tree looking for value on right
+
+        // Replace the current pair with 0
+        if let Some(parent) = pair.borrow().parent.as_ref().unwrap().upgrade() {
+            let mut parent = parent.borrow_mut();
+
+            if Rc::ptr_eq(&parent.left.as_ref().unwrap(), pair) {
+                parent.left = Some(BTNode::new_value(0));
+            } else {
+                parent.right = Some(BTNode::new_value(0));
+            }
+        }
+
+        unimplemented!();
+    }
+
+    fn split(&mut self) {
+        unimplemented!();
+    }
+
+    fn add_to_left(&mut self) {
+        unimplemented!();
+    }
+
+    fn add_to_right(&mut self) {
+        unimplemented!();
+    }
 }
 
 fn parse(input: &str) -> Result<BinaryTree, String> {
     let mut depth = 0;
 
-    let mut stack: Vec<(usize, BTNode)> = Vec::new();
+    let mut stack: Vec<(usize, Rc<RefCell<BTNode>>)> = Vec::new();
 
     for c in input.chars() {
         if c == '[' {
-            stack.push((depth, BTNode::new_empty_pair()));
+            let node = BTNode::new_empty_pair();
+
+            if let Some((_depth, last)) = stack.last() {
+                let mut node_mut = node.borrow_mut();
+                node_mut.parent = Some(Rc::downgrade(last));
+            }
+
+            stack.push((depth, node));
             depth += 1;
         } else if c == ']' {
             // Empty pair "[]" is illegal
             let (right_depth, right) = stack.pop().ok_or("stack pop")?;
             let (left_depth, left) = stack.pop().ok_or("stack pop")?;
+            let left_cloned = left.borrow().clone();
 
-            let node_and_depth = match left {
+            let node_and_depth = match left_cloned {
                 BTNode {
                     op: Op::Value(_), ..
                 } => {
-                    let (depth, mut node) = stack.pop().ok_or("stack pop")?;
-                    node.right = Some(Box::new(right));
-                    node.left = Some(Box::new(left));
+                    let (depth, node) = stack.pop().ok_or("stack pop")?;
+
+                    {
+                        let mut right_mut = right.borrow_mut();
+                        right_mut.parent = Some(Rc::downgrade(&node));
+                        let mut left_mut = left.borrow_mut();
+                        left_mut.parent = Some(Rc::downgrade(&node));
+                    }
+                    {
+                        let mut node_mut = node.borrow_mut();
+                        node_mut.right = Some(right);
+                        node_mut.left = Some(left);
+                    }
+
                     (depth, node)
                 }
-                BTNode {
-                    op: Op::Pair,
-                    ..
-                } => {
+                BTNode { op: Op::Pair, .. } => {
                     if left_depth == right_depth {
                         // Same depth, so this was a left node and the
                         // pair node wrapping this is next
-                        let (depth, mut node) = stack.pop().ok_or("stack pop")?;
-                        node.right = Some(Box::new(right));
-                        node.left = Some(Box::new(left));
+                        let (depth, node) = stack.pop().ok_or("stack pop")?;
+
+                        {
+                            let mut right_mut = right.borrow_mut();
+                            right_mut.parent = Some(Rc::downgrade(&node));
+                            let mut left_mut = left.borrow_mut();
+                            left_mut.parent = Some(Rc::downgrade(&node));
+                        }
+                        {
+                            let mut node_mut = node.borrow_mut();
+                            node_mut.right = Some(right);
+                            node_mut.left = Some(left);
+                        }
+
                         (depth, node)
                     } else {
-                        let mut node = left;
-                        node.right = Some(Box::new(right));
+                        // There was no left node
+                        let node = left;
+                        {
+                            let mut right_mut = right.borrow_mut();
+                            right_mut.parent = Some(Rc::downgrade(&node));
+                        }
+                        {
+                            let mut node_mut = node.borrow_mut();
+                            node_mut.right = Some(right);
+                        }
                         (depth, node)
                     }
                 }
@@ -82,7 +215,9 @@ fn parse(input: &str) -> Result<BinaryTree, String> {
             depth -= 1;
         } else if c.is_digit(10) {
             let value = c.to_digit(10).ok_or("to_digit parsing")?;
-            stack.push((depth, BTNode::new_value(value)));
+            let node = BTNode::new_value(value);
+
+            stack.push((depth, node));
         }
     }
 
@@ -90,18 +225,10 @@ fn parse(input: &str) -> Result<BinaryTree, String> {
     assert_eq!(stack.len(), 1);
 
     let binary_tree = BinaryTree {
-        head: stack.pop().unwrap().1
+        head: Some(stack.pop().unwrap().1),
     };
 
     Ok(binary_tree)
-}
-
-fn addition(a: BinaryTree, b: BinaryTree) {
-    let mut new_head = BTNode::new_empty_pair();
-
-    new_head.left = Some(Box::new(a.head));
-    new_head.right = Some(Box::new(b.head));
-    
 }
 
 fn part_1(input: &str) -> usize {
@@ -125,13 +252,10 @@ mod tests {
     fn it_parses_snailfish_numbers_1() {
         assert_eq!(
             parse("[1,2]").unwrap(),
-            BinaryTree {
-                head: BTNode {
-                    left: Some(Box::new(BTNode::new_value(1))),
-                    right: Some(Box::new(BTNode::new_value(2))),
-                    op: Op::Pair,
-                }
-            }
+            BinaryTree::new(Some(BTNode::new_pair(
+                Some(BTNode::new_value(1)),
+                Some(BTNode::new_value(2)),
+            )))
         );
     }
 
@@ -139,17 +263,13 @@ mod tests {
     fn it_parses_snailfish_numbers_2() {
         assert_eq!(
             parse("[[1,2],3]").unwrap(),
-            BinaryTree {
-                head: BTNode {
-                    left: Some(Box::new(BTNode {
-                        left: Some(Box::new(BTNode::new_value(1))),
-                        right: Some(Box::new(BTNode::new_value(2))),
-                        op: Op::Pair,
-                    })),
-                    right: Some(Box::new(BTNode::new_value(3))),
-                    op: Op::Pair,
-                },
-            }
+            BinaryTree::new(Some(BTNode::new_pair(
+                Some(BTNode::new_pair(
+                    Some(BTNode::new_value(1)),
+                    Some(BTNode::new_value(2)),
+                )),
+                Some(BTNode::new_value(3))
+            )))
         );
     }
 
@@ -157,17 +277,13 @@ mod tests {
     fn it_parses_snailfish_numbers_3() {
         assert_eq!(
             parse("[9,[8,7]]").unwrap(),
-            BinaryTree {
-                head: BTNode {
-                    left: Some(Box::new(BTNode::new_value(9))),
-                    right: Some(Box::new(BTNode {
-                        left: Some(Box::new(BTNode::new_value(8))),
-                        right: Some(Box::new(BTNode::new_value(7))),
-                        op: Op::Pair,
-                    })),
-                    op: Op::Pair,
-                },
-            }
+            BinaryTree::new(Some(BTNode::new_pair(
+                Some(BTNode::new_value(9)),
+                Some(BTNode::new_pair(
+                    Some(BTNode::new_value(8)),
+                    Some(BTNode::new_value(7)),
+                )),
+            )))
         );
     }
 
@@ -175,21 +291,16 @@ mod tests {
     fn it_parses_snailfish_numbers_4() {
         assert_eq!(
             parse("[[1,9],[8,5]]").unwrap(),
-            BinaryTree {
-                head: BTNode {
-                    left: Some(Box::new(BTNode {
-                        left: Some(Box::new(BTNode::new_value(1))),
-                        right: Some(Box::new(BTNode::new_value(9))),
-                        op: Op::Pair,
-                    })),
-                    right: Some(Box::new(BTNode {
-                        left: Some(Box::new(BTNode::new_value(8))),
-                        right: Some(Box::new(BTNode::new_value(5))),
-                        op: Op::Pair,
-                    })),
-                    op: Op::Pair,
-                },
-            }
+            BinaryTree::new(Some(BTNode::new_pair(
+                Some(BTNode::new_pair(
+                    Some(BTNode::new_value(1)),
+                    Some(BTNode::new_value(9)),
+                )),
+                Some(BTNode::new_pair(
+                    Some(BTNode::new_value(8)),
+                    Some(BTNode::new_value(5)),
+                )),
+            )))
         );
     }
 
@@ -197,48 +308,143 @@ mod tests {
     fn it_parses_snailfish_numbers_5() {
         assert_eq!(
             parse("[[[[1,2],[3,4]],[[5,6],[7,8]]],9]").unwrap(),
-            BinaryTree {
-                head: BTNode {
-                    left: Some(Box::new(BTNode {
-                        left: Some(Box::new(BTNode {
-                            left: Some(Box::new(BTNode {
-                                left: Some(Box::new(BTNode::new_value(1))),
-                                right: Some(Box::new(BTNode::new_value(2))),
-                                op: Op::Pair,
-                            })),
-                            right: Some(Box::new(BTNode {
-                                left: Some(Box::new(BTNode::new_value(3))),
-                                right: Some(Box::new(BTNode::new_value(4))),
-                                op: Op::Pair,
-                            })),
-                            op: Op::Pair,
-                        })),
-                        right: Some(Box::new(BTNode {
-                            left: Some(Box::new(BTNode {
-                                left: Some(Box::new(BTNode::new_value(5))),
-                                right: Some(Box::new(BTNode::new_value(6))),
-                                op: Op::Pair,
-                            })),
-                            right: Some(Box::new(BTNode {
-                                left: Some(Box::new(BTNode::new_value(7))),
-                                right: Some(Box::new(BTNode::new_value(8))),
-                                op: Op::Pair,
-                            })),
-                            op: Op::Pair,
-                        })),
-                        op: Op::Pair,
-                    })),
-                    right: Some(Box::new(BTNode::new_value(9))),
-                    op: Op::Pair,
-                },
-            }
+            BinaryTree::new(Some(BTNode::new_pair(
+                Some(BTNode::new_pair(
+                    Some(BTNode::new_pair(
+                        Some(BTNode::new_pair(
+                            Some(BTNode::new_value(1)),
+                            Some(BTNode::new_value(2)),
+                        )),
+                        Some(BTNode::new_pair(
+                            Some(BTNode::new_value(3)),
+                            Some(BTNode::new_value(4)),
+                        )),
+                    )),
+                    Some(BTNode::new_pair(
+                        Some(BTNode::new_pair(
+                            Some(BTNode::new_value(5)),
+                            Some(BTNode::new_value(6)),
+                        )),
+                        Some(BTNode::new_pair(
+                            Some(BTNode::new_value(7)),
+                            Some(BTNode::new_value(8)),
+                        )),
+                    )),
+                )),
+                Some(BTNode::new_value(9)),
+            )))
         );
     }
 
     #[test]
     fn it_parses_snailfish_numbers_6() {
+        assert!(parse("[1,2]").is_ok());
+        assert!(parse("[[1,2],3]").is_ok());
+        assert!(parse("[9,[8,7]]").is_ok());
+        assert!(parse("[[1,9],[8,5]]").is_ok());
+        assert!(parse("[[[[1,2],[3,4]],[[5,6],[7,8]]],9]").is_ok());
         assert!(parse("[[[9,[3,8]],[[0,9],6]],[[[3,7],[4,9]],3]]").is_ok());
         assert!(parse("[[[[1,3],[5,3]],[[1,3],[8,7]]],[[[4,9],[6,9]],[[8,2],[7,3]]]]").is_ok());
+    }
+
+    #[test]
+    fn it_adds_two_snailfish_numbers() {
+        let a = parse("[1,2]").unwrap();
+        let b = parse("[[3,4],5]").unwrap();
+
+        assert_eq!(BinaryTree::addition(a,b), parse("[[1,2],[[3,4],5]]").unwrap());
+    }
+
+    #[test]
+    fn it_finds_regular_number_to_left() {
+        let mut a = parse("[[[[[9,8],1],2],3],4]").unwrap();
+        // BinaryTree::find_regular_number_to_left(a);
+    }
+    
+    #[test]
+    fn it_explodes_examples_1() {
+        let explosive_pair = BTNode::new_pair(
+            Some(BTNode::new_value(9)),
+            Some(BTNode::new_value(8)),
+        );
+
+        // [[[[[9,8],1],2],3],4]
+        let binary_tree = BinaryTree::new(Some(BTNode::new_pair(
+            Some(BTNode::new_pair(
+                Some(BTNode::new_pair(
+                    Some(BTNode::new_pair(
+                        Some(Rc::clone(&explosive_pair)),
+                        Some(BTNode::new_value(1)),
+                    )),
+                    Some(BTNode::new_value(2)),
+                )),
+                Some(BTNode::new_value(3)),
+            )),
+            Some(BTNode::new_value(4)),
+        )));
+
+        assert_eq!(BinaryTree::explode(binary_tree, &explosive_pair), parse("[[[[0,9],2],3],4]").unwrap());
+    }
+
+    /*
+    #[test]
+    fn it_explodes_examples_2() {
+        let mut a = parse("[7,[6,[5,[4,[3,2]]]]]").unwrap();
+        a.explode();
+        assert_eq!(a, parse("[7,[6,[5,[7,0]]]]").unwrap());
+    }
+
+    #[test]
+    fn it_explodes_examples_3() {
+        let mut a = parse("[[6,[5,[4,[3,2]]]],1]").unwrap();
+        a.explode();
+        assert_eq!(a, parse("[[6,[5,[7,0]]],3]").unwrap());
+    }
+    */
+
+    #[test]
+    fn it_explodes_examples_4() {
+        let explosive_pair = BTNode::new_pair(
+            Some(BTNode::new_value(7)),
+            Some(BTNode::new_value(3)),
+        );
+
+        // [[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]
+        let binary_tree = BinaryTree::new(Some(BTNode::new_pair(
+            Some(BTNode::new_pair(
+                Some(BTNode::new_value(3)),
+                Some(BTNode::new_pair(
+                    Some(BTNode::new_value(2)),
+                    Some(BTNode::new_pair(
+                        Some(BTNode::new_value(1)),
+                        Some(Rc::clone(&explosive_pair)),
+                    )),
+                )),                
+            )),
+            Some(BTNode::new_pair(
+                Some(BTNode::new_value(6)),
+                Some(BTNode::new_pair(
+                    Some(BTNode::new_value(5)),
+                    Some(BTNode::new_pair(
+                        Some(BTNode::new_value(4)),
+                        Some(BTNode::new_pair(
+                            Some(BTNode::new_value(3)),
+                            Some(BTNode::new_value(2)),
+                        )),
+                    )),
+                )),
+            )),
+        )));
+
+        assert_eq!(BinaryTree::explode(binary_tree, &explosive_pair), parse("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]").unwrap());
+    }
+
+    /*
+    #[test]
+    fn it_explodes_examples_5() {
+        let mut a = parse("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]").unwrap();
+        a.explode();
+        assert_eq!(a, parse("[[3,[2,[8,0]]],[9,[5,[7,0]]]]").unwrap());
     }
 
     #[test]
@@ -274,4 +480,5 @@ mod tests {
             4140
         );
     }
+    */
 }
