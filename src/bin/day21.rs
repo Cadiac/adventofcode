@@ -1,4 +1,5 @@
 extern crate serde_scan;
+use cached::proc_macro::cached;
 
 // With three d3 we can get rolls in 27 different ways: (1,1,1), (1,1,2), (1,1,3) ...
 // Of those, distinct sums are: 3, 4, 5, 6, 7, 8, 9
@@ -8,7 +9,7 @@ const DISTINCT_D3_ROLLS_AND_COUNTS: [(u32, usize); 7] =
 
 const INPUT_FILE: &str = include_str!("../../inputs/day21.txt");
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Hash, PartialEq, Eq)]
 struct Player {
     id: u32,
     position: u32,
@@ -71,6 +72,7 @@ fn part_1(input: &str) -> u32 {
     }
 }
 
+#[cached]
 fn roll_dirac_dice(players: [Player; 2], active_player: usize) -> [usize; 2] {
     let mut wins = [0, 0];
 
