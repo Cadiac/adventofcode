@@ -21,20 +21,21 @@ fn parse(input: &str) -> [Player; 2] {
     let player_1_input = lines.next().unwrap();
     let player_2_input = lines.next().unwrap();
 
-    let (player_id_1, player_1_pos) =
+    let (player_id_1, player_1_pos): (u32, u32) =
         serde_scan::scan!("Player {} starting position: {}" <- player_1_input).unwrap();
-    let (player_id_2, player_2_pos) =
+    let (player_id_2, player_2_pos): (u32, u32) =
         serde_scan::scan!("Player {} starting position: {}" <- player_2_input).unwrap();
 
     [
         Player {
             id: player_id_1,
-            position: player_1_pos,
+            // Adjust the position to be 0-indexed
+            position: player_1_pos - 1,
             score: 0,
         },
         Player {
             id: player_id_2,
-            position: player_2_pos,
+            position: player_2_pos - 1,
             score: 0,
         },
     ]
@@ -55,13 +56,8 @@ fn part_1(input: &str) -> u32 {
             dice_rolled += 1;
         }
 
-        // Treat position 10 as 0 so that we can simply use modulo 10
         players[active_player].position = (players[active_player].position + rolls) % 10;
-        if players[active_player].position == 0 {
-            players[active_player].score += 10;
-        } else {
-            players[active_player].score += players[active_player].position
-        }
+        players[active_player].score += players[active_player].position + 1;
 
         if players[active_player].score >= 1000 {
             let losing_player = (active_player + 1) % 2;
@@ -76,27 +72,22 @@ fn part_1(input: &str) -> u32 {
 fn roll_dirac_dice(players: [Player; 2], active_player: usize) -> [usize; 2] {
     let mut wins = [0, 0];
 
-    for (next_rolls, count) in DISTINCT_D3_ROLLS_AND_COUNTS {
-        let universe_wins = play_quantum_turn(next_rolls, players, active_player);
-        wins[0] += count * universe_wins[0];
-        wins[1] += count * universe_wins[1];
+    for (rolls, count) in DISTINCT_D3_ROLLS_AND_COUNTS {
+        let branch_total_wins = play_quantum_turn(rolls, players, active_player);
+        wins[0] += count * branch_total_wins[0];
+        wins[1] += count * branch_total_wins[1];
     }
 
     wins
 }
 
 fn play_quantum_turn(rolls: u32, mut players: [Player; 2], active_player: usize) -> [usize; 2] {
-    // Treat position 10 as 0 so that we can simply use modulo 10
     players[active_player].position = (players[active_player].position + rolls) % 10;
-    if players[active_player].position == 0 {
-        players[active_player].score += 10;
-    } else {
-        players[active_player].score += players[active_player].position
-    }
+    players[active_player].score += players[active_player].position + 1;
 
     if players[active_player].score >= 21 {
         let mut wins = [0, 0];
-        wins[active_player] += 1;
+        wins[active_player] = 1;
         return wins;
     }
 
