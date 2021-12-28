@@ -49,7 +49,7 @@ impl BTNode {
     }
     fn new_value_with_parent(value: u32, parent: &Rc<RefCell<BTNode>>) -> Rc<RefCell<BTNode>> {
         Rc::new(RefCell::new(BTNode {
-            parent: Some(Rc::downgrade(&parent)),
+            parent: Some(Rc::downgrade(parent)),
             left: None,
             right: None,
             op: Op::Value(value),
@@ -70,13 +70,7 @@ struct BinaryTree {
 
 impl std::fmt::Display for BinaryTree {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "{}",
-            BinaryTree::unparse(self.head.as_ref().unwrap())
-                .into_iter()
-                .collect::<String>()
-        )
+        write!(f, "{}", BinaryTree::unparse(self.head.as_ref().unwrap()))
     }
 }
 
@@ -95,60 +89,27 @@ impl BinaryTree {
                 depth += 1;
             } else if c == ']' {
                 // Empty pair "[]" is illegal
+                assert!(stack.len() >= 2);
                 let (r_depth, right) = stack.pop().unwrap();
                 let (l_depth, left) = stack.pop().unwrap();
-                let left_cloned = left.borrow().clone();
-                let node_and_depth = match left_cloned {
-                    BTNode {
-                        op: Op::Value(_), ..
-                    } => {
-                        let (depth, parent) = stack.pop().unwrap();
-                        {
-                            let mut right_mut = right.borrow_mut();
-                            right_mut.parent = Some(Rc::downgrade(&parent));
-                            let mut left_mut = left.borrow_mut();
-                            left_mut.parent = Some(Rc::downgrade(&parent));
-                        }
-                        {
-                            let mut parent_mut = parent.borrow_mut();
-                            parent_mut.right = Some(right);
-                            parent_mut.left = Some(left);
-                        }
-                        (depth, parent)
-                    }
-                    BTNode { op: Op::Pair, .. } => {
-                        if l_depth == r_depth {
-                            // Same depth, so this was a left node and the
-                            // pair node wrapping this is next
-                            let (depth, parent) = stack.pop().unwrap();
-                            {
-                                let mut right_mut = right.borrow_mut();
-                                right_mut.parent = Some(Rc::downgrade(&parent));
-                                let mut left_mut = left.borrow_mut();
-                                left_mut.parent = Some(Rc::downgrade(&parent));
-                            }
-                            {
-                                let mut parent_mut = parent.borrow_mut();
-                                parent_mut.right = Some(right);
-                                parent_mut.left = Some(left);
-                            }
-                            (depth, parent)
-                        } else {
-                            // There was no left node
-                            let parent = left;
-                            {
-                                let mut right_mut = right.borrow_mut();
-                                right_mut.parent = Some(Rc::downgrade(&parent));
-                            }
-                            {
-                                parent.borrow_mut().right = Some(right);
-                            }
-                            (depth, parent)
-                        }
-                    }
+
+                if left.borrow().op == Op::Pair && l_depth != r_depth {
+                    // There was no left node
+                    let parent = left;
+                    right.borrow_mut().parent = Some(Rc::downgrade(&parent));
+                    parent.borrow_mut().right = Some(right);
+
+                    stack.push((depth, parent));
+                } else {
+                    let (depth, parent) = stack.pop().unwrap();
+                    right.borrow_mut().parent = Some(Rc::downgrade(&parent));
+                    left.borrow_mut().parent = Some(Rc::downgrade(&parent));
+                    parent.borrow_mut().right = Some(right);
+                    parent.borrow_mut().left = Some(left);
+
+                    stack.push((depth, parent));
                 };
-                // Now push the node back to stack
-                stack.push(node_and_depth);
+
                 depth -= 1;
             } else if c.is_digit(10) {
                 let value = c.to_digit(10).unwrap();
@@ -158,45 +119,40 @@ impl BinaryTree {
         }
         // Now the stack should only contain the head
         assert_eq!(stack.len(), 1);
-        let binary_tree = BinaryTree {
+
+        BinaryTree {
             head: Some(stack.pop().unwrap().1),
-        };
-        binary_tree
+        }
     }
 
     // For debugging purposes
-    fn unparse(node: &Rc<RefCell<BTNode>>) -> Vec<char> {
+    fn unparse(node: &Rc<RefCell<BTNode>>) -> String {
         if let Op::Value(value) = node.borrow().op {
-            return value.to_string().chars().collect();
+            return value.to_string();
         }
-        let mut chars = vec![];
+        let mut output = String::new();
         if let Some(left) = &node.borrow().left {
-            chars.push('[');
-            chars.append(&mut BinaryTree::unparse(left));
+            output += "[";
+            output += BinaryTree::unparse(left).as_str();
         }
         if let Some(right) = &node.borrow().right {
-            chars.push(',');
-            chars.append(&mut BinaryTree::unparse(right));
-            chars.push(']');
+            output += ",";
+            output += BinaryTree::unparse(right).as_str();
+            output += "]";
         }
-        chars
+        output
     }
 
     fn add(&mut self, other: BinaryTree) {
         let head = BTNode::new_pair(std::mem::take(&mut self.head), other.head);
-        head.borrow_mut().left.as_ref().unwrap().borrow_mut().parent = Some(Rc::downgrade(&head));
-        head.borrow_mut()
-            .right
-            .as_ref()
-            .unwrap()
-            .borrow_mut()
-            .parent = Some(Rc::downgrade(&head));
+        head.borrow().left.as_ref().unwrap().borrow_mut().parent = Some(Rc::downgrade(&head));
+        head.borrow().right.as_ref().unwrap().borrow_mut().parent = Some(Rc::downgrade(&head));
 
         self.head = Some(head);
     }
 
     fn find_leftmost_explosive(&self) -> Option<Rc<RefCell<BTNode>>> {
-        BinaryTree::find_explosive_recursive(&self.head.as_ref().unwrap(), 0)
+        BinaryTree::find_explosive_recursive(self.head.as_ref().unwrap(), 0)
     }
 
     fn find_explosive_recursive(
@@ -221,7 +177,7 @@ impl BinaryTree {
     }
 
     fn find_leftmost_splittable(&self) -> Option<Rc<RefCell<BTNode>>> {
-        BinaryTree::find_splittable_recursive(&self.head.as_ref().unwrap())
+        BinaryTree::find_splittable_recursive(self.head.as_ref().unwrap())
     }
 
     fn find_splittable_recursive(node: &Rc<RefCell<BTNode>>) -> Option<Rc<RefCell<BTNode>>> {
@@ -329,7 +285,7 @@ impl BinaryTree {
     }
 
     fn magnitude(&self) -> u32 {
-        BinaryTree::magnitude_recursive(&self.head.as_ref().unwrap())
+        BinaryTree::magnitude_recursive(self.head.as_ref().unwrap())
     }
 
     fn magnitude_recursive(node: &Rc<RefCell<BTNode>>) -> u32 {
@@ -376,8 +332,8 @@ impl BinaryTree {
     fn split(node: &Rc<RefCell<BTNode>>) {
         let op = node.borrow().op;
         if let Op::Value(value) = op {
-            let left = BTNode::new_value_with_parent(value / 2, &node);
-            let right = BTNode::new_value_with_parent((value + 1) / 2, &node);
+            let left = BTNode::new_value_with_parent(value / 2, node);
+            let right = BTNode::new_value_with_parent((value + 1) / 2, node);
 
             let mut node_mut = node.borrow_mut();
             node_mut.op = Op::Pair;
