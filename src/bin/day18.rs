@@ -164,6 +164,7 @@ impl BinaryTree {
         binary_tree
     }
 
+    // For debugging purposes
     fn unparse(node: &Rc<RefCell<BTNode>>) -> Vec<char> {
         if let Op::Value(value) = node.borrow().op {
             return value.to_string().chars().collect();
@@ -194,7 +195,11 @@ impl BinaryTree {
         self.head = Some(head);
     }
 
-    fn find_leftmost_explosive(
+    fn find_leftmost_explosive(&self) -> Option<Rc<RefCell<BTNode>>> {
+        BinaryTree::find_explosive_recursive(&self.head.as_ref().unwrap(), 0)
+    }
+
+    fn find_explosive_recursive(
         node: &Rc<RefCell<BTNode>>,
         depth: usize,
     ) -> Option<Rc<RefCell<BTNode>>> {
@@ -203,19 +208,23 @@ impl BinaryTree {
         }
 
         if let Some(left) = &node.borrow().left {
-            let found = BinaryTree::find_leftmost_explosive(left, depth + 1);
+            let found = BinaryTree::find_explosive_recursive(left, depth + 1);
             if found.is_some() {
                 return found;
             }
         }
         if let Some(right) = &node.borrow().right {
-            return BinaryTree::find_leftmost_explosive(right, depth + 1);
+            return BinaryTree::find_explosive_recursive(right, depth + 1);
         }
 
         None
     }
 
-    fn find_leftmost_splittable(node: &Rc<RefCell<BTNode>>) -> Option<Rc<RefCell<BTNode>>> {
+    fn find_leftmost_splittable(&self) -> Option<Rc<RefCell<BTNode>>> {
+        BinaryTree::find_splittable_recursive(&self.head.as_ref().unwrap())
+    }
+
+    fn find_splittable_recursive(node: &Rc<RefCell<BTNode>>) -> Option<Rc<RefCell<BTNode>>> {
         if let Op::Value(value) = node.borrow().op {
             if value >= 10 {
                 return Some(node.clone());
@@ -223,13 +232,13 @@ impl BinaryTree {
         }
 
         if let Some(left) = &node.borrow().left {
-            let found = BinaryTree::find_leftmost_splittable(left);
+            let found = BinaryTree::find_splittable_recursive(left);
             if found.is_some() {
                 return found;
             }
         }
         if let Some(right) = &node.borrow().right {
-            return BinaryTree::find_leftmost_splittable(right);
+            return BinaryTree::find_splittable_recursive(right);
         }
 
         None
@@ -252,20 +261,6 @@ impl BinaryTree {
                             }
                         }
                     }
-                }
-            }
-        }
-    }
-
-    fn add_to_offspring_right(node: Rc<RefCell<BTNode>>, value: u32) {
-        if let Some(right) = &node.borrow().right {
-            let op = right.borrow().op;
-            match op {
-                Op::Pair => {
-                    BinaryTree::add_to_offspring_right(right.clone(), value);
-                }
-                Op::Value(current_value) => {
-                    right.borrow_mut().op = Op::Value(current_value + value);
                 }
             }
         }
@@ -307,20 +302,29 @@ impl BinaryTree {
         }
     }
 
+    fn add_to_offspring_right(node: Rc<RefCell<BTNode>>, value: u32) {
+        if let Some(right) = &node.borrow().right {
+            let op = right.borrow().op;
+            match op {
+                Op::Pair => {
+                    BinaryTree::add_to_offspring_right(right.clone(), value);
+                }
+                Op::Value(current_value) => {
+                    right.borrow_mut().op = Op::Value(current_value + value);
+                }
+            }
+        }
+    }
+
     fn reduce(&self) {
         loop {
-            if let Some(node) = BinaryTree::find_leftmost_explosive(&self.head.as_ref().unwrap(), 0)
-            {
+            if let Some(node) = self.find_leftmost_explosive() {
                 BinaryTree::explode(&node);
-                continue;
-            }
-
-            if let Some(node) = BinaryTree::find_leftmost_splittable(&self.head.as_ref().unwrap()) {
+            } else if let Some(node) = self.find_leftmost_splittable() {
                 BinaryTree::split(&node);
-                continue;
+            } else {
+                break;
             }
-
-            break;
         }
     }
 
@@ -363,7 +367,6 @@ impl BinaryTree {
             }
         }
 
-        // Replace the current pair with 0 value node
         let mut node_mut = node.borrow_mut();
         node_mut.op = Op::Value(0);
         node_mut.left = None;
@@ -404,10 +407,9 @@ fn part_1(input: &str) -> u32 {
 }
 
 fn part_2(input: &str) -> u32 {
-    let numbers: Vec<_> = input.lines().collect();
     let mut largest_magnitude = 0;
 
-    for (first, second) in numbers.iter().tuple_combinations() {
+    for (first, second) in input.lines().tuple_combinations() {
         let mut binary_tree = BinaryTree::parse(first);
         binary_tree.add(BinaryTree::parse(second));
         binary_tree.reduce();
@@ -559,7 +561,7 @@ mod tests {
     #[test]
     fn it_finds_explosive_pairs_1() {
         let binary_tree = BinaryTree::parse("[[[[[9,8],1],2],3],4]");
-        let explosive_pair = BinaryTree::find_leftmost_explosive(&binary_tree.head.unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         assert!(explosive_pair.is_some());
         assert_eq!(explosive_pair, BinaryTree::parse("[9,8]").head);
     }
@@ -567,29 +569,28 @@ mod tests {
     #[test]
     fn it_finds_explosive_pairs_2() {
         let binary_tree = BinaryTree::parse("[[[[1,[9,8]],2],3],4]");
-        let explosive_pair = BinaryTree::find_leftmost_explosive(&binary_tree.head.unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         assert_eq!(explosive_pair, BinaryTree::parse("[9,8]").head);
     }
 
     #[test]
     fn it_finds_explosive_pairs_3() {
         let binary_tree = BinaryTree::parse("[7,[6,[5,[4,[3,2]]]]]");
-        let explosive_pair = BinaryTree::find_leftmost_explosive(&binary_tree.head.unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         assert_eq!(explosive_pair, BinaryTree::parse("[3,2]").head);
     }
 
     #[test]
     fn it_finds_explosive_pairs_4() {
         let binary_tree = BinaryTree::parse("[[[[1,9],2],3],4]");
-        let explosive_pair = BinaryTree::find_leftmost_explosive(&binary_tree.head.unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         assert_eq!(explosive_pair, None);
     }
 
     #[test]
     fn it_explodes_examples_1() {
         let binary_tree = BinaryTree::parse("[[[[[9,8],1],2],3],4]");
-        let explosive_pair =
-            BinaryTree::find_leftmost_explosive(binary_tree.head.as_ref().unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         BinaryTree::explode(&explosive_pair.unwrap());
         assert_eq!(binary_tree, BinaryTree::parse("[[[[0,9],2],3],4]"));
     }
@@ -597,8 +598,7 @@ mod tests {
     #[test]
     fn it_explodes_examples_2() {
         let binary_tree = BinaryTree::parse("[7,[6,[5,[4,[3,2]]]]]");
-        let explosive_pair =
-            BinaryTree::find_leftmost_explosive(binary_tree.head.as_ref().unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         BinaryTree::explode(&explosive_pair.unwrap());
         assert_eq!(binary_tree, BinaryTree::parse("[7,[6,[5,[7,0]]]]"));
     }
@@ -606,8 +606,7 @@ mod tests {
     #[test]
     fn it_explodes_examples_3() {
         let binary_tree = BinaryTree::parse("[[6,[5,[4,[3,2]]]],1]");
-        let explosive_pair =
-            BinaryTree::find_leftmost_explosive(binary_tree.head.as_ref().unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         BinaryTree::explode(&explosive_pair.unwrap());
         assert_eq!(binary_tree, BinaryTree::parse("[[6,[5,[7,0]]],3]"));
     }
@@ -615,8 +614,7 @@ mod tests {
     #[test]
     fn it_explodes_examples_4() {
         let binary_tree = BinaryTree::parse("[[3,[2,[1,[7,3]]]],[6,[5,[4,[3,2]]]]]");
-        let explosive_pair =
-            BinaryTree::find_leftmost_explosive(binary_tree.head.as_ref().unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         BinaryTree::explode(&explosive_pair.unwrap());
         assert_eq!(
             binary_tree,
@@ -627,8 +625,7 @@ mod tests {
     #[test]
     fn it_explodes_examples_5() {
         let binary_tree = BinaryTree::parse("[[3,[2,[8,0]]],[9,[5,[4,[3,2]]]]]");
-        let explosive_pair =
-            BinaryTree::find_leftmost_explosive(binary_tree.head.as_ref().unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         BinaryTree::explode(&explosive_pair.unwrap());
         assert_eq!(
             binary_tree,
@@ -646,26 +643,23 @@ mod tests {
             BinaryTree::parse("[[[[[4,3],4],4],[7,[[8,4],9]]],[1,1]]")
         );
 
-        let explosive_pair =
-            BinaryTree::find_leftmost_explosive(binary_tree.head.as_ref().unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         BinaryTree::explode(&explosive_pair.unwrap());
 
-        let explosive_pair =
-            BinaryTree::find_leftmost_explosive(binary_tree.head.as_ref().unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         BinaryTree::explode(&explosive_pair.unwrap());
 
-        let splittable = BinaryTree::find_leftmost_splittable(binary_tree.head.as_ref().unwrap());
+        let splittable = binary_tree.find_leftmost_splittable();
         BinaryTree::split(&splittable.unwrap());
 
-        let splittable = BinaryTree::find_leftmost_splittable(binary_tree.head.as_ref().unwrap());
+        let splittable = binary_tree.find_leftmost_splittable();
         BinaryTree::split(&splittable.unwrap());
         assert_eq!(
             binary_tree,
             BinaryTree::parse("[[[[0,7],4],[[7,8],[0,[6,7]]]],[1,1]]")
         );
 
-        let explosive_pair =
-            BinaryTree::find_leftmost_explosive(binary_tree.head.as_ref().unwrap(), 0);
+        let explosive_pair = binary_tree.find_leftmost_explosive();
         BinaryTree::explode(&explosive_pair.unwrap());
 
         assert_eq!(
@@ -676,48 +670,24 @@ mod tests {
 
     #[test]
     fn it_adds_list_of_snailfish_numbers_1() {
-        let final_sum = add_list(
-            "[1,1]\n\
-             [2,2]\n\
-             [3,3]\n\
-             [4,4]",
-        );
-
         assert_eq!(
-            final_sum,
+            add_list("[1,1]\n[2,2]\n[3,3]\n[4,4]"),
             BinaryTree::parse("[[[[1,1],[2,2]],[3,3]],[4,4]]")
         );
     }
 
     #[test]
     fn it_adds_list_of_snailfish_numbers_2() {
-        let final_sum = add_list(
-            "[1,1]\n\
-             [2,2]\n\
-             [3,3]\n\
-             [4,4]\n\
-             [5,5]",
-        );
-
         assert_eq!(
-            final_sum,
+            add_list("[1,1]\n[2,2]\n[3,3]\n[4,4]\n[5,5]"),
             BinaryTree::parse("[[[[3,0],[5,3]],[4,4]],[5,5]]")
         );
     }
 
     #[test]
     fn it_adds_list_of_snailfish_numbers_3() {
-        let final_sum = add_list(
-            "[1,1]\n\
-             [2,2]\n\
-             [3,3]\n\
-             [4,4]\n\
-             [5,5]\n\
-             [6,6]",
-        );
-
         assert_eq!(
-            final_sum,
+            add_list("[1,1]\n[2,2]\n[3,3]\n[4,4]\n[5,5]\n[6,6]"),
             BinaryTree::parse("[[[[5,0],[7,4]],[5,5]],[6,6]]")
         );
     }
@@ -744,35 +714,18 @@ mod tests {
     }
 
     #[test]
+    #[rustfmt::skip]
     fn it_solves_magnitude_examples() {
         assert_eq!(BinaryTree::parse("[9,1]").magnitude(), 29);
         assert_eq!(BinaryTree::parse("[1,9]").magnitude(), 21);
         assert_eq!(BinaryTree::parse("[[9,1],[1,9]]").magnitude(), 129);
         assert_eq!(BinaryTree::parse("[[1,2],[[3,4],5]]").magnitude(), 143);
-        assert_eq!(
-            BinaryTree::parse("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]").magnitude(),
-            1384
-        );
-        assert_eq!(
-            BinaryTree::parse("[[[[1,1],[2,2]],[3,3]],[4,4]]").magnitude(),
-            445
-        );
-        assert_eq!(
-            BinaryTree::parse("[[[[3,0],[5,3]],[4,4]],[5,5]]").magnitude(),
-            791
-        );
-        assert_eq!(
-            BinaryTree::parse("[[[[5,0],[7,4]],[5,5]],[6,6]]").magnitude(),
-            1137
-        );
-        assert_eq!(
-            BinaryTree::parse("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]").magnitude(),
-            3488
-        );
-        assert_eq!(
-            BinaryTree::parse("[[[[7,8],[6,6]],[[6,0],[7,7]]],[[[7,8],[8,8]],[[7,9],[0,6]]]]").magnitude(),
-            3993
-        );
+        assert_eq!(BinaryTree::parse("[[[[0,7],4],[[7,8],[6,0]]],[8,1]]").magnitude(), 1384);
+        assert_eq!(BinaryTree::parse("[[[[1,1],[2,2]],[3,3]],[4,4]]").magnitude(), 445);
+        assert_eq!(BinaryTree::parse("[[[[3,0],[5,3]],[4,4]],[5,5]]").magnitude(), 791);
+        assert_eq!(BinaryTree::parse("[[[[5,0],[7,4]],[5,5]],[6,6]]").magnitude(), 1137);
+        assert_eq!(BinaryTree::parse("[[[[8,7],[7,7]],[[8,6],[7,7]]],[[[0,7],[6,6]],[8,7]]]").magnitude(), 3488);
+        assert_eq!(BinaryTree::parse("[[[[7,8],[6,6]],[[6,0],[7,7]]],[[[7,8],[8,8]],[[7,9],[0,6]]]]").magnitude(), 3993);
     }
 
     #[test]
