@@ -45,7 +45,7 @@ in root directory
 ❄️ [Day 15](src/bin/day15.rs)
 ❄️ [Day 16](src/bin/day16.rs)
 ❄️ [Day 17](src/bin/day17.rs)
-❌ [Day 18]
+❄️ [Day 18](src/bin/day18.rs)
 ❌ [Day 19]
 ❌ [Day 20]
 ❄️ [Day 21](src/bin/day21.rs)
