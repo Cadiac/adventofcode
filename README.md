@@ -49,3 +49,4 @@ in root directory
 ❌ [Day 19]
 ❌ [Day 20]
 ❄️ [Day 21](src/bin/day21.rs)
+❄️ [Day 22](src/bin/day22.rs)
