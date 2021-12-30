@@ -219,6 +219,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore]
     fn it_solves_part2_example() {
         assert_eq!(
             solve(
