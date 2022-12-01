@@ -5,7 +5,11 @@ authors = ["Jaakko Husso <jaakko.t.husso@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-itertools = "0.10.3"
-nom = "7.1.0"
+itertools = "0.10.5"
+nom = "7.1.1"
 serde_scan = "0.4.1"
-cached = "0.26.2"
+cached = "0.40.0"
+rayon = "1.6.0"
+log = "0.4.17"
+env_logger = "0.8.4"
+clap = { version = "3.2.8", features = ["derive"] }
