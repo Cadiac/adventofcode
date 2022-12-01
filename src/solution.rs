@@ -1,4 +1,5 @@
 use std::error::Error;
+use std::fmt;
 
 pub mod day01;
 
@@ -6,7 +7,17 @@ pub mod day01;
 pub enum Answer {
     U64(u64),
     I64(i64),
-    Text(String),
+    Str(String),
+}
+
+impl fmt::Display for Answer {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Answer::U64(value) => write!(f, "{value}"),
+            Answer::I64(value) => write!(f, "{value}"),
+            Answer::Str(value) => write!(f, "{value}"),
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, clap::ValueEnum)]
@@ -43,10 +54,19 @@ pub trait Solution {
     fn part_2(&self) -> Result<Answer, Box<dyn Error>>;
 }
 
-impl From<(Day, String)> for Box<dyn Solution> {
-    fn from((day, input): (Day, String)) -> Box<dyn Solution> {
+impl From<(Day, &str)> for Box<dyn Solution> {
+    fn from((day, input): (Day, &str)) -> Box<dyn Solution> {
         match day {
-            Day::Day01 => Box::new(day01::Day01::new(&input)),
+            Day::Day01 => Box::new(day01::Day01::new(input)),
+            _ => unimplemented!("{day:?}")
+        }
+    }
+}
+
+impl From<Day> for Box<dyn Solution> {
+    fn from(day: Day) -> Box<dyn Solution> {
+        match day {
+            Day::Day01 => Box::new(day01::Day01::default()),
             _ => unimplemented!("{day:?}")
         }
     }

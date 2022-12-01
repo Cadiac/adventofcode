@@ -20,9 +20,11 @@ $ cargo run -- --day day01 --file ./inputs/day01.txt
 
 or run single day's tests with
 
-// TODO: HOW?
+```bash
+$ cargo test --lib -- solution::day01::tests
+```
 
-in root directory
+within the project's root directory
 
 ## Solutions
 

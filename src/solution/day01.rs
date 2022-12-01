@@ -1,57 +1,50 @@
 use std::error::Error;
 
-use crate::solution::{Solution, Answer};
+use crate::solution::{Answer, Solution};
 
-const INPUT_FILE: &str = include_str!("../../inputs/day02.txt");
+const DEFAULT_INPUT: &str = include_str!("../../inputs/day01.txt");
 
 pub struct Day01 {
-    input: String,
+    elves: Vec<u64>,
 }
 
 impl Day01 {
     pub fn new(input: &str) -> Self {
         Self {
-            input: input.to_owned(),
+            elves: Day01::parse(input),
         }
+    }
+
+    pub fn parse(input: &str) -> Vec<u64> {
+        input
+            .split("\n\n")
+            .map(|chunk| chunk.lines().map(|line| line.parse::<u64>().unwrap()).sum())
+            .collect()
     }
 }
 
 impl Default for Day01 {
     fn default() -> Self {
         Self {
-            input: INPUT_FILE.to_owned(),
+            elves: Day01::parse(DEFAULT_INPUT),
         }
     }
 }
 
 impl Solution for Day01 {
     fn part_1(&self) -> Result<Answer, Box<dyn Error>> {
-        let count = self
-            .input
-            .lines()
-            .map(|depth| depth.parse::<u32>().unwrap())
-            .collect::<Vec<_>>()
-            .windows(2)
-            .filter(|depths| depths[0] < depths[1])
-            .count();
+        let most = self.elves.iter().max().unwrap();
 
-        Ok(Answer::U64(count as u64))
+        Ok(Answer::U64(*most))
     }
 
     fn part_2(&self) -> Result<Answer, Box<dyn Error>> {
-        let count = self
-            .input
-            .lines()
-            .map(|depth| depth.parse::<u32>().unwrap())
-            .collect::<Vec<_>>()
-            .windows(3)
-            .map(|depths| depths.iter().sum())
-            .collect::<Vec<u32>>()
-            .windows(2)
-            .filter(|depths| depths[0] < depths[1])
-            .count();
+        let mut sorted = self.elves.clone();
+        sorted.sort();
 
-        Ok(Answer::U64(count as u64))
+        let top_3 = sorted.iter().rev().take(3).sum();
+
+        Ok(Answer::U64(top_3))
     }
 }
 
@@ -63,18 +56,24 @@ mod tests {
     fn it_solves_part1_example() {
         assert_eq!(
             Day01::new(
-                "199\n\
-                    200\n\
-                    208\n\
-                    210\n\
-                    200\n\
-                    207\n\
-                    240\n\
-                    269\n\
-                    260\n\
-                    263"
-            ).part_1().unwrap(),
-            Answer::U64(7)
+                "1000\n\
+                2000\n\
+                3000\n\
+                \n\
+                4000\n\
+                \n\
+                5000\n\
+                6000\n\
+                \n\
+                7000\n\
+                8000\n\
+                9000\n\
+                \n\
+                10000"
+            )
+            .part_1()
+            .unwrap(),
+            Answer::U64(24000)
         );
     }
 
@@ -82,18 +81,24 @@ mod tests {
     fn it_solves_part2_example() {
         assert_eq!(
             Day01::new(
-                "199\n\
-                    200\n\
-                    208\n\
-                    210\n\
-                    200\n\
-                    207\n\
-                    240\n\
-                    269\n\
-                    260\n\
-                    263"
-            ).part_2().unwrap(),
-            Answer::U64(5)
+                "1000\n\
+                2000\n\
+                3000\n\
+                \n\
+                4000\n\
+                \n\
+                5000\n\
+                6000\n\
+                \n\
+                7000\n\
+                8000\n\
+                9000\n\
+                \n\
+                10000"
+            )
+            .part_2()
+            .unwrap(),
+            Answer::U64(45000)
         );
     }
 }

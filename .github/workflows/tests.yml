@@ -2,9 +2,9 @@ name: Tests
 
 on:
   push:
-    branches: [ 2021 ]
+    branches: [ "2022" ]
   pull_request:
-    branches: [ 2021 ]
+    branches: [ "2022" ]
 
 env:
   CARGO_TERM_COLOR: always

@@ -22,25 +22,36 @@ struct Args {
     verbose: bool,
 
     /// Path to the input file
-    #[clap(short, long, value_hint = ValueHint::FilePath)]
-    file: PathBuf
+    #[clap(short, long, value_hint = ValueHint::FilePath, conflicts_with="stdin")]
+    file: Option<PathBuf>,
+
+    /// Read input from stdin
+    #[clap(short, long)]
+    stdin: Option<String>,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cli = Args::parse();
     init_logger(cli.verbose);
 
-    let mut file = File::open(&cli.file)?;
-    let mut input = String::new();
-    file.read_to_string(&mut input)?;
-
-    let solver: Box<dyn Solution> = (cli.day, input).into();
+    let solver: Box<dyn Solution> = match cli.file {
+        Some(path) => {
+            let mut file = File::open(&path)?;
+            let mut input = String::new();
+            file.read_to_string(&mut input)?;
+        
+            (cli.day, input.as_str()).into()
+        },
+        None => {
+            cli.day.into()
+        }
+    };
 
     let part_1 = solver.part_1()?;
-    info!("Part 1: {part_1:?}");
+    info!("Part 1: {part_1}");
 
     let part_2 = solver.part_2()?;
-    info!("Part 2: {part_2:?}");
+    info!("Part 2: {part_2}");
 
     Ok(())
 }
