@@ -13,3 +13,5 @@ rayon = "1.6.0"
 log = "0.4.17"
 env_logger = "0.8.4"
 clap = { version = "3.2.8", features = ["derive"] }
+yew = { version = "0.20.0", features = ["csr"] }
+wasm-logger = "0.2.0"

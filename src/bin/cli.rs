@@ -43,7 +43,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             
             run_solution(day, input)
         }
-    }
+    }?;
+
+    Ok(())
 }
 
 fn init_logger(verbose: bool) {

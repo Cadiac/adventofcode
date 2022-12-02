@@ -1,0 +1,58 @@
+/* Mostly borrowed from https://adventofcode.com/ to get the same look */
+
+body {
+    background: #0f0f23;
+    color: #cccccc;
+    font-family: "Source Code Pro", monospace;
+    font-size: 14pt;
+    min-width: 60em;
+}
+
+button {
+    background: transparent;
+    border: 0;
+    font-family: inherit;
+    font-size: inherit;
+    margin: 0;
+    padding: 0;
+    color: #009900;
+    cursor: pointer;
+}
+button:hover, button:focus {
+    color: #99ff99;
+}
+
+pre {
+    border: 1px solid #333340;
+    background: #10101a;
+    position: absolute;
+}
+
+header nav {
+    display: inline-block;
+}
+header nav ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: inline-block;
+}
+header nav li {
+    display: inline-block;
+    padding: 0 .6em;
+}
+header nav button {
+    display: inline-block;
+    text-decoration: none;
+    outline: none;
+}
+header h1 {
+    display: inline-block;
+    text-decoration: none;
+    color: #00cc00;
+    text-shadow: 0 0 2px #00cc00, 0 0 5px #00cc00;
+    margin: 0;
+    padding-right: 1em;
+    font-size: 1em;
+    font-weight: normal;  
+}
