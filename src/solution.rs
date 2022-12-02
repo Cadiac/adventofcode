@@ -6,7 +6,7 @@ use log::info;
 pub mod day01;
 pub mod day02;
 
-#[derive(Clone, Debug, PartialEq, clap::ValueEnum)]
+#[derive(Clone, Debug, PartialEq, Eq, clap::ValueEnum)]
 pub enum Day {
     Day01,
     Day02,
@@ -24,7 +24,7 @@ pub trait Solution {
     fn part_2(&self, input: &str) -> Result<Self::S, Box<dyn Error>>;
 
     fn run(&self, input: Option<String>) -> Result<(), Box<dyn Error>> {
-        let input = input.unwrap_or(self.default_input().to_owned());
+        let input = input.unwrap_or_else(|| self.default_input().to_owned());
         let name = self.name();
 
         let part_1 = self.part_1(&input)?;

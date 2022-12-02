@@ -57,7 +57,7 @@ impl Solution for Day02 {
         let total = input
             .lines()
             .map(|line| {
-                let mut choices = line.split(" ");
+                let mut choices = line.split(' ');
                 (
                     choices.next().unwrap().into(),
                     choices.next().unwrap().into(),
@@ -89,7 +89,7 @@ impl Solution for Day02 {
         let total = input
             .lines()
             .map(|line| {
-                let mut choices = line.split(" ");
+                let mut choices = line.split(' ');
                 (
                     choices.next().unwrap().into(),
                     choices.next().unwrap().into(),

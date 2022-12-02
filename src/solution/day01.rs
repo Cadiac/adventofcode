@@ -29,13 +29,10 @@ impl Solution for Day01 {
     }
 
     fn part_2(&self, input: &str) -> Result<u64, Box<dyn Error>> {
-        let elves = parse(input);
-        let mut sorted = elves.clone();
-        sorted.sort();
+        let mut elves = parse(input);
+        elves.sort();
 
-        let top_3 = sorted.iter().rev().take(3).sum();
-
-        Ok(top_3)
+        Ok(elves.iter().rev().take(3).sum())
     }
 }
 

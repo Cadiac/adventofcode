@@ -18,13 +18,25 @@ You can run individual solutions with
 $ cargo run -- --day day01 --file ./inputs/day01.txt
 ```
 
-or run single day's tests with
+or all solutions using defaults inputs from `inputs/` directory with
+
+```bash
+$ cargo run
+```
+
+Single day's tests can be run with
 
 ```bash
 $ cargo test --lib -- solution::day01::tests
 ```
 
-within the project's root directory
+or all tests with
+
+```bash
+$ cargo test
+```
+
+within the project's root directory.
 
 ## Solutions
 
