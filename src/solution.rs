@@ -2,6 +2,7 @@ use std::error::Error;
 use std::fmt;
 
 pub mod day01;
+pub mod day02;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Answer {
@@ -58,6 +59,7 @@ impl From<(Day, &str)> for Box<dyn Solution> {
     fn from((day, input): (Day, &str)) -> Box<dyn Solution> {
         match day {
             Day::Day01 => Box::new(day01::Day01::new(input)),
+            Day::Day02 => Box::new(day02::Day02::new(input)),
             _ => unimplemented!("{day:?}")
         }
     }
@@ -67,6 +69,7 @@ impl From<Day> for Box<dyn Solution> {
     fn from(day: Day) -> Box<dyn Solution> {
         match day {
             Day::Day01 => Box::new(day01::Day01::default()),
+            Day::Day02 => Box::new(day02::Day02::default()),
             _ => unimplemented!("{day:?}")
         }
     }
