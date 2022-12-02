@@ -5,55 +5,45 @@ use std::{path::PathBuf};
 use std::error::Error;
 use std::fs::{File};
 
-use aoc::solution::{Solution, Day};
-
-#[macro_use]
-extern crate log;
+use aoc::solution::{Day, run_solution, run_all};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
     /// Day of the Solution
     #[clap(short, long, value_enum)]
-    day: Day,
+    day: Option<Day>,
+
+    /// Path to the input file
+    #[clap(short, long, value_hint = ValueHint::FilePath)]
+    file: Option<PathBuf>,
 
     /// Print game actions debug output (slow)
     #[clap(short, long, action)]
     verbose: bool,
-
-    /// Path to the input file
-    #[clap(short, long, value_hint = ValueHint::FilePath, conflicts_with="stdin")]
-    file: Option<PathBuf>,
-
-    /// Read input from stdin
-    #[clap(short, long)]
-    stdin: Option<String>,
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cli = Args::parse();
     init_logger(cli.verbose);
 
-    let solver: Box<dyn Solution> = match cli.file {
-        Some(path) => {
-            let mut file = File::open(&path)?;
-            let mut input = String::new();
-            file.read_to_string(&mut input)?;
+    match cli.day {
+        None => run_all(),
+        Some(day) => {
+            let input = match cli.file {
+                None => None,
+                Some(path) => {
+                    let mut file = File::open(&path)?;
+                    let mut input = String::new();
+                    file.read_to_string(&mut input)?;
         
-            (cli.day, input.as_str()).into()
-        },
-        None => {
-            cli.day.into()
+                    Some(input)
+                }
+            };
+            
+            run_solution(day, input)
         }
-    };
-
-    let part_1 = solver.part_1()?;
-    info!("Part 1: {part_1}");
-
-    let part_2 = solver.part_2()?;
-    info!("Part 2: {part_2}");
-
-    Ok(())
+    }
 }
 
 fn init_logger(verbose: bool) {

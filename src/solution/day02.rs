@@ -1,8 +1,6 @@
 use std::error::Error;
 
-use crate::solution::{Answer, Solution};
-
-const DEFAULT_INPUT: &str = include_str!("../../inputs/day02.txt");
+use crate::solution::{Solution};
 
 #[derive(Clone, Copy)]
 enum RPS {
@@ -39,34 +37,24 @@ impl From<&str> for Outcome {
     }
 }
 
-pub struct Day02 {
-    input: String,
-}
+pub struct Day02;
 
-impl Day02 {
-    pub fn new(input: &str) -> Self {
-        Self {
-            input: input.to_owned(),
-        }
-    }
-}
-
-fn score(selected: RPS, outcome: Outcome) -> u64 {
-    selected as u64 + outcome as u64
-}
-
-impl Default for Day02 {
-    fn default() -> Self {
-        Self {
-            input: DEFAULT_INPUT.to_owned(),
-        }
-    }
+fn score(selected: RPS, outcome: Outcome) -> i64 {
+    selected as i64 + outcome as i64
 }
 
 impl Solution for Day02 {
-    fn part_1(&self) -> Result<Answer, Box<dyn Error>> {
-        let total = self
-            .input
+    type F = i64;
+    type S = i64;
+
+    fn name(&self) -> &'static str { "Day 02" }
+
+    fn default_input(&self) -> &'static str {
+        include_str!("../../inputs/day02.txt")
+    }
+
+    fn part_1(&self, input: &str) -> Result<i64, Box<dyn Error>> {
+        let total = input
             .lines()
             .map(|line| {
                 let mut choices = line.split(" ");
@@ -94,12 +82,11 @@ impl Solution for Day02 {
             })
             .sum();
 
-        Ok(Answer::U64(total))
+        Ok(total)
     }
 
-    fn part_2(&self) -> Result<Answer, Box<dyn Error>> {
-        let total = self
-            .input
+    fn part_2(&self, input: &str) -> Result<i64, Box<dyn Error>> {
+        let total = input
             .lines()
             .map(|line| {
                 let mut choices = line.split(" ");
@@ -108,7 +95,7 @@ impl Solution for Day02 {
                     choices.next().unwrap().into(),
                 )
             })
-            .map(|(opponent, outcome)| match opponent {
+            .map(|(opponent, outcome): (RPS, Outcome)| match opponent {
                 RPS::Rock => match outcome {
                     Outcome::Lose => score(RPS::Scissors, outcome),
                     Outcome::Draw => score(RPS::Rock, outcome),
@@ -127,7 +114,7 @@ impl Solution for Day02 {
             })
             .sum();
 
-        Ok(Answer::U64(total))
+        Ok(total)
     }
 }
 
@@ -138,16 +125,16 @@ mod tests {
     #[test]
     fn it_solves_part1_example() {
         assert_eq!(
-            Day02::new("A Y\nB X\nC Z").part_1().unwrap(),
-            Answer::U64(15)
+            Day02.part_1("A Y\nB X\nC Z").unwrap(),
+            15
         );
     }
 
     #[test]
     fn it_solves_part2_example() {
         assert_eq!(
-            Day02::new("A Y\nB X\nC Z").part_2().unwrap(),
-            Answer::U64(12)
+            Day02.part_2("A Y\nB X\nC Z").unwrap(),
+            12
         );
     }
 }
