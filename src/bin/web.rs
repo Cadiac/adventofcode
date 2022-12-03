@@ -4,7 +4,17 @@ use aoc::solution::{run_all, run_solution};
 
 #[function_component]
 fn App() -> Html {
-    let console = use_state(Vec::new);
+    let console = use_state(|| vec![
+        "             *            ".to_string(),
+        "             ^            ".to_string(),
+        "            ^^o           ".to_string(),
+        "            o^^           ".to_string(),
+        "            ^^o^          ".to_string(),
+        "           o^^^^o         ".to_string(),
+        "           ^^o^^^^        ".to_string(),
+        "       ______||______     ".to_string(),
+        "          AoC 2022        ".to_string(),
+    ]);
     let run_all = {
         let console = console.clone();
         move |_| {

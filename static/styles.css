@@ -5,7 +5,12 @@ body {
     color: #cccccc;
     font-family: "Source Code Pro", monospace;
     font-size: 14pt;
-    min-width: 60em;
+    margin: 0;
+    padding: 0;;
+}
+
+main {
+    padding: 1em;
 }
 
 button {
@@ -30,9 +35,13 @@ a {
 pre {
     border: 1px solid #333340;
     background: #10101a;
-    position: absolute;
+    width: 100%;
+    max-width: 60em;
 }
 
+header {
+    padding: 1em;
+}
 header nav {
     display: inline-block;
 }
