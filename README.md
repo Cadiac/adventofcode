@@ -8,7 +8,7 @@ Solutions to [Advent of Code 2022](https://adventofcode.com/) implemented in [Ru
 
 Follow [Rust](https://www.rust-lang.org/en-US/install.html) installation instructions.
 
-## Running solutions
+## Running the solutions
 
 The project is split into separate binaries within one cargo project.
 
@@ -37,6 +37,30 @@ $ cargo test
 ```
 
 within the project's root directory.
+
+## Running the web project
+
+This repository now also ships with a small web tool, [https://aoc.cadi.ac/](https://aoc.cadi.ac/) to run the solutions online.
+
+To get started with local web development environment start by adding `wasm32-unknown-unknown` toolchain:
+
+```bash
+$ rustup target add wasm32-unknown-unknown
+```
+
+Then install trunk
+
+```bash
+$ cargo install --locked trunk
+```
+
+and start the local development server with
+
+```bash
+$ trunk serve
+```
+
+This should start the server at `localhost:8080`.
 
 ## Solutions
 
