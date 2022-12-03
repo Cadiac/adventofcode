@@ -29,6 +29,14 @@ fn App() -> Html {
         }
     };
 
+    let run_day_3 = {
+        let console = console.clone();
+        move |_| {
+            let output = run_solution(aoc::solution::Day::Day03, None).unwrap();
+            console.set(output);
+        }
+    };
+
     html! {
         <>
             <header>
@@ -38,6 +46,7 @@ fn App() -> Html {
                         <li><button onclick={run_all}>{ "[Run All]" }</button></li>
                         <li><button onclick={run_day_1}>{ "[1]" }</button></li>
                         <li><button onclick={run_day_2}>{ "[2]" }</button></li>
+                        <li><button onclick={run_day_3}>{ "[3]" }</button></li>
                     </ul>
                 </nav>
             </header>

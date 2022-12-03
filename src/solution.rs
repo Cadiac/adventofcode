@@ -5,7 +5,7 @@ use log::info;
 
 pub mod day01;
 pub mod day02;
-// pub mod day03;
+pub mod day03;
 
 #[derive(Clone, Debug, PartialEq, Eq, clap::ValueEnum)]
 pub enum Day {
@@ -50,7 +50,7 @@ pub fn run_solution(day: Day, input: Option<String>) -> Result<Vec<String>, Box<
     match day {
         Day::Day01 => day01::Day01.run(input),
         Day::Day02 => day02::Day02.run(input),
-        // Day::Day03 => day03::Day03.run(input),
+        Day::Day03 => day03::Day03.run(input),
         _ => unimplemented!(),
     }
 }
@@ -60,7 +60,7 @@ pub fn run_all() -> Result<Vec<String>, Box<dyn Error>>{
 
     output.append(&mut day01::Day01.run(None)?);
     output.append(&mut day02::Day02.run(None)?);
-    // day03::Day03.run(None)?;
+    output.append(&mut day03::Day03.run(None)?);
 
     Ok(output)
 }
