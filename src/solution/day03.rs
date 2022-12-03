@@ -1,17 +1,19 @@
-use std::{collections::HashSet, error::Error};
-
 use itertools::Itertools;
+use std::iter::FromIterator;
+use std::{collections::HashSet, error::Error};
 
 use crate::solution::Solution;
 
 pub struct Day03;
 
-fn as_priority(item: char) -> u32 {
-    if item.is_lowercase() {
-        item as u32 - 'a' as u32 + 1
+fn as_priority(item: u8) -> u32 {
+    let priority = if item.is_ascii_lowercase() {
+        item - b'a' + 1
     } else {
-        item as u32 - 'A' as u32 + 27
-    }
+        item - b'A' + 27
+    };
+
+    priority as u32
 }
 
 impl Solution for Day03 {
@@ -32,12 +34,9 @@ impl Solution for Day03 {
             .map(|line| {
                 let (first, second) = line.split_at(line.len() / 2);
 
-                let first: HashSet<char> =
-                    first.chars().collect::<Vec<char>>().into_iter().collect();
-                let second: HashSet<char> =
-                    second.chars().collect::<Vec<char>>().into_iter().collect();
-
-                let shared = first.intersection(&second).next().expect("shared item");
+                let first: HashSet<u8> = HashSet::from_iter(first.bytes());
+                let second: HashSet<u8> = HashSet::from_iter(second.bytes());
+                let shared = first.intersection(&second).next().unwrap();
 
                 as_priority(*shared)
             })
@@ -50,19 +49,16 @@ impl Solution for Day03 {
             .chunks(3)
             .into_iter()
             .map(|group| {
-                let shared = group
+                let mut unique = group
                     .into_iter()
-                    .map(|elf| {
-                        elf.chars()
-                            .collect::<Vec<char>>()
-                            .into_iter()
-                            .collect::<HashSet<char>>()
-                    })
-                    .reduce(|acc, unique| acc.intersection(&unique).copied().collect())
-                    .expect("non empty group")
-                    .into_iter()
-                    .next()
-                    .expect("shared item");
+                    .map(|elf| HashSet::<u8>::from_iter(elf.bytes()));
+
+                let mut common = unique.next().unwrap();
+                for another in unique {
+                    common.retain(|item| another.contains(item));
+                }
+
+                let shared = common.into_iter().next().unwrap();
 
                 as_priority(shared)
             })
