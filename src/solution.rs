@@ -6,6 +6,7 @@ use log::info;
 pub mod day01;
 pub mod day02;
 pub mod day03;
+pub mod day04;
 
 #[derive(Clone, Debug, PartialEq, Eq, clap::ValueEnum)]
 pub enum Day {
@@ -13,6 +14,18 @@ pub enum Day {
     Day02,
     Day03,
     Day04,
+    Day05,
+}
+
+impl From<u8> for Day {
+    fn from(num: u8) -> Self {
+        match num {
+            1 => Day::Day01,
+            2 => Day::Day02,
+            3 => Day::Day03,
+            _ => unimplemented!(),
+        }
+    }
 }
 
 pub trait Solution {
@@ -46,7 +59,7 @@ pub trait Solution {
     }
 }
 
-pub fn run_solution(day: Day, input: Option<String>) -> Result<Vec<String>, Box<dyn Error>>{
+pub fn run_solution(day: Day, input: Option<String>) -> Result<Vec<String>, Box<dyn Error>> {
     match day {
         Day::Day01 => day01::Day01.run(input),
         Day::Day02 => day02::Day02.run(input),
@@ -55,12 +68,12 @@ pub fn run_solution(day: Day, input: Option<String>) -> Result<Vec<String>, Box<
     }
 }
 
-pub fn run_all() -> Result<Vec<String>, Box<dyn Error>>{
+pub fn run_all() -> Result<Vec<String>, Box<dyn Error>> {
     let mut output = Vec::new();
 
-    output.append(&mut day01::Day01.run(None)?);
-    output.append(&mut day02::Day02.run(None)?);
-    output.append(&mut day03::Day03.run(None)?);
+    for day in 1..=3 {
+        output.append(&mut run_solution(day.into(), None)?);
+    }
 
     Ok(output)
 }

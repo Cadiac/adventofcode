@@ -18,8 +18,13 @@ button {
     color: #009900;
     cursor: pointer;
 }
-button:hover, button:focus {
+button:hover, button:focus, a:hover, a:focus {
     color: #99ff99;
+}
+
+a {
+    color: #009900;
+    text-decoration: none;
 }
 
 pre {
@@ -55,4 +60,11 @@ header h1 {
     padding-right: 1em;
     font-size: 1em;
     font-weight: normal;  
+}
+footer {
+    position: absolute;
+    bottom: 0;
+    margin: 1em auto 1em auto;
+    width: 100%;
+    text-align: center;
 }

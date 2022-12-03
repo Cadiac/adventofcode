@@ -13,26 +13,10 @@ fn App() -> Html {
         }
     };
 
-    let run_day_1 = {
+    let run_day = |day: aoc::solution::Day| {
         let console = console.clone();
         move |_| {
-            let output = run_solution(aoc::solution::Day::Day01, None).unwrap();
-            console.set(output);
-        }
-    };
-
-    let run_day_2 = {
-        let console = console.clone();
-        move |_| {
-            let output = run_solution(aoc::solution::Day::Day02, None).unwrap();
-            console.set(output);
-        }
-    };
-
-    let run_day_3 = {
-        let console = console.clone();
-        move |_| {
-            let output = run_solution(aoc::solution::Day::Day03, None).unwrap();
+            let output = run_solution(day.clone(), None).unwrap();
             console.set(output);
         }
     };
@@ -44,19 +28,31 @@ fn App() -> Html {
                 <nav>
                     <ul>
                         <li><button onclick={run_all}>{ "[Run All]" }</button></li>
-                        <li><button onclick={run_day_1}>{ "[1]" }</button></li>
-                        <li><button onclick={run_day_2}>{ "[2]" }</button></li>
-                        <li><button onclick={run_day_3}>{ "[3]" }</button></li>
+                        {
+                            for (1..=3).map(|day| {
+                                html! {
+                                    <li><button onclick={run_day(day.into())}>{format!("[{}]", day)}</button></li>
+                                }
+                            })
+                        }
                     </ul>
                 </nav>
             </header>
             <main>
                 <pre>{ console.join("\n") }</pre>
             </main>
+            <footer>
+                <small>
+                    {"Made by "}
+                    <a href="https://github.com/Cadiac">{"Cadiac"}</a>
+                    {". Source code can be be found "}
+                    <a href="https://github.com/Cadiac/adventofcode">{"here"}</a>
+                    {"."}
+                </small>
+            </footer>
         </>
     }
 }
-
 
 fn main() {
     wasm_logger::init(wasm_logger::Config::new(log::Level::Info));
