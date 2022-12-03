@@ -4,7 +4,7 @@ use aoc::solution::{run_all, run_solution};
 
 #[function_component]
 fn App() -> Html {
-    let console = use_state(|| vec![]);
+    let console = use_state(Vec::new);
     let run_all = {
         let console = console.clone();
         move |_| {

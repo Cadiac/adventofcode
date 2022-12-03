@@ -1,10 +1,18 @@
-use std::{collections::HashMap, collections::HashSet, error::Error};
+use std::{collections::HashSet, error::Error};
 
 use itertools::Itertools;
 
 use crate::solution::Solution;
 
 pub struct Day03;
+
+fn as_priority(item: char) -> u32 {
+    if item.is_lowercase() {
+        item as u32 - 'a' as u32 + 1
+    } else {
+        item as u32 - 'A' as u32 + 27
+    }
+}
 
 impl Solution for Day03 {
     type F = u32;
@@ -29,13 +37,9 @@ impl Solution for Day03 {
                 let second: HashSet<char> =
                     second.chars().collect::<Vec<char>>().into_iter().collect();
 
-                let shared = first.intersection(&second).next().unwrap();
+                let shared = first.intersection(&second).next().expect("shared item");
 
-                if shared.is_lowercase() {
-                    *shared as u32 - 'a' as u32 + 1
-                } else {
-                    *shared as u32 - 'A' as u32 + 27
-                }
+                as_priority(*shared)
             })
             .sum())
     }
@@ -46,27 +50,21 @@ impl Solution for Day03 {
             .chunks(3)
             .into_iter()
             .map(|group| {
-                let unique = group.into_iter().map(|elf| {
-                    elf.chars()
-                        .collect::<Vec<char>>()
-                        .into_iter()
-                        .collect::<HashSet<char>>()
-                });
+                let shared = group
+                    .into_iter()
+                    .map(|elf| {
+                        elf.chars()
+                            .collect::<Vec<char>>()
+                            .into_iter()
+                            .collect::<HashSet<char>>()
+                    })
+                    .reduce(|acc, unique| acc.intersection(&unique).copied().collect())
+                    .expect("non empty group")
+                    .into_iter()
+                    .next()
+                    .expect("shared item");
 
-                let mut common: HashMap<char, usize> = HashMap::new();
-
-                for chars in unique {
-                    for c in chars.iter() {
-                        *common.entry(*c).or_insert(0) += 1;
-                    }
-                }
-
-                let (shared, _) = common.into_iter().find(|(_, count)| *count == 3).unwrap();
-                if shared.is_lowercase() {
-                    shared as u32 - 'a' as u32 + 1
-                } else {
-                    shared as u32 - 'A' as u32 + 27
-                }
+                as_priority(shared)
             })
             .sum())
     }
