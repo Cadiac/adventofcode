@@ -1,19 +1,19 @@
 use yew::prelude::*;
 
-use aoc::solution::{run_all, run_solution};
+use aoc::solution::{run_all, run_solution, MAX_DAYS};
 
 #[function_component]
 fn App() -> Html {
     let console = use_state(|| vec![
-        "             *             ".to_string(),
-        "             ^             ".to_string(),
-        "            ^^o            ".to_string(),
-        "            o^^            ".to_string(),
-        "            ^^o^           ".to_string(),
-        "           o^^^^o          ".to_string(),
-        "           ^^o^^^^         ".to_string(),
-        "       ______||______      ".to_string(),
-        "          AoC 2022         ".to_string(),
+        "              *             ".to_string(),
+        "              ^             ".to_string(),
+        "             ^^o            ".to_string(),
+        "             o^^            ".to_string(),
+        "             ^^o^           ".to_string(),
+        "            o^^^^o          ".to_string(),
+        "            ^^o^^^^         ".to_string(),
+        "        ______||______      ".to_string(),
+        "           AoC 2022         ".to_string(),
     ]);
     let run_all = {
         let console = console.clone();
@@ -39,7 +39,7 @@ fn App() -> Html {
                     <ul>
                         <li><button onclick={run_all}>{ "[Run All]" }</button></li>
                         {
-                            for (1..=4).map(|day| {
+                            for (1..=MAX_DAYS).map(|day| {
                                 html! {
                                     <li><button onclick={run_day(day.into())}>{format!("[{}]", day)}</button></li>
                                 }
