@@ -64,6 +64,7 @@ pub fn run_solution(day: Day, input: Option<String>) -> Result<Vec<String>, Box<
         Day::Day01 => day01::Day01.run(input),
         Day::Day02 => day02::Day02.run(input),
         Day::Day03 => day03::Day03.run(input),
+        Day::Day04 => day04::Day04.run(input),
         _ => unimplemented!(),
     }
 }
@@ -71,7 +72,7 @@ pub fn run_solution(day: Day, input: Option<String>) -> Result<Vec<String>, Box<
 pub fn run_all() -> Result<Vec<String>, Box<dyn Error>> {
     let mut output = Vec::new();
 
-    for day in 1..=3 {
+    for day in 1..=4 {
         output.append(&mut run_solution(day.into(), None)?);
     }
 

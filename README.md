@@ -4,6 +4,8 @@
 
 Solutions to [Advent of Code 2022](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
 
+Online solutions runner: https://aoc.cadi.ac/
+
 ## Installing
 
 Follow [Rust](https://www.rust-lang.org/en-US/install.html) installation instructions.
@@ -67,3 +69,4 @@ This should start the server at `localhost:8080`.
 ❄️ [Day 01](src/bin/day01.rs)
 ❄️ [Day 02](src/bin/day02.rs)
 ❄️ [Day 03](src/bin/day03.rs)
+❄️ [Day 04](src/bin/day04.rs)
