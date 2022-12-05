@@ -1,6 +1,4 @@
-use std::error::Error;
-
-use crate::solution::{Solution};
+use crate::solution::{AocError, Solution};
 
 #[derive(Clone, Copy)]
 enum RPS {
@@ -53,7 +51,7 @@ impl Solution for Day02 {
         include_str!("../../inputs/day02.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<i64, Box<dyn Error>> {
+    fn part_1(&self, input: &str) -> Result<i64, AocError> {
         let total = input
             .lines()
             .map(|line| {
@@ -85,7 +83,7 @@ impl Solution for Day02 {
         Ok(total)
     }
 
-    fn part_2(&self, input: &str) -> Result<i64, Box<dyn Error>> {
+    fn part_2(&self, input: &str) -> Result<i64, AocError> {
         let total = input
             .lines()
             .map(|line| {

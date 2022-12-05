@@ -1,38 +1,52 @@
-use std::error::Error;
-
-use crate::solution::{Solution};
+use crate::solution::{AocError, Solution};
 
 pub struct Day01;
 
-fn parse(input: &str) -> Vec<u64> {
-    input
-        .split("\n\n")
-        .map(|chunk| chunk.lines().map(|line| line.parse::<u64>().unwrap()).sum())
-        .collect()
+fn parse(input: &str) -> Result<Vec<u64>, AocError> {
+    let mut values = Vec::new();
+
+    for chunk in input.split("\n\n") {
+        let mut sum = 0;
+
+        for line in chunk.lines() {
+            match line.parse::<u64>() {
+                Ok(val) => sum += val,
+                Err(err) => return Err(AocError::parse_error(line, err)),
+            }
+        }
+
+        values.push(sum);
+    }
+
+    Ok(values)
 }
 
 impl Solution for Day01 {
     type F = u64;
     type S = u64;
 
-    fn name(&self) -> &'static str { "Day 01" }
+    fn name(&self) -> &'static str {
+        "Day 01"
+    }
 
     fn default_input(&self) -> &'static str {
         include_str!("../../inputs/day01.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<u64, Box<dyn Error>> {
-        let elves = parse(input);
-        let most = elves.iter().max().unwrap();
-
-        Ok(*most)
+    fn part_1(&self, input: &str) -> Result<u64, AocError> {
+        parse(input).and_then(|elves| {
+            elves
+                .into_iter()
+                .max()
+                .ok_or_else(|| AocError("no distinct max".to_string()))
+        })
     }
 
-    fn part_2(&self, input: &str) -> Result<u64, Box<dyn Error>> {
-        let mut elves = parse(input);
-        elves.sort();
-
-        Ok(elves.iter().rev().take(3).sum())
+    fn part_2(&self, input: &str) -> Result<u64, AocError> {
+        parse(input).and_then(|mut elves| {
+            elves.sort();
+            Ok(elves.iter().rev().take(3).sum())
+        })
     }
 }
 
@@ -58,9 +72,8 @@ mod tests {
                 9000\n\
                 \n\
                 10000"
-            )
-            .unwrap(),
-            24000
+            ),
+            Ok(24000)
         );
     }
 
@@ -82,9 +95,25 @@ mod tests {
                 9000\n\
                 \n\
                 10000"
-            )
-            .unwrap(),
-            45000
+            ),
+            Ok(45000)
+        );
+    }
+
+    #[test]
+    fn it_handles_broken_input() {
+        assert_eq!(
+            Day01.part_2(
+                "10a00\n\
+                2000\n\
+                3000
+                \n\
+                10000"
+            ),
+            Err(AocError::parse_error(
+                "10a00",
+                "invalid digit found in string"
+            ))
         );
     }
 }

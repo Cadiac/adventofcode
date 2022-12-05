@@ -2,7 +2,7 @@ use itertools::Itertools;
 use std::iter::FromIterator;
 use std::{collections::HashSet, error::Error};
 
-use crate::solution::Solution;
+use crate::solution::{AocError, Solution};
 
 pub struct Day03;
 
@@ -28,7 +28,7 @@ impl Solution for Day03 {
         include_str!("../../inputs/day03.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<u32, Box<dyn Error>> {
+    fn part_1(&self, input: &str) -> Result<u32, AocError> {
         Ok(input
             .lines()
             .map(|line| {
@@ -43,7 +43,7 @@ impl Solution for Day03 {
             .sum())
     }
 
-    fn part_2(&self, input: &str) -> Result<u32, Box<dyn Error>> {
+    fn part_2(&self, input: &str) -> Result<u32, AocError> {
         Ok(input
             .lines()
             .chunks(3)

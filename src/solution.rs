@@ -37,6 +37,24 @@ impl From<u8> for Day {
     }
 }
 
+#[derive(PartialEq, Debug, Clone)]
+pub struct AocError(String);
+
+impl AocError {
+    fn parse_error<E: fmt::Display>(input: &str, err: E) -> Self {
+        AocError(format!("Parse error at: {input}: {err}"))
+    }
+}
+
+impl Error for AocError {}
+
+impl std::fmt::Display for AocError {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+
 pub trait Solution {
     type F: fmt::Display;
     type S: fmt::Display;
@@ -44,8 +62,8 @@ pub trait Solution {
     fn name(&self) -> &'static str;
     fn default_input(&self) -> &'static str;
 
-    fn part_1(&self, input: &str) -> Result<Self::F, Box<dyn Error>>;
-    fn part_2(&self, input: &str) -> Result<Self::S, Box<dyn Error>>;
+    fn part_1(&self, input: &str) -> Result<Self::F, AocError>;
+    fn part_2(&self, input: &str) -> Result<Self::S, AocError>;
 
     fn run(&self, input: Option<String>) -> Result<Vec<String>, Box<dyn Error>> {
         let input = input.unwrap_or_else(|| self.default_input().to_owned());

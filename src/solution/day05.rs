@@ -1,7 +1,7 @@
 use serde_scan;
 use std::error::Error;
 
-use crate::solution::Solution;
+use crate::solution::{Solution, AocError};
 
 pub struct Day05;
 
@@ -52,7 +52,7 @@ impl Solution for Day05 {
         include_str!("../../inputs/day05.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<String, Box<dyn Error>> {
+    fn part_1(&self, input: &str) -> Result<String, AocError> {
         let (mut crates, moves) = parse(input);
 
         for (count, from, to) in moves {
@@ -65,7 +65,7 @@ impl Solution for Day05 {
         Ok(top_crates(crates))
     }
 
-    fn part_2(&self, input: &str) -> Result<String, Box<dyn Error>> {
+    fn part_2(&self, input: &str) -> Result<String, AocError> {
         let (mut crates, moves) = parse(input);
 
         for (count, from, to) in moves {

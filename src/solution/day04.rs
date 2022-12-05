@@ -1,6 +1,6 @@
 use std::{error::Error};
 
-use crate::solution::Solution;
+use crate::solution::{Solution, AocError};
 
 pub struct Day04;
 
@@ -35,7 +35,7 @@ impl Solution for Day04 {
         include_str!("../../inputs/day04.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<usize, Box<dyn Error>> {
+    fn part_1(&self, input: &str) -> Result<usize, AocError> {
         Ok(input
             .lines()
             .map(parse)
@@ -43,7 +43,7 @@ impl Solution for Day04 {
             .count())
     }
 
-    fn part_2(&self, input: &str) -> Result<usize, Box<dyn Error>> {
+    fn part_2(&self, input: &str) -> Result<usize, AocError> {
         Ok(input
             .lines()
             .map(parse)
