@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt;
 
-use log::info;
+use log::{info, error};
 
 pub mod day01;
 pub mod day02;
@@ -41,7 +41,10 @@ impl From<u8> for Day {
 pub struct AocError(String);
 
 impl AocError {
-    fn parse_error<E: fmt::Display>(input: &str, err: E) -> Self {
+    fn logic<E: fmt::Display>(err: E) -> Self {
+        AocError(format!("Logic error: {err}"))
+    }
+    fn parse<E: fmt::Display>(input: &str, err: E) -> Self {
         AocError(format!("Parse error at: {input}: {err}"))
     }
 }
@@ -65,28 +68,42 @@ pub trait Solution {
     fn part_1(&self, input: &str) -> Result<Self::F, AocError>;
     fn part_2(&self, input: &str) -> Result<Self::S, AocError>;
 
-    fn run(&self, input: Option<String>) -> Result<Vec<String>, Box<dyn Error>> {
+    fn run(&self, input: Option<String>) -> Vec<String> {
         let input = input.unwrap_or_else(|| self.default_input().to_owned());
         let name = self.name();
         let mut output = Vec::new();
 
-        let part_1 = self.part_1(&input)?;
+        match self.part_1(&input) {
+            Ok(result) => {
+                let logline = format!("[{name}][PART 1] {result}");
+                info!("{logline}");
+                output.push(logline);
+            },
+            Err(err) => {
+                let logline = format!("[{name}][PART 1] Error: {err}");
+                error!("{logline}");
+                output.push(logline);
+            }
+        };
 
-        let result = format!("{name}: Part 1 - {part_1}");
-        info!("{result}");
-        output.push(result);
+        match self.part_2(&input) {
+            Ok(result) => {
+                let logline = format!("[{name}][PART 2] {result}");
+                info!("{logline}");
+                output.push(logline);
+            },
+            Err(err) => {
+                let logline = format!("[{name}][PART 2] Error: {err}");
+                error!("{logline}");
+                output.push(logline);
+            }
+        };
 
-        let part_2 = self.part_2(&input)?;
-
-        let result = format!("{name}: Part 2 - {part_2}");
-        info!("{result}");
-        output.push(result);
-
-        Ok(output)
+        output
     }
 }
 
-pub fn run_solution(day: Day, input: Option<String>) -> Result<Vec<String>, Box<dyn Error>> {
+pub fn run_solution(day: Day, input: Option<String>) -> Vec<String> {
     match day {
         Day::Day01 => day01::Day01.run(input),
         Day::Day02 => day02::Day02.run(input),
@@ -98,13 +115,13 @@ pub fn run_solution(day: Day, input: Option<String>) -> Result<Vec<String>, Box<
     }
 }
 
-pub fn run_all() -> Result<Vec<String>, Box<dyn Error>> {
+pub fn run_all() -> Vec<String> {
     let mut output = Vec::new();
 
     for day in 1..=MAX_DAYS {
-        output.append(&mut run_solution(day.into(), None)?);
+        output.append(&mut run_solution(day.into(), None));
         output.push("--".to_string())
     }
 
-    Ok(output)
+    output
 }

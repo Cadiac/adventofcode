@@ -9,10 +9,9 @@ fn parse(input: &str) -> Result<Vec<u64>, AocError> {
         let mut sum = 0;
 
         for line in chunk.lines() {
-            match line.parse::<u64>() {
-                Ok(val) => sum += val,
-                Err(err) => return Err(AocError::parse_error(line, err)),
-            }
+            sum += line
+                .parse::<u64>()
+                .map_err(|err| AocError::parse(line, err))?;
         }
 
         values.push(sum);
@@ -38,7 +37,7 @@ impl Solution for Day01 {
             elves
                 .into_iter()
                 .max()
-                .ok_or_else(|| AocError("no distinct max".to_string()))
+                .ok_or_else(|| AocError::logic("no distinct max"))
         })
     }
 
@@ -110,7 +109,7 @@ mod tests {
                 \n\
                 10000"
             ),
-            Err(AocError::parse_error(
+            Err(AocError::parse(
                 "10a00",
                 "invalid digit found in string"
             ))

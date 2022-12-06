@@ -1,26 +1,28 @@
-use std::{error::Error};
-
-use crate::solution::{Solution, AocError};
+use crate::solution::{AocError, Solution};
+use std::num::ParseIntError;
 
 pub struct Day04;
 
-fn parse(input: &str) -> ((u32, u32), (u32, u32)) {
+fn parse(input: &str) -> Result<((u32, u32), (u32, u32)), AocError> {
     let mut pairs = input.split(",");
 
-    let first: Vec<u32> = pairs
+    let first = pairs
         .next()
-        .unwrap()
+        .ok_or_else( || AocError::parse("first", "no pair"))?
         .split("-")
-        .map(|value| value.parse::<u32>().unwrap())
-        .collect();
-    let second: Vec<u32> = pairs
-        .next()
-        .unwrap()
-        .split("-")
-        .map(|value| value.parse::<u32>().unwrap())
-        .collect();
+        .map(|value| value.parse::<u32>())
+        .collect::<Result<Vec<u32>, ParseIntError>>()
+        .map_err(|err| AocError::parse("first", err))?;
 
-    ((first[0], first[1]), (second[0], second[1]))
+    let second = pairs
+        .next()
+        .ok_or_else( || AocError::parse("second", "no pair"))?
+        .split("-")
+        .map(|value| value.parse::<u32>())
+        .collect::<Result<Vec<u32>, ParseIntError>>()
+        .map_err(|err| AocError::parse("second", err))?;
+
+    Ok(((first[0], first[1]), (second[0], second[1])))
 }
 
 impl Solution for Day04 {
@@ -36,19 +38,29 @@ impl Solution for Day04 {
     }
 
     fn part_1(&self, input: &str) -> Result<usize, AocError> {
-        Ok(input
-            .lines()
-            .map(parse)
-            .filter(|(a, b)| a.0 <= b.0 && a.1 >= b.1 || b.0 <= a.0 && b.1 >= a.1)
-            .count())
+        let mut count = 0;
+
+        for line in input.lines() {
+            let (a, b) = parse(line)?;
+            if a.0 <= b.0 && a.1 >= b.1 || b.0 <= a.0 && b.1 >= a.1 {
+                count += 1;
+            }
+        }
+
+        Ok(count)
     }
 
     fn part_2(&self, input: &str) -> Result<usize, AocError> {
-        Ok(input
-            .lines()
-            .map(parse)
-            .filter(|(a, b)| u32::max(a.0, b.0) <= u32::min(a.1, b.1))
-            .count())
+        let mut count = 0;
+
+        for line in input.lines() {
+            let (a, b) = parse(line)?;
+            if u32::max(a.0, b.0) <= u32::min(a.1, b.1) {
+                count += 1;
+            }
+        }
+
+        Ok(count)
     }
 }
 
@@ -59,34 +71,30 @@ mod tests {
     #[test]
     fn it_solves_part1_example() {
         assert_eq!(
-            Day04
-                .part_1(
-                    "2-4,6-8\n\
-                    2-3,4-5\n\
-                    5-7,7-9\n\
-                    2-8,3-7\n\
-                    6-6,4-6\n\
-                    2-6,4-8"
-                )
-                .unwrap(),
-            2
+            Day04.part_1(
+                "2-4,6-8\n\
+                2-3,4-5\n\
+                5-7,7-9\n\
+                2-8,3-7\n\
+                6-6,4-6\n\
+                2-6,4-8"
+            ),
+            Ok(2)
         );
     }
 
     #[test]
     fn it_solves_part2_example() {
         assert_eq!(
-            Day04
-                .part_2(
-                    "2-4,6-8\n\
-                    2-3,4-5\n\
-                    5-7,7-9\n\
-                    2-8,3-7\n\
-                    6-6,4-6\n\
-                    2-6,4-8"
-                )
-                .unwrap(),
-            4
+            Day04.part_2(
+                "2-4,6-8\n\
+                2-3,4-5\n\
+                5-7,7-9\n\
+                2-8,3-7\n\
+                6-6,4-6\n\
+                2-6,4-8"
+            ),
+            Ok(4)
         );
     }
 }

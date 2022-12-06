@@ -45,72 +45,88 @@ impl Solution for Day02 {
     type F = i64;
     type S = i64;
 
-    fn name(&self) -> &'static str { "Day 02" }
+    fn name(&self) -> &'static str {
+        "Day 02"
+    }
 
     fn default_input(&self) -> &'static str {
         include_str!("../../inputs/day02.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<i64, AocError> {
-        let total = input
-            .lines()
-            .map(|line| {
-                let mut choices = line.split(' ');
-                (
-                    choices.next().unwrap().into(),
-                    choices.next().unwrap().into(),
-                )
-            })
-            .map(|(opponent, selected): (RPS, RPS)| match opponent {
+        let mut total = 0;
+
+        for line in input.lines() {
+            let mut choices = line.split(' ');
+
+            let opponent: RPS = choices
+                .next()
+                .ok_or_else(|| AocError::parse(line, "missing opponent"))?
+                .into();
+            let selected: RPS = choices
+                .next()
+                .ok_or_else(|| AocError::parse(line, "missing selected"))?
+                .into();
+
+            let outcome = match opponent {
                 RPS::Rock => match selected {
-                    RPS::Rock => score(selected, Outcome::Draw),
-                    RPS::Paper => score(selected, Outcome::Win),
-                    RPS::Scissors => score(selected, Outcome::Lose),
+                    RPS::Rock => Outcome::Draw,
+                    RPS::Paper => Outcome::Win,
+                    RPS::Scissors => Outcome::Lose,
                 },
                 RPS::Paper => match selected {
-                    RPS::Rock => score(selected, Outcome::Lose),
-                    RPS::Paper => score(selected, Outcome::Draw),
-                    RPS::Scissors => score(selected, Outcome::Win),
+                    RPS::Rock => Outcome::Lose,
+                    RPS::Paper => Outcome::Draw,
+                    RPS::Scissors => Outcome::Win,
                 },
                 RPS::Scissors => match selected {
-                    RPS::Rock => score(selected, Outcome::Win),
-                    RPS::Paper => score(selected, Outcome::Lose),
-                    RPS::Scissors => score(selected, Outcome::Draw),
+                    RPS::Rock => Outcome::Win,
+                    RPS::Paper => Outcome::Lose,
+                    RPS::Scissors => Outcome::Draw,
                 },
-            })
-            .sum();
+            };
+    
+            total += score(selected, outcome);
+        }
 
         Ok(total)
     }
 
     fn part_2(&self, input: &str) -> Result<i64, AocError> {
-        let total = input
-            .lines()
-            .map(|line| {
-                let mut choices = line.split(' ');
-                (
-                    choices.next().unwrap().into(),
-                    choices.next().unwrap().into(),
-                )
-            })
-            .map(|(opponent, outcome): (RPS, Outcome)| match opponent {
+        let mut total = 0;
+
+        for line in input.lines() {
+            let mut choices = line.split(' ');
+
+            let opponent: RPS = choices
+                .next()
+                .ok_or_else(|| AocError::parse(line, "missing opponent"))?
+                .into();
+            let outcome: Outcome = choices
+                .next()
+                .ok_or_else(|| AocError::parse(line, "missing outcome"))?
+                .into();
+
+            let selected = match opponent {
                 RPS::Rock => match outcome {
-                    Outcome::Lose => score(RPS::Scissors, outcome),
-                    Outcome::Draw => score(RPS::Rock, outcome),
-                    Outcome::Win => score(RPS::Paper, outcome),
+                    Outcome::Lose => RPS::Scissors,
+                    Outcome::Draw => RPS::Rock,
+                    Outcome::Win => RPS::Paper,
                 },
                 RPS::Paper => match outcome {
-                    Outcome::Lose => score(RPS::Rock, outcome),
-                    Outcome::Draw => score(RPS::Paper, outcome),
-                    Outcome::Win => score(RPS::Scissors, outcome),
+                    Outcome::Lose => RPS::Rock,
+                    Outcome::Draw => RPS::Paper,
+                    Outcome::Win => RPS::Scissors,
                 },
                 RPS::Scissors => match outcome {
-                    Outcome::Lose => score(RPS::Paper, outcome),
-                    Outcome::Draw => score(RPS::Scissors, outcome),
-                    Outcome::Win => score(RPS::Rock, outcome),
+                    Outcome::Lose => RPS::Paper,
+                    Outcome::Draw => RPS::Scissors,
+                    Outcome::Win => RPS::Rock,
                 },
-            })
-            .sum();
+            };
+
+            total += score(selected, outcome);
+        }
 
         Ok(total)
     }
@@ -122,17 +138,11 @@ mod tests {
 
     #[test]
     fn it_solves_part1_example() {
-        assert_eq!(
-            Day02.part_1("A Y\nB X\nC Z").unwrap(),
-            15
-        );
+        assert_eq!(Day02.part_1("A Y\nB X\nC Z"), Ok(15));
     }
 
     #[test]
     fn it_solves_part2_example() {
-        assert_eq!(
-            Day02.part_2("A Y\nB X\nC Z").unwrap(),
-            12
-        );
+        assert_eq!(Day02.part_2("A Y\nB X\nC Z"), Ok(12));
     }
 }
