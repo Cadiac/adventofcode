@@ -33,18 +33,16 @@ impl Solution for Day01 {
     }
 
     fn part_1(&self, input: &str) -> Result<u64, AocError> {
-        parse(input).and_then(|elves| {
-            elves
-                .into_iter()
-                .max()
-                .ok_or_else(|| AocError::logic("no distinct max"))
-        })
+        parse(input)?
+            .into_iter()
+            .max()
+            .ok_or_else(|| AocError::logic("no distinct max"))
     }
 
     fn part_2(&self, input: &str) -> Result<u64, AocError> {
-        parse(input).and_then(|mut elves| {
+        parse(input).map(|mut elves| {
             elves.sort();
-            Ok(elves.iter().rev().take(3).sum())
+            elves.iter().rev().take(3).sum()
         })
     }
 }
@@ -109,10 +107,7 @@ mod tests {
                 \n\
                 10000"
             ),
-            Err(AocError::parse(
-                "10a00",
-                "invalid digit found in string"
-            ))
+            Err(AocError::parse("10a00", "invalid digit found in string"))
         );
     }
 }

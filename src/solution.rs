@@ -75,12 +75,12 @@ pub trait Solution {
 
         match self.part_1(&input) {
             Ok(result) => {
-                let logline = format!("[{name}][PART 1] {result}");
+                let logline = format!("[{name}][Part 1] {result}");
                 info!("{logline}");
                 output.push(logline);
             },
             Err(err) => {
-                let logline = format!("[{name}][PART 1] Error: {err}");
+                let logline = format!("[{name}][Part 1] Error: {err}");
                 error!("{logline}");
                 output.push(logline);
             }
@@ -88,12 +88,12 @@ pub trait Solution {
 
         match self.part_2(&input) {
             Ok(result) => {
-                let logline = format!("[{name}][PART 2] {result}");
+                let logline = format!("[{name}][Part 2] {result}");
                 info!("{logline}");
                 output.push(logline);
             },
             Err(err) => {
-                let logline = format!("[{name}][PART 2] Error: {err}");
+                let logline = format!("[{name}][Part 2] Error: {err}");
                 error!("{logline}");
                 output.push(logline);
             }
