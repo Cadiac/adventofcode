@@ -1,11 +1,11 @@
 use clap::{Parser, ValueHint};
 use env_logger::Env;
-use std::io::Read;
-use std::{path::PathBuf};
 use std::error::Error;
-use std::fs::{File};
+use std::fs::File;
+use std::io::Read;
+use std::path::PathBuf;
 
-use aoc::solution::{Day, run_solution, run_all};
+use aoc::solution::{run_all, run_solution, Day};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -28,7 +28,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     init_logger(cli.verbose);
 
     match cli.day {
-        None => run_all(),
+        None => {
+            run_all();
+        }
         Some(day) => {
             let input = match cli.file {
                 None => None,
@@ -36,14 +38,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                     let mut file = File::open(&path)?;
                     let mut input = String::new();
                     file.read_to_string(&mut input)?;
-        
+
                     Some(input)
                 }
             };
-            
-            run_solution(day, input)
+
+            run_solution(day, input);
         }
-    }?;
+    };
 
     Ok(())
 }

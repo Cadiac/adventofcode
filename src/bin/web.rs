@@ -18,7 +18,7 @@ fn App() -> Html {
     let run_all = {
         let console = console.clone();
         move |_| {
-            let output = run_all().unwrap();
+            let output = run_all();
             console.set(output);
         }
     };
@@ -26,7 +26,7 @@ fn App() -> Html {
     let run_day = |day: aoc::solution::Day| {
         let console = console.clone();
         move |_| {
-            let output = run_solution(day.clone(), None).unwrap();
+            let output = run_solution(day.clone(), None);
             console.set(output);
         }
     };
