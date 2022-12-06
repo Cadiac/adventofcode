@@ -66,8 +66,9 @@ This should start the server at `localhost:8080`.
 
 ## Solutions
 
-❄️ [Day 01](src/bin/day01.rs)
-❄️ [Day 02](src/bin/day02.rs)
-❄️ [Day 03](src/bin/day03.rs)
-❄️ [Day 04](src/bin/day04.rs)
-❄️ [Day 04](src/bin/day05.rs)
+❄️ [Day 01](src/solution/day01.rs)
+❄️ [Day 02](src/solution/day02.rs)
+❄️ [Day 03](src/solution/day03.rs)
+❄️ [Day 04](src/solution/day04.rs)
+❄️ [Day 05](src/solution/day05.rs)
+❄️ [Day 06](src/solution/day06.rs)
