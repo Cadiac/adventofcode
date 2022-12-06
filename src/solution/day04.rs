@@ -1,15 +1,17 @@
 use crate::solution::{AocError, Solution};
 use std::num::ParseIntError;
 
+type Pairs = ((u32, u32), (u32, u32));
+
 pub struct Day04;
 
-fn parse(input: &str) -> Result<((u32, u32), (u32, u32)), AocError> {
-    let mut pairs = input.split(",");
+fn parse(input: &str) -> Result<Pairs, AocError> {
+    let mut pairs = input.split(',');
 
     let first = pairs
         .next()
         .ok_or_else( || AocError::parse("first", "no pair"))?
-        .split("-")
+        .split('-')
         .map(|value| value.parse::<u32>())
         .collect::<Result<Vec<u32>, ParseIntError>>()
         .map_err(|err| AocError::parse("first", err))?;
@@ -17,7 +19,7 @@ fn parse(input: &str) -> Result<((u32, u32), (u32, u32)), AocError> {
     let second = pairs
         .next()
         .ok_or_else( || AocError::parse("second", "no pair"))?
-        .split("-")
+        .split('-')
         .map(|value| value.parse::<u32>())
         .collect::<Result<Vec<u32>, ParseIntError>>()
         .map_err(|err| AocError::parse("second", err))?;

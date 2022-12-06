@@ -2,9 +2,11 @@ use serde_scan::{self, ScanError};
 
 use crate::solution::{AocError, Solution};
 
+type Instructions = Vec<(usize, usize, usize)>;
+
 pub struct Day05;
 
-fn parse(input: &str) -> Result<(Vec<Vec<char>>, Vec<(usize, usize, usize)>), AocError> {
+fn parse(input: &str) -> Result<(Vec<Vec<char>>, Instructions), AocError> {
     let mut input = input.split("\n\n");
     let crates_input = input
         .next()
@@ -14,11 +16,10 @@ fn parse(input: &str) -> Result<(Vec<Vec<char>>, Vec<(usize, usize, usize)>), Ao
     let mut crates_input = crates_input.lines().rev();
 
     // Skip over the crate indices row, just use its length / 4 as the count
-    let crates_count = crates_input
+    let crates_count = (crates_input
         .next()
         .ok_or_else(|| AocError::parse("crate numbers", "missing"))?
-        .len()
-        + 1 / 4;
+        .len() + 1) / 4;
     let mut crates = vec![Vec::new(); crates_count];
 
     for line in crates_input {
