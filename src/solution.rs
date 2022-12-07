@@ -13,33 +13,6 @@ pub mod day07;
 
 pub const MAX_DAYS: u8 = 7;
 
-#[derive(Clone, Debug, PartialEq, Eq, clap::ValueEnum)]
-pub enum Day {
-    Day01,
-    Day02,
-    Day03,
-    Day04,
-    Day05,
-    Day06,
-    Day07,
-    Day08,
-}
-
-impl From<u8> for Day {
-    fn from(num: u8) -> Self {
-        match num {
-            1 => Day::Day01,
-            2 => Day::Day02,
-            3 => Day::Day03,
-            4 => Day::Day04,
-            5 => Day::Day05,
-            6 => Day::Day06,
-            7 => Day::Day07,
-            _ => unimplemented!(),
-        }
-    }
-}
-
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct AocError(String);
 
@@ -106,15 +79,15 @@ pub trait Solution {
     }
 }
 
-pub fn run_solution(day: Day, input: Option<String>) -> Vec<String> {
+pub fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
     match day {
-        Day::Day01 => day01::Day01.run(input),
-        Day::Day02 => day02::Day02.run(input),
-        Day::Day03 => day03::Day03.run(input),
-        Day::Day04 => day04::Day04.run(input),
-        Day::Day05 => day05::Day05.run(input),
-        Day::Day06 => day06::Day06.run(input),
-        Day::Day07 => day07::Day07.run(input),
+        1 => day01::Day01.run(input),
+        2 => day02::Day02.run(input),
+        3 => day03::Day03.run(input),
+        4 => day04::Day04.run(input),
+        5 => day05::Day05.run(input),
+        6 => day06::Day06.run(input),
+        7 => day07::Day07.run(input),
         _ => unimplemented!(),
     }
 }

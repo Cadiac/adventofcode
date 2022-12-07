@@ -14,10 +14,10 @@ Follow [Rust](https://www.rust-lang.org/en-US/install.html) installation instruc
 
 The project is split into separate binaries within one cargo project.
 
-You can run individual solutions with
+You can run individual solutions using custom inputs with
 
 ```bash
-$ cargo run -- --day day01 --file ./inputs/day01.txt
+$ cargo run -- --day 1 --file ./inputs/day01.txt
 ```
 
 or all solutions using defaults inputs from `inputs/` directory with

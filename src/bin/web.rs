@@ -23,7 +23,7 @@ fn App() -> Html {
         }
     };
 
-    let run_day = |day: aoc::solution::Day| {
+    let run_day = |day: u8| {
         let console = console.clone();
         move |_| {
             let output = run_solution(day.clone(), None);
@@ -41,7 +41,7 @@ fn App() -> Html {
                         {
                             for (1..=MAX_DAYS).map(|day| {
                                 html! {
-                                    <li><button onclick={run_day(day.into())}>{format!("[{}]", day)}</button></li>
+                                    <li><button onclick={run_day(day)}>{format!("[{}]", day)}</button></li>
                                 }
                             })
                         }

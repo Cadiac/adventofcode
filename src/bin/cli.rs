@@ -5,14 +5,14 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
-use aoc::solution::{run_all, run_solution, Day};
+use aoc::solution::{run_all, run_solution};
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
 struct Args {
     /// Day of the Solution
-    #[clap(short, long, value_enum)]
-    day: Option<Day>,
+    #[clap(short, long, value_name = "<1-25>")]
+    day: Option<u8>,
 
     /// Path to the input file
     #[clap(short, long, value_hint = ValueHint::FilePath)]
