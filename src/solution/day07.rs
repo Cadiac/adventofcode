@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use serde_scan::scan;
+
 use crate::solution::{AocError, Solution};
 
 pub struct Day07;
@@ -10,59 +12,41 @@ struct FsNode {
     files: HashMap<String, usize>,
 }
 
-fn parse(input: &str) -> FsNode {
+fn parse(input: &str) -> Result<FsNode, AocError> {
     let mut working_dir: Vec<String> = Vec::new();
     let mut root = FsNode::default();
 
-    let mut lines_iter = input.lines();
-    let mut current = lines_iter.next();
+    for line in input.lines() {
+        if line.starts_with('$') {
+            if line.starts_with("$ ls") {
+                continue;
+            }
 
-    while let Some(line) = current {
-        if line.starts_with("$ ls") {
+            let path = scan!("$ cd {}" <- line).map_err(|err| AocError::parse(line, err))?;
+
+            if path == ".." {
+                working_dir.pop();
+            } else {
+                working_dir.push(path);
+            }
+        } else {
             let mut target = &mut root;
             for path in working_dir.iter() {
                 target = target.directories.entry(path.clone()).or_default();
             }
 
-            loop {
-                current = lines_iter.next();
-
-                match current {
-                    Some(output) => {
-                        // End of the output, next command begins
-                        if output.starts_with("$") {
-                            break;
-                        }
-
-                        if output.starts_with("dir ") {
-                            if let Ok(name) = serde_scan::scan!("dir {}" <- output) {
-                                if !target.directories.contains_key(&name) {
-                                    target.directories.insert(name, FsNode::default());
-                                }
-                                continue;
-                            }
-                        } else if let Ok((size, name)) = serde_scan::scan!("{} {}" <- output) {
-                            target.files.insert(name, size);
-                            continue;
-                        }
-
-                        unreachable!()
-                    }
-                    None => break,
-                }
+            if line.starts_with("dir") {
+                let name = scan!("dir {}" <- line).map_err(|err| AocError::parse(line, err))?;
+                target.directories.entry(name).or_insert_with(FsNode::default);
+            } else {
+                let (size, name) =
+                    scan!("{} {}" <- line).map_err(|err| AocError::parse(line, err))?;
+                target.files.insert(name, size);
             }
-        } else if line.starts_with("$ cd ..") {
-            working_dir.pop();
-            current = lines_iter.next();
-        } else if let Ok(path) = serde_scan::scan!("$ cd {}" <- line) {
-            working_dir.push(path);
-            current = lines_iter.next();
-        } else {
-            unreachable!()
         }
     }
 
-    root
+    Ok(root)
 }
 
 fn find_directory_sizes(node: &FsNode) -> Vec<usize> {
@@ -72,16 +56,15 @@ fn find_directory_sizes(node: &FsNode) -> Vec<usize> {
     let mut sizes: Vec<usize> = node
         .directories
         .values()
-        .map(|sub_dir| {
+        .flat_map(|sub_dir| {
             let children = find_directory_sizes(sub_dir);
-            // The last element contains the size of the sub directory,
+            // The last element contains the size of the whole sub directory,
             // the elements before it are its children
             if let Some(last) = children.last() {
                 total_size += last;
             }
             children
         })
-        .flatten()
         .collect();
 
     // Add the sizes of files contained within this directory
@@ -105,19 +88,22 @@ impl Solution for Day07 {
     }
 
     fn part_1(&self, input: &str) -> Result<usize, AocError> {
-        Ok(find_directory_sizes(&parse(input))
+        let fs = parse(input)?;
+
+        Ok(find_directory_sizes(&fs)
             .into_iter()
             .filter(|size| *size <= 100000)
             .sum())
     }
 
     fn part_2(&self, input: &str) -> Result<usize, AocError> {
-        let mut sizes = find_directory_sizes(&parse(input));
+        let fs = parse(input)?;
+        let mut sizes = find_directory_sizes(&fs);
 
         let total_available = 70000000;
         let update_size = 30000000;
 
-        let used_space = sizes.last().unwrap();
+        let used_space = sizes.last().ok_or_else(|| AocError::logic("empty fs"))?;
         let required_space = update_size - (total_available - used_space);
 
         sizes.sort();

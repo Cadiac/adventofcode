@@ -1,4 +1,4 @@
-use serde_scan::{self, ScanError};
+use serde_scan::{ScanError};
 
 use crate::solution::{AocError, Solution};
 
