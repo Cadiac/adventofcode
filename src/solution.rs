@@ -9,8 +9,9 @@ pub mod day03;
 pub mod day04;
 pub mod day05;
 pub mod day06;
+pub mod day07;
 
-pub const MAX_DAYS: u8 = 6;
+pub const MAX_DAYS: u8 = 7;
 
 #[derive(Clone, Debug, PartialEq, Eq, clap::ValueEnum)]
 pub enum Day {
@@ -21,6 +22,7 @@ pub enum Day {
     Day05,
     Day06,
     Day07,
+    Day08,
 }
 
 impl From<u8> for Day {
@@ -32,6 +34,7 @@ impl From<u8> for Day {
             4 => Day::Day04,
             5 => Day::Day05,
             6 => Day::Day06,
+            7 => Day::Day07,
             _ => unimplemented!(),
         }
     }
@@ -111,6 +114,7 @@ pub fn run_solution(day: Day, input: Option<String>) -> Vec<String> {
         Day::Day04 => day04::Day04.run(input),
         Day::Day05 => day05::Day05.run(input),
         Day::Day06 => day06::Day06.run(input),
+        Day::Day07 => day07::Day07.run(input),
         _ => unimplemented!(),
     }
 }
