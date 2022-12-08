@@ -1,7 +1,7 @@
 use std::error::Error;
 use std::fmt;
 
-use log::{info, error};
+use log::{error, info};
 
 pub mod day01;
 pub mod day02;
@@ -18,10 +18,18 @@ pub const MAX_DAYS: u8 = 8;
 pub struct AocError(String);
 
 impl AocError {
-    fn logic<E: fmt::Display>(err: E) -> Self {
+    fn logic<E>(err: E) -> Self
+    where
+        E: fmt::Display,
+    {
         AocError(format!("Logic error: {err}"))
     }
-    fn parse<E: fmt::Display>(input: &str, err: E) -> Self {
+
+    fn parse<I, E>(input: I, err: E) -> Self
+    where
+        I: fmt::Display,
+        E: fmt::Display,
+    {
         AocError(format!("Parse error at: {input}: {err}"))
     }
 }
@@ -33,7 +41,6 @@ impl std::fmt::Display for AocError {
         write!(f, "{}", self.0)
     }
 }
-
 
 pub trait Solution {
     type F: fmt::Display;
@@ -55,7 +62,7 @@ pub trait Solution {
                 let logline = format!("[{name}][Part 1] {result}");
                 info!("{logline}");
                 output.push(logline);
-            },
+            }
             Err(err) => {
                 let logline = format!("[{name}][Part 1] Error: {err}");
                 error!("{logline}");
@@ -68,7 +75,7 @@ pub trait Solution {
                 let logline = format!("[{name}][Part 2] {result}");
                 info!("{logline}");
                 output.push(logline);
-            },
+            }
             Err(err) => {
                 let logline = format!("[{name}][Part 2] Error: {err}");
                 error!("{logline}");

@@ -72,27 +72,33 @@ impl Solution for Day08 {
     fn part_2(&self, input: &str) -> Result<i32, AocError> {
         let mut trees = parse(input);
 
-        // Assume rectangle shaped world
-        let height = trees.len();
-        let width = trees.first().unwrap().len();
-
-        // Offsets for translations of x and y in all rotations
-        let offsets = [
-            |x, y, _w, _h| (x, y),
-            |x, y, w, _h| (y, w - 1 - x),
-            |x, y, w, h| (w - 1 - x, h - 1 - y),
-            |x, y, _w, h| (h - 1 - y, x),
-        ];
+        // Assume square shaped world
+        let width = trees
+            .first()
+            .ok_or_else(|| AocError::logic("empty world"))?
+            .len();
 
         let mut scores: HashMap<(usize, usize), Vec<i32>> = HashMap::new();
 
-        for offset in offsets {
+        // Move one by one in each direction, collecting how many trees are seen that way,
+        // and store these on each coordinate towards every direction
+        for i in 0..4 {
             for y in 0..trees.len() {
                 for x in 0..trees[y].len() {
-                    let (offset_x, offset_y) = offset(x, y, width, height);
+                    let mut t_x = x;
+                    let mut t_y = y;
 
-                    let mut trees_iter = trees[offset_y].iter().skip(offset_x);
-                    let (starting_point, _) = trees_iter.next().unwrap();
+                    // Translate the starting point coordinates by rotation
+                    for _ in 0..i {
+                        let previous_x = t_x;
+                        t_x = t_y;
+                        t_y = width - 1 - previous_x;
+                    }
+
+                    let mut trees_iter = trees[t_y].iter().skip(t_x);
+                    let (starting_point, _) = trees_iter
+                        .next()
+                        .ok_or_else(|| AocError::logic("no starting point"))?;
 
                     let mut seen = 0;
                     for (tree_height, _) in trees_iter {
@@ -109,13 +115,11 @@ impl Solution for Day08 {
             trees = rotate_left(trees);
         }
 
-        let best_score = scores
+        scores
             .into_values()
-            .map(|values| values.into_iter().reduce(|acc, cur| acc * cur).unwrap())
+            .map(|values| values.into_iter().reduce(|acc, cur| acc * cur).unwrap_or(0))
             .max()
-            .unwrap();
-
-        Ok(best_score)
+            .ok_or_else(|| AocError::logic("no best score"))
     }
 }
 
