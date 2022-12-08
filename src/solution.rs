@@ -98,7 +98,7 @@ pub fn run_all() -> Vec<String> {
     let mut output = Vec::new();
 
     for day in 1..=MAX_DAYS {
-        output.append(&mut run_solution(day.into(), None));
+        output.append(&mut run_solution(day, None));
         output.push("--".to_string())
     }
 

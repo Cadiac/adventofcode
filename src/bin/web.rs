@@ -26,7 +26,7 @@ fn App() -> Html {
     let run_day = |day: u8| {
         let console = console.clone();
         move |_| {
-            let output = run_solution(day.clone(), None);
+            let output = run_solution(day, None);
             console.set(output);
         }
     };

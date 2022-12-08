@@ -1,4 +1,5 @@
 use crate::solution::{AocError, Solution};
+use std::collections::HashMap;
 
 pub struct Day08;
 
@@ -54,9 +55,9 @@ impl Solution for Day08 {
                     if *tree_height > tallest {
                         tallest = *tree_height;
 
-                        if *already_seen == false {
-                            seen += 1;
+                        if !(*already_seen) {
                             *already_seen = true;
+                            seen += 1;
                         }
                     }
                 }
@@ -70,45 +71,49 @@ impl Solution for Day08 {
 
     fn part_2(&self, input: &str) -> Result<i32, AocError> {
         let mut trees = parse(input);
-        let mut best_score = 0;
 
-        for y in 0..trees.len() {
-            for x in 0..trees[y].len() {
-                let starting_point = trees[y][x].0;
+        // Assume rectangle shaped world
+        let height = trees.len();
+        let width = trees.first().unwrap().len();
 
-                let mut scores = Vec::new();
+        // Offsets for translations of x and y in all rotations
+        let offsets = [
+            |x, y, _w, _h| (x, y),
+            |x, y, w, _h| (y, w - 1 - x),
+            |x, y, w, h| (w - 1 - x, h - 1 - y),
+            |x, y, _w, h| (h - 1 - y, x),
+        ];
 
-                // Offset translations of x and y in all rotations
-                let offsets = [
-                    (x, y),
-                    (y, trees[y].len() - 1 - x),
-                    (trees[y].len() - 1 - x, trees.len() - 1 - y),
-                    (trees.len() - 1 - y, x)
-                ];
+        let mut scores: HashMap<(usize, usize), Vec<i32>> = HashMap::new();
 
-                for (offset_x, offset_y) in offsets {
+        for offset in offsets {
+            for y in 0..trees.len() {
+                for x in 0..trees[y].len() {
+                    let (offset_x, offset_y) = offset(x, y, width, height);
+
+                    let mut trees_iter = trees[offset_y].iter().skip(offset_x);
+                    let (starting_point, _) = trees_iter.next().unwrap();
 
                     let mut seen = 0;
-
-                    for (tree_height, _) in trees[offset_y].iter_mut().skip(offset_x + 1) {
+                    for (tree_height, _) in trees_iter {
                         seen += 1;
-                        if *tree_height >= starting_point {
+                        if tree_height >= starting_point {
                             break;
                         }
                     }
-        
-                    scores.push(seen);
-        
-                    trees = rotate_left(trees);
-                }
 
-                let total_score = scores.into_iter().reduce(|acc, cur| acc * cur).unwrap();
-
-                if total_score > best_score {
-                    best_score = total_score;
+                    scores.entry((x, y)).or_default().push(seen);
                 }
             }
+
+            trees = rotate_left(trees);
         }
+
+        let best_score = scores
+            .into_values()
+            .map(|values| values.into_iter().reduce(|acc, cur| acc * cur).unwrap())
+            .max()
+            .unwrap();
 
         Ok(best_score)
     }
