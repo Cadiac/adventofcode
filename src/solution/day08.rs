@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 pub struct Day08;
 
-fn rotate_left<T>(data: Vec<Vec<T>>) -> Vec<Vec<T>> {
+fn rotate_left<T>(data: Vec<Vec<T>>) -> Result<Vec<Vec<T>>, AocError> {
     let size = data.len();
 
     let mut line_iters: Vec<_> = data
@@ -12,21 +12,20 @@ fn rotate_left<T>(data: Vec<Vec<T>>) -> Vec<Vec<T>> {
         .collect();
 
     (0..size)
-        .map(|_| {
-            line_iters
-                .iter_mut()
-                .map(|line| line.next().unwrap())
-                .collect::<Vec<T>>()
-        })
-        .collect()
+        .map(|_| line_iters.iter_mut().map(|line| line.next()).collect())
+        .collect::<Option<_>>()
+        .ok_or_else(|| AocError::logic("rotation failed"))
 }
 
-fn parse(input: &str) -> Vec<Vec<(i32, bool)>> {
+fn parse(input: &str) -> Result<Vec<Vec<(i32, bool)>>, AocError> {
     input
         .lines()
         .map(|line| {
             line.chars()
-                .map(|tree| (tree.to_digit(10).unwrap() as i32, false))
+                .map(|tree| match tree.to_digit(10) {
+                    Some(digit) => Ok((digit as i32, false)),
+                    None => Err(AocError::parse(tree, "failed to parse digit")),
+                })
                 .collect()
         })
         .collect()
@@ -45,7 +44,7 @@ impl Solution for Day08 {
     }
 
     fn part_1(&self, input: &str) -> Result<i32, AocError> {
-        let mut trees = parse(input);
+        let mut trees = parse(input)?;
         let mut seen = 0;
 
         for _ in 0..4 {
@@ -63,14 +62,14 @@ impl Solution for Day08 {
                 }
             }
 
-            trees = rotate_left(trees);
+            trees = rotate_left(trees)?;
         }
 
         Ok(seen)
     }
 
     fn part_2(&self, input: &str) -> Result<i32, AocError> {
-        let mut trees = parse(input);
+        let mut trees = parse(input)?;
 
         // Assume square shaped world
         let width = trees
@@ -112,12 +111,12 @@ impl Solution for Day08 {
                 }
             }
 
-            trees = rotate_left(trees);
+            trees = rotate_left(trees)?;
         }
 
         scores
             .into_values()
-            .map(|values| values.into_iter().reduce(|acc, cur| acc * cur).unwrap_or(0))
+            .map(|values| values.into_iter().product())
             .max()
             .ok_or_else(|| AocError::logic("no best score"))
     }
