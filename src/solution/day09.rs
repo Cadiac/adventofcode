@@ -14,10 +14,10 @@ fn parse(input: &str) -> Result<Vec<(Coords<i32>, usize)>, AocError> {
             let mut iter = line.split_ascii_whitespace();
 
             let direction = match iter.next() {
-                Some("U") => Coords::<i32> { x: 0, y: -1 },
-                Some("D") => Coords::<i32> { x: 0, y: 1 },
-                Some("L") => Coords::<i32> { x: -1, y: 0 },
-                Some("R") => Coords::<i32> { x: 1, y: 0 },
+                Some("U") => Coords { x: 0, y: -1 },
+                Some("D") => Coords { x: 0, y: 1 },
+                Some("L") => Coords { x: -1, y: 0 },
+                Some("R") => Coords { x: 1, y: 0 },
                 Some(dir) => return Err(AocError::parse(line, format!("unknown direction {dir}"))),
                 None => return Err(AocError::parse(line, "missing direction")),
             };
@@ -78,8 +78,8 @@ impl Solution for Day09 {
     }
 
     fn part_1(&self, input: &str) -> Result<usize, AocError> {
-        let mut head = Coords::<i32> { x: 0, y: 0 };
-        let mut tail = Coords::<i32> { x: 0, y: 0 };
+        let mut head = Coords { x: 0, y: 0 };
+        let mut tail = Coords { x: 0, y: 0 };
 
         let mut visited: HashSet<Coords<i32>> = HashSet::new();
         visited.insert(tail);
@@ -101,7 +101,7 @@ impl Solution for Day09 {
     }
 
     fn part_2(&self, input: &str) -> Result<usize, AocError> {
-        let mut rope = [Coords::<i32> { x: 0, y: 0 }; 10];
+        let mut rope = [Coords { x: 0, y: 0 }; 10];
 
         let mut visited: HashSet<Coords<i32>> = HashSet::new();
         visited.insert(rope[9]);
