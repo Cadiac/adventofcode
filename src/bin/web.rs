@@ -2,22 +2,37 @@ use yew::prelude::*;
 
 use aoc::solution::{run_all, run_solution, MAX_DAYS};
 
+use aoc::web::{rope::Rope};
+
 #[function_component]
 fn App() -> Html {
     let console = use_state(|| vec![
-        "              *             ".to_string(),
-        "              ^             ".to_string(),
-        "             ^^o            ".to_string(),
-        "             o^^            ".to_string(),
-        "             ^^o^           ".to_string(),
-        "            o^^^^o          ".to_string(),
-        "            ^^o^^^^         ".to_string(),
-        "        ______||______      ".to_string(),
-        "           AoC 2022         ".to_string(),
+        "                               ".to_string(),
+        "               *               ".to_string(),
+        "               ^^              ".to_string(),
+        "              ^^o              ".to_string(),
+        "              o^^              ".to_string(),
+        "              ^^o^             ".to_string(),
+        "             o^^^^o            ".to_string(),
+        "             ^^o^^^^           ".to_string(),
+        "        _______||_______       ".to_string(),
+        "            AoC 2022           ".to_string(),
     ]);
+
+    let view_rope = use_state(|| false);
+
+    let toggle_rope = {
+        let view_rope = view_rope.clone();
+        move |_| {
+            view_rope.set(!(*view_rope));
+        }
+    };
+
     let run_all = {
         let console = console.clone();
+        let view_rope = view_rope.clone();
         move |_| {
+            view_rope.set(false);
             let output = run_all();
             console.set(output);
         }
@@ -25,7 +40,9 @@ fn App() -> Html {
 
     let run_day = |day: u8| {
         let console = console.clone();
+        let view_rope = view_rope.clone();
         move |_| {
+            view_rope.set(false);
             let output = run_solution(day, None);
             console.set(output);
         }
@@ -37,9 +54,17 @@ fn App() -> Html {
                 <h1>{"AoC 2022"}</h1>
                 <nav>
                     <ul>
-                        <li><button onclick={run_all}>{ "[Run All]" }</button></li>
+                        <li><button onclick={run_all}>{ "[All]" }</button></li>
                         {
-                            for (1..=MAX_DAYS).map(|day| {
+                            for (1..=9).map(|day| {
+                                html! {
+                                    <li><button onclick={run_day(day)}>{format!("[{}]", day)}</button></li>
+                                }
+                            })
+                        }
+                        <li><button onclick={toggle_rope}>{ "[9+]" }</button></li>
+                        {
+                            for (9..=MAX_DAYS).map(|day| {
                                 html! {
                                     <li><button onclick={run_day(day)}>{format!("[{}]", day)}</button></li>
                                 }
@@ -49,7 +74,11 @@ fn App() -> Html {
                 </nav>
             </header>
             <main>
-                <pre>{ console.join("\n") }</pre>
+                {if *view_rope {
+                    html! { <Rope/> }
+                } else {
+                    html! { <pre><code>{ console.join("\n") }</code></pre> }
+                }}
             </main>
             <footer>
                 <small>

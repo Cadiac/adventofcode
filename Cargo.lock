@@ -29,7 +29,9 @@ dependencies = [
  "nom",
  "rayon",
  "serde_scan",
+ "wasm-bindgen",
  "wasm-logger",
+ "web-sys",
  "yew",
 ]
 

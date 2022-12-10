@@ -31,12 +31,29 @@ a {
     color: #009900;
     text-decoration: none;
 }
+h1, h2 {
+    font-size: 1em;
+    font-weight: normal;
+}
 
-pre {
+code {
+    position: relative;
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+}
+
+code:before {
+    z-index: -1;
+    content: "";
+    position: absolute;
+    display: block;
+    left: -2px;
+    right: -2px;
+    top: 3px;
+    bottom: 0px;
     border: 1px solid #333340;
     background: #10101a;
-    width: 100%;
-    max-width: 60em;
 }
 
 header {
@@ -76,4 +93,9 @@ footer {
     margin: 1em auto 1em auto;
     width: 100%;
     text-align: center;
+}
+
+.success {
+    color: #ffff66;
+    text-shadow: 0 0 5px #ffff66;
 }

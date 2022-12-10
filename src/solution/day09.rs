@@ -5,64 +5,101 @@ use crate::{
     utils::Coords,
 };
 
+type Visited = HashSet<Coords<i32>>;
+type Rope = Vec<Coords<i32>>;
+
 pub struct Day09;
 
-fn parse(input: &str) -> Result<Vec<(Coords<i32>, usize)>, AocError> {
-    input
-        .lines()
-        .map(|line| {
-            let mut iter = line.split_ascii_whitespace();
+impl Day09 {
+    fn parse(input: &str) -> Result<Vec<(Coords<i32>, usize)>, AocError> {
+        input
+            .lines()
+            .map(|line| {
+                let mut iter = line.split_ascii_whitespace();
 
-            let direction = match iter.next() {
-                Some("U") => Coords { x: 0, y: -1 },
-                Some("D") => Coords { x: 0, y: 1 },
-                Some("L") => Coords { x: -1, y: 0 },
-                Some("R") => Coords { x: 1, y: 0 },
-                Some(dir) => return Err(AocError::parse(line, format!("unknown direction {dir}"))),
-                None => return Err(AocError::parse(line, "missing direction")),
-            };
+                let direction = match iter.next() {
+                    Some("U") => Coords { x: 0, y: -1 },
+                    Some("D") => Coords { x: 0, y: 1 },
+                    Some("L") => Coords { x: -1, y: 0 },
+                    Some("R") => Coords { x: 1, y: 0 },
+                    Some(dir) => {
+                        return Err(AocError::parse(line, format!("unknown direction {dir}")))
+                    }
+                    None => return Err(AocError::parse(line, "missing direction")),
+                };
 
-            let steps = iter
-                .next()
-                .ok_or_else(|| AocError::parse(line, "missing steps"))?
-                .parse()
-                .map_err(|err| AocError::parse(line, err))?;
+                let steps = iter
+                    .next()
+                    .ok_or_else(|| AocError::parse(line, "missing steps"))?
+                    .parse()
+                    .map_err(|err| AocError::parse(line, err))?;
 
-            Ok((direction, steps))
-        })
-        .collect()
-}
-
-fn should_move(head: &Coords<i32>, tail: &Coords<i32>) -> Option<Coords<i32>> {
-    let dist_y = i32::abs(head.y - tail.y);
-    let dist_x = i32::abs(head.x - tail.x);
-
-    // If the head is ever two steps directly up, down, left, or right from the tail,
-    // the tail must also move one step in that direction
-    if head.x == tail.x && dist_y > 1 {
-        return Some(Coords {
-            x: 0,
-            y: i32::signum(head.y - tail.y),
-        });
+                Ok((direction, steps))
+            })
+            .collect()
     }
 
-    if head.y == tail.y && dist_x > 1 {
-        return Some(Coords {
-            x: i32::signum(head.x - tail.x),
-            y: 0,
-        });
+    fn should_move(head: &Coords<i32>, tail: &Coords<i32>) -> Option<Coords<i32>> {
+        let dist_y = i32::abs(head.y - tail.y);
+        let dist_x = i32::abs(head.x - tail.x);
+
+        // If the head is ever two steps directly up, down, left, or right from the tail,
+        // the tail must also move one step in that direction
+        if head.x == tail.x && dist_y > 1 {
+            return Some(Coords {
+                x: 0,
+                y: i32::signum(head.y - tail.y),
+            });
+        }
+
+        if head.y == tail.y && dist_x > 1 {
+            return Some(Coords {
+                x: i32::signum(head.x - tail.x),
+                y: 0,
+            });
+        }
+
+        // Otherwise, if the head and tail aren't touching and aren't in the same row or column,
+        // the tail always moves one step diagonally to keep up
+        if dist_x + dist_y > 2 {
+            return Some(Coords {
+                x: i32::signum(head.x - tail.x),
+                y: i32::signum(head.y - tail.y),
+            });
+        }
+
+        None
     }
 
-    // Otherwise, if the head and tail aren't touching and aren't in the same row or column,
-    // the tail always moves one step diagonally to keep up
-    if dist_x + dist_y > 2 {
-        return Some(Coords {
-            x: i32::signum(head.x - tail.x),
-            y: i32::signum(head.y - tail.y),
-        });
-    }
+    pub fn simulate(
+        directions: Vec<(Coords<i32>, usize)>,
+        mut rope: Rope,
+        mut visited: HashSet<Coords<i32>>,
+    ) -> (Visited, Rope) {
+        let length = rope.len();
 
-    None
+        visited.insert(rope[length - 1]);
+
+        for (direction, steps) in directions {
+            for _ in 0..steps {
+                rope[0].x += direction.x;
+                rope[0].y += direction.y;
+
+                for index in 1..length {
+                    if let Some(movement) = Self::should_move(&rope[index - 1], &rope[index]) {
+                        rope[index].x += movement.x;
+                        rope[index].y += movement.y;
+
+                        if index == length - 1 {
+                            visited.insert(rope[index]);
+                        }
+                    }
+                }
+            }
+        }
+
+        (visited, rope)
+    }
 }
 
 impl Solution for Day09 {
@@ -78,51 +115,17 @@ impl Solution for Day09 {
     }
 
     fn part_1(&self, input: &str) -> Result<usize, AocError> {
-        let mut head = Coords { x: 0, y: 0 };
-        let mut tail = Coords { x: 0, y: 0 };
-
-        let mut visited: HashSet<Coords<i32>> = HashSet::new();
-        visited.insert(tail);
-
-        for (direction, steps) in parse(input)? {
-            for _ in 0..steps {
-                head.x += direction.x;
-                head.y += direction.y;
-
-                if let Some(movement) = should_move(&head, &tail) {
-                    tail.x += movement.x;
-                    tail.y += movement.y;
-                    visited.insert(tail);
-                }
-            }
-        }
+        let directions = Self::parse(input)?;
+        let rope = vec![Coords { x: 0, y: 0 }; 2];
+        let (visited, _) = Self::simulate(directions, rope, HashSet::new());
 
         Ok(visited.len())
     }
 
     fn part_2(&self, input: &str) -> Result<usize, AocError> {
-        let mut rope = [Coords { x: 0, y: 0 }; 10];
-
-        let mut visited: HashSet<Coords<i32>> = HashSet::new();
-        visited.insert(rope[9]);
-
-        for (direction, steps) in parse(input)? {
-            for _ in 0..steps {
-                rope[0].x += direction.x;
-                rope[0].y += direction.y;
-
-                for index in 1..10 {
-                    if let Some(movement) = should_move(&rope[index - 1], &rope[index]) {
-                        rope[index].x += movement.x;
-                        rope[index].y += movement.y;
-
-                        if index == 9 {
-                            visited.insert(rope[index]);
-                        }
-                    }
-                }
-            }
-        }
+        let directions = Self::parse(input)?;
+        let rope = vec![Coords { x: 0, y: 0 }; 10];
+        let (visited, _) = Self::simulate(directions, rope, HashSet::new());
 
         Ok(visited.len())
     }
