@@ -64,7 +64,7 @@ fn App() -> Html {
                         }
                         <li><button onclick={toggle_rope}>{ "[9+]" }</button></li>
                         {
-                            for (9..=MAX_DAYS).map(|day| {
+                            for (10..=MAX_DAYS).map(|day| {
                                 html! {
                                     <li><button onclick={run_day(day)}>{format!("[{}]", day)}</button></li>
                                 }
