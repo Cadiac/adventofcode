@@ -123,7 +123,7 @@ impl Component for Rope {
                         } else if self.visited.contains(&Coords{x, y}) {
                             "#".to_string()
                         } else {
-                            format!(".")
+                            ".".to_string()
                         }
                     })
                     .collect::<String>()

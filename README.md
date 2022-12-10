@@ -75,3 +75,4 @@ This should start the server at `localhost:8080`.
 ❄️ [Day 07](src/solution/day07.rs)
 ❄️ [Day 08](src/solution/day08.rs)
 ❄️ [Day 09](src/solution/day09.rs)
+❄️ [Day 10](src/solution/day10.rs)
