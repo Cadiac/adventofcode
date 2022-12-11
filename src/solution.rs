@@ -13,8 +13,9 @@ pub mod day07;
 pub mod day08;
 pub mod day09;
 pub mod day10;
+pub mod day11;
 
-pub const MAX_DAYS: u8 = 10;
+pub const MAX_DAYS: u8 = 11;
 
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct AocError(String);
@@ -101,6 +102,7 @@ pub fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
         8 => day08::Day08.run(input),
         9 => day09::Day09.run(input),
         10 => day10::Day10.run(input),
+        11 => day11::Day11.run(input),
         _ => unimplemented!(),
     }
 }

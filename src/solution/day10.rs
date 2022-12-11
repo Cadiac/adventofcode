@@ -38,7 +38,7 @@ impl Solution for Day10 {
     type S = String;
 
     fn name(&self) -> &'static str {
-        "Day 09"
+        "Day 10"
     }
 
     fn default_input(&self) -> &'static str {
