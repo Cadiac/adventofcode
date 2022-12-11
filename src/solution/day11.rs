@@ -7,8 +7,10 @@ use crate::solution::{AocError, Solution};
 
 pub struct Day11;
 
+#[derive(Default)]
 enum Argument {
     Number(u32),
+    #[default]
     Old,
 }
 
@@ -17,78 +19,113 @@ struct Monkey {
     remainders: VecDeque<HashMap<u32, u32>>,
     operation: Box<dyn Fn(u32, u32) -> u32>,
     argument: Argument,
-    modulo: u32,
+    modulus: u32,
     next: (usize, usize),
     activity: usize,
 }
 
+impl Default for Monkey {
+    fn default() -> Self {
+        Monkey {
+            items: VecDeque::default(),
+            remainders: VecDeque::default(),
+            operation: Box::new(|x, y| x + y),
+            argument: Argument::default(),
+            modulus: 0,
+            next: (0, 0),
+            activity: 0,
+        }
+    }
+}
+
+enum Parser {
+    Id,
+    StartingItems,
+    Operation,
+    TestDivisible,
+    TestTrue,
+    TestFalse,
+    End,
+}
+
 impl Day11 {
     fn parse(input: &str) -> Result<Vec<Monkey>, AocError> {
-        input
-            .split("\n\n")
-            .map(|chunk| {
-                let mut lines = chunk.lines().skip(1);
+        let mut state = Parser::Id;
 
-                let mut line = lines
-                    .next()
-                    .ok_or_else(|| AocError::parse(chunk, "line 1"))?;
-                let items: String = serde_scan::scan!("  Starting items: {}" <- line)
-                    .map_err(|err| AocError::parse(line, err))?;
-                let items: VecDeque<u32> = items
-                    .split(", ")
-                    .map(|item| item.parse::<u32>())
-                    .collect::<Result<VecDeque<u32>, ParseIntError>>()
-                    .map_err(|err| AocError::parse(line, err))?;
+        let mut monkeys: Vec<Monkey> = Vec::new();
+        let mut current = Monkey::default();
 
-                line = lines
-                    .next()
-                    .ok_or_else(|| AocError::parse(chunk, "line 2"))?;
-                let (operator, argument): (char, &str) =
-                    serde_scan::scan!("  Operation: new = old {} {}" <- line)
+        for line in input.lines() {
+            match state {
+                Parser::Id => state = Parser::StartingItems,
+
+                Parser::StartingItems => {
+                    current.items = line
+                        .strip_prefix("  Starting items: ")
+                        .ok_or_else(|| AocError::parse(line, "prefix"))?
+                        .split(", ")
+                        .map(|item| item.parse::<u32>())
+                        .collect::<Result<VecDeque<u32>, ParseIntError>>()
                         .map_err(|err| AocError::parse(line, err))?;
 
-                let argument = match argument {
-                    "old" => Argument::Old,
-                    number => Argument::Number(
-                        number.parse().map_err(|err| AocError::parse(number, err))?,
-                    ),
-                };
+                    state = Parser::Operation;
+                }
 
-                let operation: Box<dyn Fn(u32, u32) -> u32> = if operator == '*' {
-                    Box::new(|a, b| -> u32 { a * b })
-                } else {
-                    Box::new(|a, b| -> u32 { a + b })
-                };
+                Parser::Operation => {
+                    let (operator, argument): (char, &str) =
+                        serde_scan::scan!("  Operation: new = old {} {}" <- line)
+                            .map_err(|err| AocError::parse(line, err))?;
 
-                line = lines
-                    .next()
-                    .ok_or_else(|| AocError::parse(chunk, "line 3"))?;
-                let modulo: u32 = serde_scan::scan!("  Test: divisible by {}" <- line)
-                    .map_err(|err| AocError::parse(line, err))?;
+                    let operation: Box<dyn Fn(u32, u32) -> u32> = if operator == '*' {
+                        Box::new(|a, b| -> u32 { a * b })
+                    } else {
+                        Box::new(|a, b| -> u32 { a + b })
+                    };
 
-                line = lines
-                    .next()
-                    .ok_or_else(|| AocError::parse(chunk, "line 4"))?;
-                let right: usize = serde_scan::scan!("    If true: throw to monkey {}" <- line)
-                    .map_err(|err| AocError::parse(line, err))?;
+                    let argument = match argument {
+                        "old" => Argument::Old,
+                        number => Argument::Number(
+                            number.parse().map_err(|err| AocError::parse(number, err))?,
+                        ),
+                    };
 
-                line = lines
-                    .next()
-                    .ok_or_else(|| AocError::parse(chunk, "line 5"))?;
-                let left: usize = serde_scan::scan!("    If false: throw to monkey {}" <- line)
-                    .map_err(|err| AocError::parse(line, err))?;
+                    current.operation = operation;
+                    current.argument = argument;
 
-                Ok(Monkey {
-                    items,
-                    operation,
-                    argument,
-                    modulo,
-                    next: (left, right),
-                    remainders: VecDeque::new(),
-                    activity: 0,
-                })
-            })
-            .collect()
+                    state = Parser::TestDivisible;
+                }
+
+                Parser::TestDivisible => {
+                    current.modulus = serde_scan::scan!("  Test: divisible by {}" <- line)
+                        .map_err(|err| AocError::parse(line, err))?;
+
+                    state = Parser::TestTrue;
+                }
+
+                Parser::TestTrue => {
+                    current.next.1 = serde_scan::scan!("    If true: throw to monkey {}" <- line)
+                        .map_err(|err| AocError::parse(line, err))?;
+
+                    state = Parser::TestFalse;
+                }
+
+                Parser::TestFalse => {
+                    current.next.0 = serde_scan::scan!("    If false: throw to monkey {}" <- line)
+                        .map_err(|err| AocError::parse(line, err))?;
+
+                    monkeys.push(current);
+                    current = Monkey::default();
+
+                    state = Parser::End;
+                }
+
+                Parser::End => {
+                    state = Parser::Id;
+                }
+            }
+        }
+
+        Ok(monkeys)
     }
 }
 
@@ -119,7 +156,7 @@ impl Solution for Day11 {
 
                     let worry_level = (monkeys[i].operation)(item, argument) / 3;
 
-                    let target = if worry_level % monkeys[i].modulo == 0 {
+                    let target = if worry_level % monkeys[i].modulus == 0 {
                         monkeys[i].next.1
                     } else {
                         monkeys[i].next.0
@@ -138,15 +175,16 @@ impl Solution for Day11 {
 
     fn part_2(&self, input: &str) -> Result<usize, AocError> {
         let mut monkeys = Self::parse(input)?;
-        // Gather list of modulos the monkeys are interested in
-        let modulos: Vec<u32> = monkeys.iter().map(|monkey| monkey.modulo).collect();
+
+        // Gather list of modulus for each monkey
+        let moduli: Vec<u32> = monkeys.iter().map(|monkey| monkey.modulus).collect();
 
         // Populate the initial item remainders for every divider
         for monkey in monkeys.iter_mut() {
             for item in monkey.items.iter() {
                 let mut item_remainders = HashMap::new();
-                for modulo in modulos.iter() {
-                    item_remainders.insert(*modulo, item % modulo);
+                for modulus in moduli.iter() {
+                    item_remainders.insert(*modulus, item % modulus);
                 }
                 monkey.remainders.push_back(item_remainders);
             }
@@ -157,17 +195,18 @@ impl Solution for Day11 {
                 while let Some(mut remainders) = monkeys[i].remainders.pop_front() {
                     monkeys[i].activity += 1;
 
-                    for (modulo, remainder) in remainders.iter_mut() {
+                    // Recalculate the item's remainders for each monkey's modulus
+                    for (modulus, remainder) in remainders.iter_mut() {
                         let argument = match monkeys[i].argument {
                             Argument::Number(num) => num,
                             Argument::Old => *remainder,
                         };
 
-                        *remainder = (monkeys[i].operation)(*remainder, argument) % modulo;
+                        *remainder = (monkeys[i].operation)(*remainder, argument) % modulus;
                     }
 
                     let remainder = *remainders
-                        .get(&monkeys[i].modulo)
+                        .get(&monkeys[i].modulus)
                         .ok_or_else(|| AocError::logic("unknown remainder"))?;
 
                     let target = if remainder == 0 {
