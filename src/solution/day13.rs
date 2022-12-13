@@ -13,16 +13,51 @@ use nom::{
 
 use crate::solution::{AocError, Solution};
 
-#[derive(Debug)]
-struct Pair {
-    left: Packet,
-    right: Packet,
-}
-
 #[derive(Debug, Clone, Eq, PartialEq)]
 enum Packet {
     Value(u32),
     Array(Vec<Packet>),
+}
+
+impl PartialOrd for Packet {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Packet {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self {
+            Packet::Value(left) => match other {
+                Packet::Value(right) => left.cmp(right),
+                Packet::Array(right) => {
+                    for i in 0..usize::min(1, right.len()) {
+                        let ordering = self.cmp(&right[i]);
+                        if ordering != Ordering::Equal {
+                            return ordering;
+                        }
+                    }
+
+                    return 1.cmp(&right.len());
+                }
+            },
+            Packet::Array(left) => {
+                let right = match other {
+                    Packet::Array(right) => right.clone(),
+                    Packet::Value(_) => vec![other.clone()],
+                };
+
+                for i in 0..usize::min(left.len(), right.len()) {
+                    let ordering = left[i].cmp(&right[i]);
+                    if ordering != Ordering::Equal {
+                        return ordering;
+                    }
+                }
+
+                return left.len().cmp(&right.len());
+            }
+        }
+    }
 }
 
 fn parse_packet(input: &str) -> IResult<&str, Packet> {
@@ -52,60 +87,21 @@ fn parse_array(input: &str) -> IResult<&str, Vec<Packet>> {
     )(input)
 }
 
-fn parse_pair(input: &str) -> IResult<&str, Pair> {
+fn parse_pair(input: &str) -> IResult<&str, [Packet; 2]> {
     context(
         "pair",
         map(
             separated_pair(parse_packet, newline, parse_packet),
-            |(left, right)| Pair { left, right },
+            |(left, right)| [left, right],
         ),
     )(input)
 }
 
-fn parse(input: &str) -> IResult<&str, Vec<Pair>> {
+fn parse(input: &str) -> IResult<&str, Vec<[Packet; 2]>> {
     context("pairs", separated_list0(tag("\n\n"), parse_pair))(input)
 }
 
 pub struct Day13;
-
-fn compare(left: &Packet, right: &Packet) -> Ordering {
-    if let Packet::Value(lval) = left {
-        if let Packet::Value(rval) = right {
-            return lval.cmp(rval);
-        } else if let Packet::Array(rval) = right {
-            let lval = vec![left.clone()];
-
-            for i in 0..usize::min(lval.len(), rval.len()) {
-                let cmp = compare(&lval[i], &rval[i]);
-                if cmp != Ordering::Equal {
-                    return cmp;
-                }
-            }
-
-            return lval.len().cmp(&rval.len())
-        }
-    }
-
-    if let Packet::Array(lval) = left {
-        let rval = match right {
-            Packet::Array(rval) => rval.clone(),
-            Packet::Value(_) => {
-                vec![right.clone()]
-            }
-        };
-
-        for i in 0..usize::min(lval.len(), rval.len()) {
-            let cmp = compare(&lval[i], &rval[i]);
-            if cmp != Ordering::Equal {
-                return cmp;
-            }
-        }
-
-        return lval.len().cmp(&rval.len())
-    }
-
-    Ordering::Equal
-}
 
 impl Solution for Day13 {
     type F = usize;
@@ -122,23 +118,18 @@ impl Solution for Day13 {
     fn part_1(&self, input: &str) -> Result<usize, AocError> {
         let (_, pairs) = parse(input).map_err(|err| AocError::parse("", err))?;
 
-        let correct = pairs
-            .iter()
+        Ok(pairs
+            .into_iter()
             .enumerate()
-            .filter(|(_, pair)| compare(&pair.left, &pair.right) == Ordering::Less)
+            .filter(|(_, [left, right])| left.cmp(right) == Ordering::Less)
             .map(|(i, _)| i + 1)
-            .collect::<Vec<_>>();
-
-        Ok(correct.iter().sum())
+            .sum())
     }
 
     fn part_2(&self, input: &str) -> Result<usize, AocError> {
         let (_, pairs) = parse(input).map_err(|err| AocError::parse("", err))?;
 
-        let mut packets = pairs
-            .into_iter()
-            .flat_map(|pair| vec!(pair.left, pair.right))
-            .collect::<Vec<_>>();
+        let mut packets = pairs.into_iter().flatten().collect::<Vec<_>>();
 
         let key_2 = Packet::Array(vec![Packet::Value(2)]);
         let key_6 = Packet::Array(vec![Packet::Value(6)]);
@@ -146,7 +137,7 @@ impl Solution for Day13 {
         packets.push(key_2.clone());
         packets.push(key_6.clone());
 
-        packets.sort_by(compare);
+        packets.sort();
 
         Ok(packets
             .into_iter()
