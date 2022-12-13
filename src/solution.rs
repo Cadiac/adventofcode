@@ -106,7 +106,7 @@ pub fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
         10 => day10::Day10.run(input),
         11 => day11::Day11.run(input),
         12 => day12::Day12.run(input),
-        13 => day12::Day12.run(input),
+        13 => day13::Day13.run(input),
         _ => unimplemented!(),
     }
 }
