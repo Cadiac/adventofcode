@@ -27,26 +27,9 @@ impl PartialOrd for Packet {
 
 impl Ord for Packet {
     fn cmp(&self, other: &Self) -> Ordering {
-        match self {
-            Packet::Value(left) => match other {
-                Packet::Value(right) => left.cmp(right),
-                Packet::Array(right) => {
-                    for i in 0..usize::min(1, right.len()) {
-                        let ordering = self.cmp(&right[i]);
-                        if ordering != Ordering::Equal {
-                            return ordering;
-                        }
-                    }
-
-                    return 1.cmp(&right.len());
-                }
-            },
-            Packet::Array(left) => {
-                let right = match other {
-                    Packet::Array(right) => right.clone(),
-                    Packet::Value(_) => vec![other.clone()],
-                };
-
+        match (self, other) {
+            (Packet::Value(left), Packet::Value(right)) => left.cmp(right),
+            (Packet::Array(left), Packet::Array(right)) => {
                 for i in 0..usize::min(left.len(), right.len()) {
                     let ordering = left[i].cmp(&right[i]);
                     if ordering != Ordering::Equal {
@@ -54,7 +37,27 @@ impl Ord for Packet {
                     }
                 }
 
-                return left.len().cmp(&right.len());
+                left.len().cmp(&right.len())
+            }
+            (Packet::Value(_), Packet::Array(right)) => {
+                if right.len() > 0 {
+                    let ordering = self.cmp(&right[0]);
+                    if ordering != Ordering::Equal {
+                        return ordering;
+                    }
+                }
+
+                1.cmp(&right.len())
+            }
+            (Packet::Array(left), Packet::Value(_)) => {
+                if left.len() > 0 {
+                    let ordering = left[0].cmp(&other);
+                    if ordering != Ordering::Equal {
+                        return ordering;
+                    }
+                }
+
+                left.len().cmp(&1)
             }
         }
     }
