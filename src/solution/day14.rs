@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 
 use itertools::Itertools;
 
@@ -7,7 +7,7 @@ use crate::solution::{AocError, Solution};
 pub struct Day14;
 
 impl Day14 {
-    fn parse(input: &str) -> Result<(HashMap<i32, HashSet<i32>>, i32), AocError> {
+    fn parse(input: &str) -> Result<(HashMap<i32, BTreeSet<i32>>, i32), AocError> {
         let mut world = HashMap::new();
         let mut max_y = 0;
 
@@ -27,7 +27,7 @@ impl Day14 {
                             max_y = start.1
                         }
 
-                        world.entry(x).or_insert(HashSet::new()).insert(start.1);
+                        world.entry(x).or_insert(BTreeSet::new()).insert(start.1);
                     }
                 } else {
                     for y in i32::min(start.1, end.1)..=i32::max(start.1, end.1) {
@@ -35,7 +35,7 @@ impl Day14 {
                             max_y = start.1
                         }
 
-                        world.entry(start.0).or_insert(HashSet::new()).insert(y);
+                        world.entry(start.0).or_insert(BTreeSet::new()).insert(y);
                     }
                 }
             }
@@ -44,7 +44,7 @@ impl Day14 {
         Ok((world, max_y))
     }
 
-    fn simulate(mut world: HashMap<i32, HashSet<i32>>) -> usize {
+    fn simulate(mut world: HashMap<i32, BTreeSet<i32>>) -> usize {
         let mut count = 0;
         let source = (500, 0);
 
@@ -52,35 +52,29 @@ impl Day14 {
             let mut sand = source;
 
             loop {
-                if let Some(solids) = world.get(&sand.0) {
-                    // Is there anything below us?
-                    if !solids.iter().any(|height| *height > sand.1) {
-                        return count;
-                    }
+                if let Some(y) = world
+                    .get(&sand.0)
+                    .and_then(|column| column.range(sand.1 + 1..).next())
+                {
+                    sand.1 = y - 1;
 
-                    // Is there something solid just below the sand?
-                    if !(solids.contains(&(sand.1 + 1))) {
-                        sand.1 += 1;
-                        continue;
-                    }
-
-                    let is_down_left = world
+                    let down_left_occupied = world
                         .get(&(sand.0 - 1))
                         .map(|s| s.contains(&(sand.1 + 1)))
                         .unwrap_or(false);
 
-                    if !(is_down_left){
+                    if !(down_left_occupied) {
                         sand.0 -= 1;
                         sand.1 += 1;
                         continue;
                     }
 
-                    let is_down_right = world
+                    let down_right_occupied = world
                         .get(&(sand.0 + 1))
                         .map(|s| s.contains(&(sand.1 + 1)))
                         .unwrap_or(false);
 
-                    if !(is_down_right) {
+                    if !(down_right_occupied) {
                         sand.0 += 1;
                         sand.1 += 1;
                         continue;
@@ -134,7 +128,10 @@ impl Solution for Day14 {
 
         // This should be wide enough
         for x in 0..1000 {
-            world.entry(x).or_insert(HashSet::new()).insert(floor_level);
+            world
+                .entry(x)
+                .or_insert(BTreeSet::new())
+                .insert(floor_level);
         }
 
         Ok(Day14::simulate(world))
