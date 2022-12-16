@@ -1,6 +1,5 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
-use std::hash::Hash;
 use std::{cmp::Ordering, collections::BinaryHeap};
 
 use itertools::Itertools;
@@ -99,16 +98,61 @@ impl Day16 {
         Ok(valves)
     }
 
+    fn find_path(path: &mut Vec<usize>, visited: &mut HashSet<usize>, current: usize, minute: u32, pressure_released: u32, valves: &[Valve]) -> u32 {
+        if visited.len() == valves.len() || minute >= 30 {
+            return pressure_released;
+        }
+    
+        let mut best = 0;
+
+        // Consider each unvisited valve as the next destination
+        for next in 0..valves.len() {
+            if !visited.contains(&next) {
+                path.push(next);
+                visited.insert(next);
+
+                // Moving costs time
+                let target = valves[next].clone();
+                let distance = valves[current].distances.get(&target.name).unwrap();
+
+                // Spend one minute per step moving + 1 minute on arrival to open the valve
+                let new_minute = u32::min(minute + distance + 1, 30);
+
+                // The valve will now release pressure for the remaining time
+                let new_pressure_released = pressure_released + (30 - new_minute) * target.flow_rate;
+
+                let pressure_released = Day16::find_path(path, visited, next, new_minute, new_pressure_released, valves);
+                if pressure_released > best {
+                    best = pressure_released;
+                }
+                visited.remove(&next);
+                path.pop();
+            }
+        }
+        best
+    }
+
+    fn tsp(valves: Vec<Valve>) -> (Vec<usize>, u32) {
+        // Initialize the path and visited set
+        let mut path = vec![0];
+        let mut visited = HashSet::new();
+        visited.insert(0);
+
+        // Call the recursive function to find path to release most pressure
+        let best_pressure_released = Day16::find_path(&mut path, &mut visited, 0, 0, 0, &valves);
+        (path, best_pressure_released)
+    }
+
     // Pass in all valve + distances to everywhere pairs.
     // Filter out any already active valves.
     // Starting position still needs to be "AA"
     fn tsp_brute_force(start: Valve, valves: Vec<Valve>) -> (Vec<usize>, u32) {
-        let num_cities = valves.len();
+        let valves_count = valves.len();
         let mut best_route = Vec::new();
-        let mut best_released = std::u32::MIN;
+        let mut best_released = 0;
 
         // Generate all permutations of the cities
-        let permutations = (0..num_cities).permutations(num_cities);
+        let permutations = (0..valves_count).permutations(valves_count);
 
         let total_count = permutations.clone().count();
         println!("Total {total_count} permutations to run...");
@@ -122,7 +166,7 @@ impl Day16 {
             let mut pressure_released = 0;
             let mut current = start.clone();
 
-            for i in 0..num_cities {
+            for i in 0..valves_count {
                 // Time is spent moving
                 let target = valves[route[i]].clone();
                 let distance = current.distances.get(&target.name).unwrap();
@@ -231,10 +275,14 @@ impl Solution for Day16 {
             println!("Valve {} has flow rate={}; distances {:?}", valve.name, valve.flow_rate, valve.distances);
         }
 
+        // Force "AA" to the beginning, TODO fixme
         let start = valves.remove("AA").unwrap();
-        let rest: Vec<Valve> = valves.into_values().collect();
+        let mut rest: Vec<_> = valves.into_values().collect();
+        let mut valves = vec![start];
+        valves.append(&mut rest);
 
-        let (route, released) = Day16::tsp_brute_force(start, rest);
+        // let (route, released) = Day16::tsp_brute_force(start, rest);
+        let (route, released) = Day16::tsp(valves);
 
         println!("Best route was: {route:?}, releasing {released} pressure.");
 
