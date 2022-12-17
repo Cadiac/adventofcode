@@ -19,6 +19,7 @@ pub mod day13;
 pub mod day14;
 pub mod day15;
 pub mod day16;
+pub mod day17;
 
 pub const MAX_DAYS: u8 = 15;
 
@@ -40,6 +41,7 @@ pub fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
         14 => day14::Day14.run(input),
         15 => day15::Day15.run(input),
         16 => day16::Day16.run(input),
+        17 => day17::Day17.run(input),
         _ => unimplemented!(),
     }
 }

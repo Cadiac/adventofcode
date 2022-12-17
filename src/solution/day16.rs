@@ -486,6 +486,7 @@ mod tests {
         assert_eq!(Day16.part_1(INPUT), Ok(1651));
     }
 
+    #[ignore]
     #[test]
     fn it_solves_part2() {
         assert_eq!(Day16.part_2(INPUT), Ok(1707));
