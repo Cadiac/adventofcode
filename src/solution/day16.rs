@@ -1,6 +1,8 @@
-use std::collections::{HashMap, HashSet, BTreeSet};
-use std::{cmp::Ordering, collections::BinaryHeap};
+use std::collections::{BTreeSet, HashMap, HashSet};
 use std::hash::{Hash, Hasher};
+use std::{cmp::Ordering, collections::BinaryHeap};
+
+use cached::proc_macro::cached;
 
 use crate::solution::{AocError, Solution};
 
@@ -72,6 +74,248 @@ fn dijkstra(valves: HashMap<String, Valve>, source: String, target: String) -> O
     }
 
     None
+}
+
+fn get_hash<T: Hash>(t: &T) -> String {
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    t.hash(&mut hasher);
+    format!("{:x}", hasher.finish())
+}
+
+#[cached(
+    key = "String",
+    convert = r#"{ format!("{}-{}-{}-{}-{}-{}-{}", get_hash(&activated), current.0, current.1, cooldown.0, cooldown.1, minute, pressure_released) }"#
+)]
+fn find_with_elephant(
+    activated: &mut BTreeSet<usize>,
+    current: (usize, usize),
+    cooldown: (u32, u32),
+    minute: u32,
+    pressure_released: u32,
+    valves: &[Valve],
+) -> u32 {
+    let time_limit = 26;
+
+    if activated.len() == valves.len() || minute >= time_limit {
+        return pressure_released;
+    }
+
+    let mut best = 0;
+
+    if cooldown.0 == 0 && cooldown.1 > 0 {
+        // One is ready to make a choice
+        // Consider each unactivated valve as the next destination
+        for next in 0..valves.len() {
+            if !activated.contains(&next) {
+                activated.insert(next);
+
+                // Moving costs time
+                let target = valves[next].clone();
+                let distance = valves[current.0].distances.get(&target.name).unwrap();
+
+                // Spend one minute per step moving + 1 minute on arrival to open the valve
+                let next_cooldown = distance + 1;
+
+                // The valve will now release pressure for the remaining time
+                let next_pressure_released = pressure_released
+                    + u32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
+
+                // Skip to the time something meaningful happens next
+                let skip = u32::min(next_cooldown, cooldown.1);
+
+                let pressure_released = find_with_elephant(
+                    activated,
+                    (next, current.1),
+                    (next_cooldown - skip, cooldown.1 - skip),
+                    minute + skip,
+                    next_pressure_released,
+                    valves,
+                );
+                if pressure_released > best {
+                    if minute == 0 {
+                        println!("found new best {pressure_released}");
+                    }
+                    best = pressure_released;
+                }
+                activated.remove(&next);
+            }
+        }
+    } else if cooldown.0 > 0 && cooldown.1 == 0 {
+        // Second is ready to make a choice
+        // Consider each unactivated valve as the next destination
+        for next in 0..valves.len() {
+            if !activated.contains(&next) {
+                activated.insert(next);
+
+                // Moving costs time
+                let target = valves[next].clone();
+                let distance = valves[current.1].distances.get(&target.name).unwrap();
+
+                // Spend one minute per step moving + 1 minute on arrival to open the valve
+                let next_cooldown = distance + 1;
+
+                // The valve will now release pressure for the remaining time
+                let next_pressure_released = pressure_released
+                    + u32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
+
+                // Skip to the time something meaningful happens next
+                let skip = u32::min(cooldown.0, next_cooldown);
+
+                let pressure_released = find_with_elephant(
+                    activated,
+                    (current.0, next),
+                    (cooldown.0 - skip, next_cooldown - skip),
+                    minute + skip,
+                    next_pressure_released,
+                    valves,
+                );
+
+                if pressure_released > best {
+                    if minute == 0 {
+                        println!("found new best {pressure_released}");
+                    }
+                    best = pressure_released;
+                }
+                activated.remove(&next);
+            }
+        }
+    } else if cooldown.0 == 0 && cooldown.1 == 0 {
+        // Both are ready to make choices
+        for next_1 in 0..valves.len() {
+            if !activated.contains(&next_1) {
+                activated.insert(next_1);
+
+                for next_2 in 0..valves.len() {
+                    if !activated.contains(&next_2) {
+                        activated.insert(next_2);
+
+                        // TODO: be smart about this, move with the one closer to the target
+
+                        // Moving costs time
+                        let target_1 = valves[next_1].clone();
+                        let distance_1 = valves[current.0].distances.get(&target_1.name).unwrap();
+
+                        let target_2 = valves[next_2].clone();
+                        let distance_2 = valves[current.1].distances.get(&target_2.name).unwrap();
+
+                        // Spend one minute per step moving + 1 minute on arrival to open the valve
+                        let next_cooldown_1 = distance_1 + 1;
+                        let next_cooldown_2 = distance_2 + 1;
+
+                        // The valve will now release pressure for the remaining time
+                        let next_pressure_released = pressure_released
+                            + u32::max(time_limit - minute - next_cooldown_1, 0)
+                                * target_1.flow_rate
+                            + u32::max(time_limit - minute - next_cooldown_2, 0)
+                                * target_2.flow_rate;
+
+                        // Skip to the time something meaningful happens next
+                        let skip = u32::min(next_cooldown_1, next_cooldown_2);
+
+                        let pressure_released = find_with_elephant(
+                            activated,
+                            (next_1, next_2),
+                            (next_cooldown_1 - skip, next_cooldown_2 - skip),
+                            minute + skip,
+                            next_pressure_released,
+                            valves,
+                        );
+
+                        if pressure_released > best {
+                            if minute == 0 {
+                                println!("found new best {pressure_released}");
+                            }
+                            best = pressure_released;
+                        }
+                        activated.remove(&next_2);
+                    }
+                }
+
+                activated.remove(&next_1);
+            }
+        }
+
+        // There's only one more choice to be made.
+        // One will just sit idle.
+        // Figure out which one needs to make this choice
+        if valves.len() - activated.len() == 1 {
+            for next in 0..valves.len() {
+                if !activated.contains(&next) {
+                    activated.insert(next);
+
+                    // Moving costs time
+                    let target = valves[next].clone();
+                    let distance = valves[current.0].distances.get(&target.name).unwrap();
+
+                    // Spend one minute per step moving + 1 minute on arrival to open the valve
+                    let next_cooldown = distance + 1;
+
+                    // The valve will now release pressure for the remaining time
+                    let next_pressure_released = pressure_released
+                        + u32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
+
+                    // Skip to the time something meaningful happens next
+                    let skip = u32::min(next_cooldown, cooldown.1);
+
+                    let pressure_released = find_with_elephant(
+                        activated,
+                        (next, current.1),
+                        (next_cooldown - skip, cooldown.1),
+                        minute + skip,
+                        next_pressure_released,
+                        valves,
+                    );
+                    if pressure_released > best {
+                        if minute == 0 {
+                            println!("found new best {pressure_released}");
+                        }
+                        best = pressure_released;
+                    }
+                    activated.remove(&next);
+                }
+            }
+
+            for next in 0..valves.len() {
+                if !activated.contains(&next) {
+                    activated.insert(next);
+
+                    // Moving costs time
+                    let target = valves[next].clone();
+                    let distance = valves[current.1].distances.get(&target.name).unwrap();
+
+                    // Spend one minute per step moving + 1 minute on arrival to open the valve
+                    let next_cooldown = distance + 1;
+
+                    // The valve will now release pressure for the remaining time
+                    let next_pressure_released = pressure_released
+                        + u32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
+
+                    // Skip to the time something meaningful happens next
+                    let skip = u32::min(cooldown.0, next_cooldown);
+
+                    let pressure_released = find_with_elephant(
+                        activated,
+                        (current.0, next),
+                        (cooldown.0, next_cooldown - skip),
+                        minute + skip,
+                        next_pressure_released,
+                        valves,
+                    );
+                    if pressure_released > best {
+                        if minute == 0 {
+                            println!("found new best {pressure_released}");
+                        }
+                        best = pressure_released;
+                    }
+                    activated.remove(&next);
+                }
+            }
+        }
+    } else {
+        unreachable!("both on cd")
+    }
+
+    best
 }
 
 pub struct Day16;
@@ -196,227 +440,13 @@ impl Day16 {
         (path, best_pressure_released)
     }
 
-    fn find_with_elephant(
-        activated: &mut BTreeSet<usize>,
-        current: (usize, usize),
-        mut cooldown: (u32, u32),
-        minute: u32,
-        pressure_released: u32,
-        valves: &[Valve],
-    ) -> u32 {
-        let time_limit = 26;
-    
-        if activated.len() == valves.len() || minute >= time_limit {
-            return pressure_released;
-        }
-    
-        let mut best = 0;        
-    
-        // advance time by a minute
-        // minute += 1;
-    
-        if cooldown.0 > 0 {
-            cooldown.0 -= 1;
-        }
-    
-        if cooldown.1 > 0 {
-            cooldown.1 -= 1;
-        }
-    
-        if cooldown.0 > 0 && cooldown.1 > 0 {
-            // Both still just moving or opening the valve ("on cooldown"), no new choices
-            return Day16::find_with_elephant(activated, current, cooldown, minute + 1, pressure_released, valves);
-        }
-    
-        if cooldown.0 == 0 && cooldown.1 > 0 {
-            // One is ready to make a choice
-            // Consider each unactivated valve as the next destination
-            for next in 0..valves.len() {
-                if !activated.contains(&next) {
-                    activated.insert(next);
-    
-                    // Moving costs time
-                    let target = valves[next].clone();
-                    let distance = valves[current.0].distances.get(&target.name).unwrap();
-    
-                    // Spend one minute per step moving + 1 minute on arrival to open the valve
-                    let duration_to_open = distance + 1;
-    
-                    // The valve will now release pressure for the remaining time
-                    let next_pressure_released =
-                        pressure_released + u32::max(time_limit - minute - duration_to_open, 0) * target.flow_rate;
-    
-                    let pressure_released = Day16::find_with_elephant(
-                        activated,
-                        (next, current.1),
-                        (duration_to_open, cooldown.1),
-                        minute + 1,
-                        next_pressure_released,
-                        valves,
-                    );
-                    if pressure_released > best {
-                        best = pressure_released;
-                    }
-                    activated.remove(&next);
-                }
-            }
-    
-        } else if cooldown.0 > 0 && cooldown.1 == 0 {
-            // Second is ready to make a choice
-            // Consider each unactivated valve as the next destination
-            for next in 0..valves.len() {
-                if !activated.contains(&next) {
-                    activated.insert(next);
-    
-                    // Moving costs time
-                    let target = valves[next].clone();
-                    let distance = valves[current.1].distances.get(&target.name).unwrap();
-    
-                    // Spend one minute per step moving + 1 minute on arrival to open the valve
-                    let duration_to_open = distance + 1;
-    
-                    // The valve will now release pressure for the remaining time
-                    let next_pressure_released =
-                        pressure_released + u32::max(time_limit - minute - duration_to_open, 0) * target.flow_rate;
-    
-                    let pressure_released = Day16::find_with_elephant(
-                        activated,
-                        (current.0, next),
-                        (cooldown.0, duration_to_open),
-                        minute + 1,
-                        next_pressure_released,
-                        valves,
-                    );
-                    if pressure_released > best {
-                        best = pressure_released;
-                    }
-                    activated.remove(&next);
-                }
-            }
-    
-        } else if cooldown.0 == 0 && cooldown.1 == 0 {
-            // Both are ready to make choices
-            for next_1 in 0..valves.len() {
-                if !activated.contains(&next_1) {
-                    activated.insert(next_1);
-    
-                    for next_2 in 0..valves.len() {
-                        if !activated.contains(&next_2) {
-                            activated.insert(next_2);
-    
-                            // TODO: be smart about this, move with the one closer to the target
-    
-                            // Moving costs time
-                            let target_1 = valves[next_1].clone();
-                            let distance_1 = valves[current.0].distances.get(&target_1.name).unwrap();
-    
-                            let target_2 = valves[next_2].clone();
-                            let distance_2 = valves[current.1].distances.get(&target_2.name).unwrap();
-    
-                            // Spend one minute per step moving + 1 minute on arrival to open the valve
-                            let duration_to_open_1 = distance_1 + 1;
-                            let duration_to_open_2 = distance_2 + 1;
-    
-                            // The valve will now release pressure for the remaining time
-                            let next_pressure_released =
-                                pressure_released + u32::max(time_limit - minute - duration_to_open_1, 0) * target_1.flow_rate
-                                    + u32::max(time_limit - minute - duration_to_open_2, 0) * target_2.flow_rate;
-    
-                            let pressure_released = Day16::find_with_elephant(
-                                activated,
-                                (next_1, next_2),
-                                (duration_to_open_1, duration_to_open_2),
-                                minute + 1,
-                                next_pressure_released,
-                                valves,
-                            );
-                            if pressure_released > best {
-                                best = pressure_released;
-                            }
-                            activated.remove(&next_2);
-                        }
-                    }
-    
-                    activated.remove(&next_1);
-                }
-            }
-    
-            // There's only one more choice to be made.
-            // One will just sit idle.
-            // Figure out which one needs to make this choice
-            if valves.len() - activated.len() == 1 {
-                for next in 0..valves.len() {
-                    if !activated.contains(&next) {
-                        activated.insert(next);
-    
-                        // Moving costs time
-                        let target = valves[next].clone();
-                        let distance = valves[current.0].distances.get(&target.name).unwrap();
-        
-    
-                        // Spend one minute per step moving + 1 minute on arrival to open the valve
-                        let duration_to_open = distance + 1;
-    
-                        // The valve will now release pressure for the remaining time
-                        let next_pressure_released =
-                            pressure_released + u32::max(time_limit - minute - duration_to_open, 0) * target.flow_rate;
-    
-                        let pressure_released = Day16::find_with_elephant(
-                            activated,
-                            (next, current.1),
-                            (duration_to_open, cooldown.1),
-                            minute + 1,
-                            next_pressure_released,
-                            valves,
-                        );
-                        if pressure_released > best {
-                            best = pressure_released;
-                        }
-                        activated.remove(&next);
-                    }
-                }
-    
-                for next in 0..valves.len() {
-                    if !activated.contains(&next) {
-                        activated.insert(next);
-    
-                        // Moving costs time
-                        let target = valves[next].clone();
-                        let distance = valves[current.1].distances.get(&target.name).unwrap();
-    
-                        // Spend one minute per step moving + 1 minute on arrival to open the valve
-                        let duration_to_open = distance + 1;
-    
-                        // The valve will now release pressure for the remaining time
-                        let next_pressure_released =
-                            pressure_released + u32::max(time_limit - minute - duration_to_open, 0) * target.flow_rate;
-    
-                        let pressure_released = Day16::find_with_elephant(
-                            activated,
-                            (current.0, next),
-                            (cooldown.0, duration_to_open),
-                            minute + 1,
-                            next_pressure_released,
-                            valves,
-                        );
-                        if pressure_released > best {
-                            best = pressure_released;
-                        }
-                        activated.remove(&next);
-                    }
-                }
-            }
-        }
-    
-        best
-    }    
-
     fn tsp_with_elephant(valves: Vec<Valve>) -> u32 {
         let mut activated = BTreeSet::new();
         activated.insert(0);
 
         // Call the recursive function to find path to release most pressure
-        let best_pressure_released = Day16::find_with_elephant(&mut activated, (0, 0), (0, 0), 0, 0, &valves);
+        let best_pressure_released =
+            find_with_elephant(&mut activated, (0, 0), (0, 0), 0, 0, &valves);
         best_pressure_released
     }
 }
