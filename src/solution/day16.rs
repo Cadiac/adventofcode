@@ -9,9 +9,9 @@ use crate::solution::{AocError, Solution};
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct Valve {
     name: String,
-    flow_rate: u32,
-    tunnels: HashMap<String, u32>,
-    distances: HashMap<String, u32>,
+    flow_rate: i32,
+    tunnels: HashMap<String, i32>,
+    distances: HashMap<String, i32>,
 }
 
 impl Hash for Valve {
@@ -23,7 +23,7 @@ impl Hash for Valve {
 #[derive(Clone, Eq, PartialEq)]
 struct Search {
     valve: String,
-    distance: u32,
+    distance: i32,
 }
 
 impl Ord for Search {
@@ -39,8 +39,8 @@ impl PartialOrd for Search {
 }
 
 // Use dijkstra to determine the distances between valves
-fn dijkstra(valves: HashMap<String, Valve>, source: String, target: String) -> Option<u32> {
-    let mut dist: HashMap<String, u32> = HashMap::new();
+fn dijkstra(valves: HashMap<String, Valve>, source: String, target: String) -> Option<i32> {
+    let mut dist: HashMap<String, i32> = HashMap::new();
     let mut heap: BinaryHeap<Search> = BinaryHeap::new();
 
     *dist.entry(source.clone()).or_insert(0) = 0;
@@ -56,7 +56,7 @@ fn dijkstra(valves: HashMap<String, Valve>, source: String, target: String) -> O
         }
 
         // we've already found a better way
-        if distance > *dist.get(&valve).unwrap_or(&u32::MAX) {
+        if distance > *dist.get(&valve).unwrap_or(&i32::MAX) {
             continue;
         }
 
@@ -66,7 +66,7 @@ fn dijkstra(valves: HashMap<String, Valve>, source: String, target: String) -> O
                 valve: tunnel.clone(),
             };
 
-            if next.distance < *dist.get(tunnel).unwrap_or(&u32::MAX) {
+            if next.distance < *dist.get(tunnel).unwrap_or(&i32::MAX) {
                 *dist.entry(tunnel.clone()).or_insert(0) = next.distance;
                 heap.push(next);
             }
@@ -82,18 +82,19 @@ fn get_hash<T: Hash>(t: &T) -> String {
     format!("{:x}", hasher.finish())
 }
 
-#[cached(
-    key = "String",
-    convert = r#"{ format!("{}-{}-{}-{}-{}-{}-{}", get_hash(&activated), current.0, current.1, cooldown.0, cooldown.1, minute, pressure_released) }"#
-)]
+// #[cached(
+//     size = 100000000,
+//     key = "String",
+//     convert = r#"{ format!("{}-{}-{}-{}-{}-{}-{}", get_hash(&activated), current.0, current.1, cooldown.0, cooldown.1, minute, pressure_released) }"#
+// )]
 fn find_with_elephant(
     activated: &mut BTreeSet<usize>,
     current: (usize, usize),
-    cooldown: (u32, u32),
-    minute: u32,
-    pressure_released: u32,
+    cooldown: (i32, i32),
+    minute: i32,
+    pressure_released: i32,
     valves: &[Valve],
-) -> u32 {
+) -> i32 {
     let time_limit = 26;
 
     if activated.len() == valves.len() || minute >= time_limit {
@@ -118,10 +119,10 @@ fn find_with_elephant(
 
                 // The valve will now release pressure for the remaining time
                 let next_pressure_released = pressure_released
-                    + u32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
+                    + i32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
 
                 // Skip to the time something meaningful happens next
-                let skip = u32::min(next_cooldown, cooldown.1);
+                let skip = i32::min(next_cooldown, cooldown.1);
 
                 let pressure_released = find_with_elephant(
                     activated,
@@ -156,10 +157,10 @@ fn find_with_elephant(
 
                 // The valve will now release pressure for the remaining time
                 let next_pressure_released = pressure_released
-                    + u32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
+                    + i32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
 
                 // Skip to the time something meaningful happens next
-                let skip = u32::min(cooldown.0, next_cooldown);
+                let skip = i32::min(cooldown.0, next_cooldown);
 
                 let pressure_released = find_with_elephant(
                     activated,
@@ -189,6 +190,10 @@ fn find_with_elephant(
                     if !activated.contains(&next_2) {
                         activated.insert(next_2);
 
+                        if minute == 0 {
+                            println!("Starting with {} and {}", valves[next_1].name, valves[next_2].name);
+                        }
+
                         // TODO: be smart about this, move with the one closer to the target
 
                         // Moving costs time
@@ -204,13 +209,13 @@ fn find_with_elephant(
 
                         // The valve will now release pressure for the remaining time
                         let next_pressure_released = pressure_released
-                            + u32::max(time_limit - minute - next_cooldown_1, 0)
+                            + i32::max(time_limit - minute - next_cooldown_1, 0)
                                 * target_1.flow_rate
-                            + u32::max(time_limit - minute - next_cooldown_2, 0)
+                            + i32::max(time_limit - minute - next_cooldown_2, 0)
                                 * target_2.flow_rate;
 
                         // Skip to the time something meaningful happens next
-                        let skip = u32::min(next_cooldown_1, next_cooldown_2);
+                        let skip = i32::min(next_cooldown_1, next_cooldown_2);
 
                         let pressure_released = find_with_elephant(
                             activated,
@@ -252,10 +257,10 @@ fn find_with_elephant(
 
                     // The valve will now release pressure for the remaining time
                     let next_pressure_released = pressure_released
-                        + u32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
+                        + i32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
 
                     // Skip to the time something meaningful happens next
-                    let skip = u32::min(next_cooldown, cooldown.1);
+                    let skip = i32::min(next_cooldown, cooldown.1);
 
                     let pressure_released = find_with_elephant(
                         activated,
@@ -288,10 +293,10 @@ fn find_with_elephant(
 
                     // The valve will now release pressure for the remaining time
                     let next_pressure_released = pressure_released
-                        + u32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
+                        + i32::max(time_limit - minute - next_cooldown, 0) * target.flow_rate;
 
                     // Skip to the time something meaningful happens next
-                    let skip = u32::min(cooldown.0, next_cooldown);
+                    let skip = i32::min(cooldown.0, next_cooldown);
 
                     let pressure_released = find_with_elephant(
                         activated,
@@ -325,7 +330,7 @@ impl Day16 {
         let mut valves = HashMap::new();
 
         for line in input.lines() {
-            let (name, flow_rate, tunnels): (String, u32, String) =
+            let (name, flow_rate, tunnels): (String, i32, String) =
                 // TODO: parsing fuckery, tunnel vs tunnels in the real input
                 serde_scan::scan!("Valve {} has flow rate={}; tunnels lead to valves {}" <- line)
                     .map_err(|err| AocError::parse(line, err))?;
@@ -377,6 +382,11 @@ impl Day16 {
         let mut valves: Vec<_> = valves.into_values().collect();
         valves.sort_by(|a, b| a.name.cmp(&b.name));
 
+        println!("Total {} valves.", valves.len());
+        for valve in valves.iter() {
+            println!("{}: distances: {:?}", valve.name, valve.distances);
+        }
+
         Ok(valves)
     }
 
@@ -384,10 +394,10 @@ impl Day16 {
         path: &mut Vec<usize>,
         activated: &mut HashSet<usize>,
         current: usize,
-        minute: u32,
-        pressure_released: u32,
+        minute: i32,
+        pressure_released: i32,
         valves: &[Valve],
-    ) -> u32 {
+    ) -> i32 {
         if activated.len() == valves.len() || minute >= 30 {
             return pressure_released;
         }
@@ -405,7 +415,7 @@ impl Day16 {
                 let distance = valves[current].distances.get(&target.name).unwrap();
 
                 // Spend one minute per step moving + 1 minute on arrival to open the valve
-                let next_minute = u32::min(minute + distance + 1, 30);
+                let next_minute = i32::min(minute + distance + 1, 30);
 
                 // The valve will now release pressure for the remaining time
                 let next_pressure_released =
@@ -429,7 +439,7 @@ impl Day16 {
         best
     }
 
-    fn tsp(valves: Vec<Valve>) -> (Vec<usize>, u32) {
+    fn tsp(valves: Vec<Valve>) -> (Vec<usize>, i32) {
         // Initialize the path and activated set
         let mut path = vec![0];
         let mut activated = HashSet::new();
@@ -440,7 +450,7 @@ impl Day16 {
         (path, best_pressure_released)
     }
 
-    fn tsp_with_elephant(valves: Vec<Valve>) -> u32 {
+    fn tsp_with_elephant(valves: Vec<Valve>) -> i32 {
         let mut activated = BTreeSet::new();
         activated.insert(0);
 
@@ -452,8 +462,8 @@ impl Day16 {
 }
 
 impl Solution for Day16 {
-    type F = u32;
-    type S = u32;
+    type F = i32;
+    type S = i32;
 
     fn name(&self) -> &'static str {
         "Day 16"
@@ -463,7 +473,7 @@ impl Solution for Day16 {
         include_str!("../../inputs/day16.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<u32, AocError> {
+    fn part_1(&self, input: &str) -> Result<i32, AocError> {
         let valves = Day16::parse(input)?;
 
         let (route, released) = Day16::tsp(valves);
@@ -471,7 +481,7 @@ impl Solution for Day16 {
         Ok(released)
     }
 
-    fn part_2(&self, input: &str) -> Result<u32, AocError> {
+    fn part_2(&self, input: &str) -> Result<i32, AocError> {
         let valves = Day16::parse(input)?;
 
         let released = Day16::tsp_with_elephant(valves);
