@@ -2,6 +2,8 @@ use std::collections::HashSet;
 
 use crate::solution::{AocError, Solution};
 
+type Beacons = HashSet<(i64, i64)>;
+
 struct Sensor {
     pos: (i64, i64),
     distance: i64,
@@ -44,7 +46,7 @@ impl Sensor {
 pub struct Day15;
 
 impl Day15 {
-    fn parse(input: &str) -> Result<(Vec<Sensor>, HashSet<(i64, i64)>), AocError> {
+    fn parse(input: &str) -> Result<(Vec<Sensor>, Beacons), AocError> {
         let mut sensors = Vec::new();
         let mut beacons = HashSet::new();
 
@@ -65,7 +67,7 @@ impl Day15 {
         Ok((sensors, beacons))
     }
 
-    fn count_impossible(y: i64, sensors: &Vec<Sensor>, beacons: &HashSet<(i64, i64)>) -> i64 {
+    fn count_impossible(y: i64, sensors: &[Sensor], beacons: &Beacons) -> i64 {
         let mut known_impossible = sensors
             .iter()
             .flat_map(|sensor| sensor.range(y))
@@ -94,10 +96,10 @@ impl Day15 {
         let known_beacons = beacons.iter().filter(|beacon| beacon.1 == y).count() as i64;
         impossible_count -= known_beacons;
 
-        return impossible_count;
+        impossible_count
     }
 
-    fn find_beacon(y: i64, sensors: &Vec<Sensor>, bounds: &(i64, i64)) -> Option<i64> {
+    fn find_beacon(y: i64, sensors: &[Sensor], bounds: &(i64, i64)) -> Option<i64> {
         let mut known_impossible = sensors
             .iter()
             .flat_map(|sensor| sensor.range_bounded(y, bounds))
@@ -119,9 +121,9 @@ impl Day15 {
         None
     }
 
-    fn scan_bounds(sensors: &Vec<Sensor>, bounds: &(i64, i64)) -> Option<i64> {
+    fn scan_bounds(sensors: &[Sensor], bounds: &(i64, i64)) -> Option<i64> {
         for y in bounds.0..=bounds.1 {
-            if let Some(x) = Day15::find_beacon(y, &sensors, &bounds) {
+            if let Some(x) = Day15::find_beacon(y, sensors, bounds) {
                 return Some(4000000 * x + y);
             }
         }

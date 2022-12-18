@@ -8,7 +8,7 @@ pub struct Day14;
 
 impl Day14 {
     fn parse(input: &str) -> Result<HashMap<i32, BTreeSet<i32>>, AocError> {
-        let mut world = HashMap::new();
+        let mut world: HashMap<i32, BTreeSet<i32>> = HashMap::new();
 
         for line in input.lines() {
             let walls = line
@@ -22,11 +22,11 @@ impl Day14 {
             for (start, end) in walls {
                 if start.1 == end.1 {
                     for x in i32::min(start.0, end.0)..=i32::max(start.0, end.0) {
-                        world.entry(x).or_insert(BTreeSet::new()).insert(start.1);
+                        world.entry(x).or_default().insert(start.1);
                     }
                 } else {
                     for y in i32::min(start.1, end.1)..=i32::max(start.1, end.1) {
-                        world.entry(start.0).or_insert(BTreeSet::new()).insert(y);
+                        world.entry(start.0).or_default().insert(y);
                     }
                 }
             }
@@ -125,7 +125,7 @@ impl Solution for Day14 {
         for x in 0..1000 {
             world
                 .entry(x)
-                .or_insert(BTreeSet::new())
+                .or_default()
                 .insert(floor_level);
         }
 

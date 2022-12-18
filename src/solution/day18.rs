@@ -1,9 +1,10 @@
 use serde_scan::ScanError;
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{hash_map::Entry, HashMap, HashSet, VecDeque};
 
 use crate::solution::{AocError, Solution};
 
 type Point = (i32, i32, i32);
+type Bounds = ((i32, i32), (i32, i32), (i32, i32));
 
 const NEIGHBOURS: [Point; 6] = [
     (-1, 0, 0),
@@ -50,7 +51,7 @@ impl Day18 {
             .sum()
     }
 
-    fn count_exterior(lava_cubes: HashSet<Point>) -> usize {
+    fn bounds(lava_cubes: &HashSet<Point>) -> Bounds {
         let min_x = lava_cubes.iter().map(|(x, _, _)| x).min().unwrap_or(&0) - 1;
         let max_x = lava_cubes.iter().map(|(x, _, _)| x).max().unwrap_or(&0) + 1;
 
@@ -60,10 +61,25 @@ impl Day18 {
         let min_z = lava_cubes.iter().map(|(_, _, z)| z).min().unwrap_or(&0) - 1;
         let max_z = lava_cubes.iter().map(|(_, _, z)| z).max().unwrap_or(&0) + 1;
 
+        ((min_x, max_x), (min_y, max_y), (min_z, max_z))
+    }
+
+    fn is_within_bounds((x, y, z): (i32, i32, i32), bounds: Bounds) -> bool {
+        x >= bounds.0 .0
+            && x <= bounds.0 .1
+            && y >= bounds.1 .0
+            && y <= bounds.1 .1
+            && z >= bounds.2 .0
+            && z <= bounds.2 .1
+    }
+
+    fn count_exterior(lava_cubes: HashSet<Point>) -> usize {
+        let bounds = Day18::bounds(&lava_cubes);
+
         let mut queue = VecDeque::new();
         let mut exterior: HashSet<Point> = HashSet::new();
 
-        let start = (min_x, min_y, min_z);
+        let start = (bounds.0 .0, bounds.1 .0, bounds.2 .0);
         exterior.insert(start);
         queue.push_back(start);
 
@@ -72,17 +88,12 @@ impl Day18 {
             for (x, y, z) in NEIGHBOURS {
                 let neighbour = (v.0 + x, v.1 + y, v.2 + z);
 
-                if neighbour.0 >= min_x
-                    && neighbour.0 <= max_x
-                    && neighbour.1 >= min_y
-                    && neighbour.1 <= max_y
-                    && neighbour.2 >= min_z
-                    && neighbour.2 <= max_z
+                if Day18::is_within_bounds(neighbour, bounds)
+                    && !lava_cubes.contains(&neighbour)
+                    && !exterior.contains(&neighbour)
                 {
-                    if !lava_cubes.contains(&neighbour) && !exterior.contains(&neighbour) {
-                        exterior.insert(neighbour);
-                        queue.push_back(neighbour);
-                    }
+                    exterior.insert(neighbour);
+                    queue.push_back(neighbour);
                 }
             }
         }
@@ -106,18 +117,8 @@ impl Day18 {
     }
 
     // For web visualization
-    pub fn label_cubes(
-        lava_cubes: HashSet<Point>,
-    ) -> (HashMap<Point, Label>, ((i32, i32), (i32, i32), (i32, i32))) {
-        let min_x = lava_cubes.iter().map(|(x, _, _)| x).min().unwrap_or(&0) - 1;
-        let max_x = lava_cubes.iter().map(|(x, _, _)| x).max().unwrap_or(&0) + 1;
-
-        let min_y = lava_cubes.iter().map(|(_, y, _)| y).min().unwrap_or(&0) - 1;
-        let max_y = lava_cubes.iter().map(|(_, y, _)| y).max().unwrap_or(&0) + 1;
-
-        let min_z = lava_cubes.iter().map(|(_, _, z)| z).min().unwrap_or(&0) - 1;
-        let max_z = lava_cubes.iter().map(|(_, _, z)| z).max().unwrap_or(&0) + 1;
-
+    pub fn label_cubes(lava_cubes: HashSet<Point>) -> (HashMap<Point, Label>, Bounds) {
+        let bounds = Day18::bounds(&lava_cubes);
         let mut queue = VecDeque::new();
         let mut labeled: HashMap<Point, Label> = HashMap::new();
 
@@ -125,7 +126,7 @@ impl Day18 {
             labeled.insert(*cube, Label::Lava);
         }
 
-        let start = (min_x, min_y, min_z);
+        let start = (bounds.0 .0, bounds.1 .0, bounds.2 .0);
         labeled.insert(start, Label::Exterior);
         queue.push_back(start);
 
@@ -134,32 +135,24 @@ impl Day18 {
             for (x, y, z) in NEIGHBOURS {
                 let neighbour = (v.0 + x, v.1 + y, v.2 + z);
 
-                if neighbour.0 >= min_x
-                    && neighbour.0 <= max_x
-                    && neighbour.1 >= min_y
-                    && neighbour.1 <= max_y
-                    && neighbour.2 >= min_z
-                    && neighbour.2 <= max_z
-                {
-                    if !labeled.contains_key(&neighbour) {
-                        labeled.insert(neighbour, Label::Exterior);
+                if Day18::is_within_bounds(neighbour, bounds) {
+                    if let Entry::Vacant(e) = labeled.entry(neighbour) {
+                        e.insert(Label::Exterior);
                         queue.push_back(neighbour);
                     }
                 }
             }
         }
 
-        for z in min_z..max_z {
-            for y in min_y..max_y {
-                for x in min_x..max_x {
-                    if !labeled.contains_key(&(x, y, z)) {
-                        labeled.insert((x, y, z), Label::Pocket);
-                    }
+        for z in bounds.2 .0..bounds.2 .1 {
+            for y in bounds.1 .0..bounds.1 .1 {
+                for x in bounds.0 .0..bounds.0 .1 {
+                    labeled.entry((x, y, z)).or_insert(Label::Pocket);
                 }
             }
         }
 
-        (labeled, ((min_x, max_x), (min_y, max_y), (min_z, max_z)))
+        (labeled, bounds)
     }
 }
 

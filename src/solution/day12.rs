@@ -4,11 +4,13 @@ use crate::solution::{AocError, Solution};
 
 const NEIGHBOURS: [(i32, i32); 4] = [(1, 0), (-1, 0), (0, 1), (0, -1)];
 
+type Coord = (usize, usize);
+
 pub struct Day12;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct Search {
-    coords: (usize, usize),
+    coords: Coord,
     elevation: u8,
     distance: u32,
 }
@@ -26,7 +28,7 @@ impl PartialOrd for Search {
 }
 
 impl Day12 {
-    fn parse(input: &str) -> Result<(Vec<Vec<u8>>, (usize, usize), (usize, usize)), AocError> {
+    fn parse(input: &str) -> Result<(Vec<Vec<u8>>, Coord, Coord), AocError> {
         let mut grid = Vec::new();
         let mut start = (0, 0);
         let mut end = (0, 0);
@@ -51,7 +53,7 @@ impl Day12 {
 }
 
 // Copied my 2021/day15 solution, seems to work here too
-fn dijkstra(grid: Vec<Vec<u8>>, source: (usize, usize), target: (usize, usize)) -> Option<u32> {
+fn dijkstra(grid: Vec<Vec<u8>>, source: Coord, target: Coord) -> Option<u32> {
     let mut dist: Vec<Vec<u32>> = vec![vec![u32::MAX; grid[0].len()]; grid.len()];
     let mut heap: BinaryHeap<Search> = BinaryHeap::new();
 

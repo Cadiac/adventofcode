@@ -1,5 +1,4 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
-use std::hash::{Hash, Hasher};
 use std::{cmp::Ordering, collections::BinaryHeap};
 
 use crate::solution::{AocError, Solution};
@@ -10,12 +9,6 @@ struct Valve {
     flow_rate: i32,
     tunnels: HashMap<String, i32>,
     distances: HashMap<String, i32>,
-}
-
-impl Hash for Valve {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.name.hash(state);
-    }
 }
 
 #[derive(Clone, Eq, PartialEq)]
@@ -427,6 +420,7 @@ impl Day16 {
         best
     }    
 
+    #[allow(dead_code)]
     fn tsp_with_elephant(valves: Vec<Valve>) -> i32 {
         let mut activated = BTreeSet::new();
         activated.insert(0);
@@ -458,9 +452,9 @@ impl Solution for Day16 {
 
     fn part_2(&self, input: &str) -> Result<i32, AocError> {
         let _valves = Day16::parse(input)?;
-
         // TODO: Make this faster. Completes the day in ~2 hours
         // let released = Day16::tsp_with_elephant(valves);
+        // Ok(released)
 
         Err(AocError("Too slow :( Completes the day in ~2 hours.".to_owned()))
     }

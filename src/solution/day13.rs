@@ -40,7 +40,7 @@ impl Ord for Packet {
                 left.len().cmp(&right.len())
             }
             (Packet::Value(_), Packet::Array(right)) => {
-                if right.len() > 0 {
+                if !right.is_empty() {
                     let ordering = self.cmp(&right[0]);
                     if ordering != Ordering::Equal {
                         return ordering;
@@ -50,8 +50,8 @@ impl Ord for Packet {
                 1.cmp(&right.len())
             }
             (Packet::Array(left), Packet::Value(_)) => {
-                if left.len() > 0 {
-                    let ordering = left[0].cmp(&other);
+                if !left.is_empty() {
+                    let ordering = left[0].cmp(other);
                     if ordering != Ordering::Equal {
                         return ordering;
                     }
@@ -67,8 +67,8 @@ fn parse_packet(input: &str) -> IResult<&str, Packet> {
     preceded(
         space0,
         alt((
-            map(parse_value, |value: u32| Packet::Value(value)),
-            map(parse_array, |values: Vec<Packet>| Packet::Array(values)),
+            map(parse_value, Packet::Value),
+            map(parse_array, Packet::Array),
         )),
     )(input)
 }
