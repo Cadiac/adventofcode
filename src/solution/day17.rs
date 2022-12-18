@@ -2,7 +2,7 @@ use std::collections::{BTreeSet, HashMap};
 
 use crate::solution::{AocError, Solution};
 
-const SHAPE_PIXELS: [&[(i64, i64)]; 5] = [
+const SHAPES: [&[(i64, i64)]; 5] = [
     &[(0, 0), (1, 0), (2, 0), (3, 0)],         // "horizontal line"
     &[(1, 0), (0, 1), (1, 1), (2, 1), (1, 2)], // "plus"
     &[(0, 0), (1, 0), (2, 0), (2, 1), (2, 2)], // "reverse L"
@@ -14,14 +14,6 @@ const CHAMBER_WIDTH: i64 = 7;
 
 type Chamber = BTreeSet<(i64, i64)>;
 
-enum Shape {
-    Horizontal,
-    Plus,
-    Corner,
-    Vertical,
-    Square,
-}
-
 enum Direction {
     Left,
     Right,
@@ -29,22 +21,13 @@ enum Direction {
 }
 
 struct Rock {
-    shape: Shape,
+    shape: usize,
     x: i64,
     y: i64,
 }
 
 impl Rock {
-    fn new(index: usize, height: i64) -> Self {
-        let shape = match index {
-            0 => Shape::Horizontal,
-            1 => Shape::Plus,
-            2 => Shape::Corner,
-            3 => Shape::Vertical,
-            4 => Shape::Square,
-            _ => unreachable!(),
-        };
-
+    fn new(shape: usize, height: i64) -> Self {
         Rock {
             shape,
             x: 2,
@@ -80,22 +63,15 @@ impl Rock {
     }
 
     fn pixels(&self) -> Vec<(i64, i64)> {
-        let base = match &self.shape {
-            Shape::Horizontal => SHAPE_PIXELS[0],
-            Shape::Plus => SHAPE_PIXELS[1],
-            Shape::Corner => SHAPE_PIXELS[2],
-            Shape::Vertical => SHAPE_PIXELS[3],
-            Shape::Square => SHAPE_PIXELS[4],
-        };
-
-        base.iter().map(|(x, y)| (self.x + x, self.y + y)).collect()
+        let base_pixels = SHAPES[self.shape];
+        base_pixels.iter().map(|(x, y)| (self.x + x, self.y + y)).collect()
     }
 }
 
 pub struct Day17;
 
 impl Day17 {
-    fn simulate(input: &str, count: usize) -> usize {
+    fn simulate(input: &str, count: u64) -> u64 {
         let mut rocks = 0;
         let mut total_height = 0;
 
@@ -106,7 +82,7 @@ impl Day17 {
 
         // Don't use the cache for small inputs
         let mut use_cache = count < 10000;
-        let mut cache: HashMap<(usize, Chamber), (usize, usize)> = HashMap::new();
+        let mut cache: HashMap<(usize, Chamber), (u64, u64)> = HashMap::new();
 
         loop {
             let (index, direction) = match movements.next() {
@@ -142,7 +118,7 @@ impl Day17 {
                     // Shift all the rocks down
                     chamber = chamber.into_iter().map(|(x, y)| (x, y - cutoff)).collect();
 
-                    total_height += cutoff as usize;
+                    total_height += cutoff as u64;
 
                     if !use_cache {
                         if let Some((previous_rocks, previous_height)) =
@@ -162,20 +138,20 @@ impl Day17 {
                 let height = *chamber.iter().map(|(_, y)| y).max().unwrap_or(&0);
 
                 if rocks + 1 >= count {
-                    return total_height + height as usize + 1;
+                    return total_height + height as u64 + 1;
                 }
 
                 // Spawn a new rock
                 rocks += 1;
-                rock = Rock::new(rocks % 5, height + 1);
+                rock = Rock::new((rocks % 5) as usize, height + 1);
             }
         }
     }
 }
 
 impl Solution for Day17 {
-    type F = usize;
-    type S = usize;
+    type F = u64;
+    type S = u64;
 
     fn name(&self) -> &'static str {
         "Day 17"
@@ -185,11 +161,11 @@ impl Solution for Day17 {
         include_str!("../../inputs/day17.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<usize, AocError> {
+    fn part_1(&self, input: &str) -> Result<u64, AocError> {
         Ok(Day17::simulate(input, 2022))
     }
 
-    fn part_2(&self, input: &str) -> Result<usize, AocError> {
+    fn part_2(&self, input: &str) -> Result<u64, AocError> {
         Ok(Day17::simulate(input, 1000000000000))
     }
 }

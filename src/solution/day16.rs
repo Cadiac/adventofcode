@@ -462,7 +462,7 @@ impl Solution for Day16 {
         // TODO: Make this faster. Completes the day in ~2 hours
         // let released = Day16::tsp_with_elephant(valves);
 
-        Ok(0)
+        Err(AocError("Too slow :( Completes the day in ~2 hours.".to_owned()))
     }
 }
 

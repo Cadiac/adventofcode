@@ -1,33 +1,42 @@
-use std::{collections::HashSet, iter::FromIterator};
+use std::collections::HashMap;
 
 use itertools::Itertools;
 use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{window, Window};
 use yew::prelude::*;
 
-use crate::{solution::day09::Day09, utils::Coords};
+use crate::solution::{
+    day18::{Day18, Label},
+    Solution,
+};
 
 pub enum Msg {
     KeyPress(char),
 }
 
-pub struct Rope {
+pub struct Lava {
     keyboard_listener: Option<Closure<dyn Fn(KeyboardEvent)>>,
-    rope: Vec<Coords<i32>>,
-    visited: HashSet<Coords<i32>>,
+    cubes: HashMap<(i32, i32, i32), Label>,
+    bounds: ((i32, i32), (i32, i32), (i32, i32)),
+    z: i32,
 }
 
-const ALLOWED_KEYS: [char; 4] = ['W', 'A', 'S', 'D'];
+const ALLOWED_KEYS: [char; 2] = ['W', 'S'];
 
-impl Component for Rope {
+impl Component for Lava {
     type Message = Msg;
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
+        let lava_cubes = Day18::parse(Day18.default_input()).unwrap();
+
+        let (labeled, bounds) = Day18::label_cubes(lava_cubes);
+
         Self {
             keyboard_listener: None,
-            rope: vec![Coords { x: 0, y: 0 }; 10],
-            visited: HashSet::from_iter(vec![Coords { x: 0, y: 0 }]),
+            cubes: labeled,
+            bounds,
+            z: 0,
         }
     }
 
@@ -82,21 +91,11 @@ impl Component for Rope {
     fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::KeyPress(c) => {
-                let direction = match c {
-                    'W' => Coords { x: 0, y: -1 },
-                    'A' => Coords { x: -1, y: 0 },
-                    'S' => Coords { x: 0, y: 1 },
-                    'D' => Coords { x: 1, y: 0 },
+                self.z = match c {
+                    'W' => i32::min(self.z + 1, self.bounds.2 .1),
+                    'S' => i32::max(self.z - 1, self.bounds.2 .0),
                     _ => unreachable!(),
                 };
-
-                let (visited, rope) = Day09::simulate(
-                    vec![(direction, 1)],
-                    std::mem::take(&mut self.rope),
-                    std::mem::take(&mut self.visited),
-                );
-                self.rope = rope;
-                self.visited = visited;
             }
         };
 
@@ -104,53 +103,37 @@ impl Component for Rope {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let output = (-10..10)
+        let output = (self.bounds.1 .0..self.bounds.1 .1)
             .map(|y| {
-                (-15..15)
-                    .map(|x| {
-                        if let Some(knot) = self
-                            .rope
-                            .iter()
-                            .position(|coords| coords.x == x && coords.y == y)
-                        {
-                            if knot == 0 {
-                                "H".to_string()
-                            } else if knot == self.rope.len() - 1 {
-                                "T".to_string()
-                            } else {
-                                format!("{knot}")
-                            }
-                        } else if self.visited.contains(&Coords{x, y}) {
-                            "#".to_string()
-                        } else {
-                            ".".to_string()
-                        }
+                (self.bounds.0 .0..self.bounds.0 .1)
+                    .map(|x| match self.cubes.get(&(x, y, self.z)) {
+                        Some(Label::Exterior) => '.',
+                        Some(Label::Lava) => '#',
+                        Some(Label::Pocket) => 'x',
+                        None => '?',
                     })
                     .collect::<String>()
             })
             .join("\n");
 
-        let visited = format!("Positions tail visited: {}", self.visited.len());
+        let current_z = format!("Z: {}", self.z);
 
         let link = ctx.link();
 
         html! {
             <>
-                <h2>{"-- Day 9 --"}</h2>
+                <h2>{"-- Day 18 --"}</h2>
                 <p>
-                    {"Move around with "}
+                    {"Move slice UP and DOWN with "}
                     <a class="link" role="button" href={"javascript:void(0)"} onclick={link.callback(|_| Msg::KeyPress('W'))}>{"W"}</a>
-                    {", "}
-                    <a class="link" role="button" href={"javascript:void(0)"} onclick={link.callback(|_| Msg::KeyPress('A'))}>{"A"}</a>
-                    {", "}
-                    <a class="link" role="button" href={"javascript:void(0)"} onclick={link.callback(|_| Msg::KeyPress('S'))}>{"S"}</a>
                     {" and "}
-                    <a class="link" role="button" href={"javascript:void(0)"} onclick={link.callback(|_| Msg::KeyPress('D'))}>{"D"}</a>
-                    {"."}</p>
+                    <a class="link" role="button" href={"javascript:void(0)"} onclick={link.callback(|_| Msg::KeyPress('S'))}>{"S"}</a>
+                    {"."}
+                </p>
                 <pre>
                     <code>{ output }</code>
                 </pre>
-                <p class="success">{ visited }</p>
+                <p class="success">{ current_z }</p>
             </>
         }
     }

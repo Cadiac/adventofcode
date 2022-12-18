@@ -21,7 +21,7 @@ struct Monkey {
     argument: Argument,
     modulus: u32,
     next: (usize, usize),
-    activity: usize,
+    activity: u64,
 }
 
 impl Default for Monkey {
@@ -130,8 +130,8 @@ impl Day11 {
 }
 
 impl Solution for Day11 {
-    type F = usize;
-    type S = usize;
+    type F = u64;
+    type S = u64;
 
     fn name(&self) -> &'static str {
         "Day 11"
@@ -141,7 +141,7 @@ impl Solution for Day11 {
         include_str!("../../inputs/day11.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<usize, AocError> {
+    fn part_1(&self, input: &str) -> Result<u64, AocError> {
         let mut monkeys = Self::parse(input)?;
 
         for _round in 1..=20 {
@@ -167,13 +167,13 @@ impl Solution for Day11 {
             }
         }
 
-        let mut activity: Vec<usize> = monkeys.iter().map(|monkey| monkey.activity).collect();
+        let mut activity: Vec<u64> = monkeys.iter().map(|monkey| monkey.activity).collect();
         activity.sort();
 
         Ok(activity.iter().rev().take(2).product())
     }
 
-    fn part_2(&self, input: &str) -> Result<usize, AocError> {
+    fn part_2(&self, input: &str) -> Result<u64, AocError> {
         let mut monkeys = Self::parse(input)?;
 
         // Gather list of modulus for each monkey
@@ -220,7 +220,7 @@ impl Solution for Day11 {
             }
         }
 
-        let mut activity: Vec<usize> = monkeys.iter().map(|monkey| monkey.activity).collect();
+        let mut activity: Vec<u64> = monkeys.iter().map(|monkey| monkey.activity).collect();
         activity.sort();
 
         Ok(activity.iter().rev().take(2).product())

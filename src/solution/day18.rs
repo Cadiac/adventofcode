@@ -1,5 +1,5 @@
 use serde_scan::ScanError;
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use crate::solution::{AocError, Solution};
 
@@ -14,10 +14,16 @@ const NEIGHBOURS: [Point; 6] = [
     (0, 0, 1),
 ];
 
+pub enum Label {
+    Exterior,
+    Lava,
+    Pocket,
+}
+
 pub struct Day18;
 
 impl Day18 {
-    fn parse(input: &str) -> Result<HashSet<Point>, AocError> {
+    pub fn parse(input: &str) -> Result<HashSet<Point>, AocError> {
         input
             .lines()
             .map(|line| serde_scan::scan!("{},{},{}" <- line))
@@ -25,8 +31,8 @@ impl Day18 {
             .map_err(|err| AocError::parse("input", err))
     }
 
-    fn count_exposed_sides(cubes: &HashSet<Point>) -> usize {
-        cubes
+    fn count_exposed_sides(lava_cubes: &HashSet<Point>) -> usize {
+        lava_cubes
             .iter()
             .map(|cube| {
                 let mut exposed_sides = 0;
@@ -34,7 +40,7 @@ impl Day18 {
                 for (x, y, z) in NEIGHBOURS {
                     let neighbour = (cube.0 + x, cube.1 + y, cube.2 + z);
 
-                    if !cubes.contains(&neighbour) {
+                    if !lava_cubes.contains(&neighbour) {
                         exposed_sides += 1;
                     }
                 }
@@ -44,15 +50,15 @@ impl Day18 {
             .sum()
     }
 
-    fn count_exterior(cubes: HashSet<Point>) -> usize {
-        let min_x = cubes.iter().map(|(x, _, _)| x).min().unwrap_or(&0) - 1;
-        let max_x = cubes.iter().map(|(x, _, _)| x).max().unwrap_or(&0) + 1;
+    fn count_exterior(lava_cubes: HashSet<Point>) -> usize {
+        let min_x = lava_cubes.iter().map(|(x, _, _)| x).min().unwrap_or(&0) - 1;
+        let max_x = lava_cubes.iter().map(|(x, _, _)| x).max().unwrap_or(&0) + 1;
 
-        let min_y = cubes.iter().map(|(_, y, _)| y).min().unwrap_or(&0) - 1;
-        let max_y = cubes.iter().map(|(_, y, _)| y).max().unwrap_or(&0) + 1;
+        let min_y = lava_cubes.iter().map(|(_, y, _)| y).min().unwrap_or(&0) - 1;
+        let max_y = lava_cubes.iter().map(|(_, y, _)| y).max().unwrap_or(&0) + 1;
 
-        let min_z = cubes.iter().map(|(_, _, z)| z).min().unwrap_or(&0) - 1;
-        let max_z = cubes.iter().map(|(_, _, z)| z).max().unwrap_or(&0) + 1;
+        let min_z = lava_cubes.iter().map(|(_, _, z)| z).min().unwrap_or(&0) - 1;
+        let max_z = lava_cubes.iter().map(|(_, _, z)| z).max().unwrap_or(&0) + 1;
 
         let mut queue = VecDeque::new();
         let mut exterior: HashSet<Point> = HashSet::new();
@@ -73,7 +79,7 @@ impl Day18 {
                     && neighbour.2 >= min_z
                     && neighbour.2 <= max_z
                 {
-                    if !cubes.contains(&neighbour) && !exterior.contains(&neighbour) {
+                    if !lava_cubes.contains(&neighbour) && !exterior.contains(&neighbour) {
                         exterior.insert(neighbour);
                         queue.push_back(neighbour);
                     }
@@ -81,7 +87,7 @@ impl Day18 {
             }
         }
 
-        cubes
+        lava_cubes
             .iter()
             .map(|cube| {
                 let mut exposed_sides = 0;
@@ -98,6 +104,63 @@ impl Day18 {
             })
             .sum()
     }
+
+    // For web visualization
+    pub fn label_cubes(
+        lava_cubes: HashSet<Point>,
+    ) -> (HashMap<Point, Label>, ((i32, i32), (i32, i32), (i32, i32))) {
+        let min_x = lava_cubes.iter().map(|(x, _, _)| x).min().unwrap_or(&0) - 1;
+        let max_x = lava_cubes.iter().map(|(x, _, _)| x).max().unwrap_or(&0) + 1;
+
+        let min_y = lava_cubes.iter().map(|(_, y, _)| y).min().unwrap_or(&0) - 1;
+        let max_y = lava_cubes.iter().map(|(_, y, _)| y).max().unwrap_or(&0) + 1;
+
+        let min_z = lava_cubes.iter().map(|(_, _, z)| z).min().unwrap_or(&0) - 1;
+        let max_z = lava_cubes.iter().map(|(_, _, z)| z).max().unwrap_or(&0) + 1;
+
+        let mut queue = VecDeque::new();
+        let mut labeled: HashMap<Point, Label> = HashMap::new();
+
+        for cube in lava_cubes.iter() {
+            labeled.insert(*cube, Label::Lava);
+        }
+
+        let start = (min_x, min_y, min_z);
+        labeled.insert(start, Label::Exterior);
+        queue.push_back(start);
+
+        // BFS the exterior points
+        while let Some(v) = queue.pop_front() {
+            for (x, y, z) in NEIGHBOURS {
+                let neighbour = (v.0 + x, v.1 + y, v.2 + z);
+
+                if neighbour.0 >= min_x
+                    && neighbour.0 <= max_x
+                    && neighbour.1 >= min_y
+                    && neighbour.1 <= max_y
+                    && neighbour.2 >= min_z
+                    && neighbour.2 <= max_z
+                {
+                    if !labeled.contains_key(&neighbour) {
+                        labeled.insert(neighbour, Label::Exterior);
+                        queue.push_back(neighbour);
+                    }
+                }
+            }
+        }
+
+        for z in min_z..max_z {
+            for y in min_y..max_y {
+                for x in min_x..max_x {
+                    if !labeled.contains_key(&(x, y, z)) {
+                        labeled.insert((x, y, z), Label::Pocket);
+                    }
+                }
+            }
+        }
+
+        (labeled, ((min_x, max_x), (min_y, max_y), (min_z, max_z)))
+    }
 }
 
 impl Solution for Day18 {
@@ -113,15 +176,15 @@ impl Solution for Day18 {
     }
 
     fn part_1(&self, input: &str) -> Result<usize, AocError> {
-        let cubes = Day18::parse(input)?;
+        let lava_cubes = Day18::parse(input)?;
 
-        Ok(Day18::count_exposed_sides(&cubes))
+        Ok(Day18::count_exposed_sides(&lava_cubes))
     }
 
     fn part_2(&self, input: &str) -> Result<usize, AocError> {
-        let cubes = Day18::parse(input)?;
+        let lava_cubes = Day18::parse(input)?;
 
-        Ok(Day18::count_exterior(cubes))
+        Ok(Day18::count_exterior(lava_cubes))
     }
 }
 
