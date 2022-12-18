@@ -1,4 +1,4 @@
-use std::collections::{HashSet};
+use std::collections::{BTreeSet, HashMap};
 
 use crate::solution::{AocError, Solution};
 
@@ -11,6 +11,8 @@ const SHAPE_PIXELS: [&[(i64, i64)]; 5] = [
 ];
 
 const CHAMBER_WIDTH: i64 = 7;
+
+type Chamber = BTreeSet<(i64, i64)>;
 
 enum Shape {
     Horizontal,
@@ -33,7 +35,7 @@ struct Rock {
 }
 
 impl Rock {
-    fn new(index: usize, max_y: i64) -> Self {
+    fn new(index: usize, height: i64) -> Self {
         let shape = match index {
             0 => Shape::Horizontal,
             1 => Shape::Plus,
@@ -46,11 +48,11 @@ impl Rock {
         Rock {
             shape,
             x: 2,
-            y: 3 + max_y,
+            y: 3 + height,
         }
     }
 
-    fn move_direction(&mut self, direction: Direction, chamber: &HashSet<(i64, i64)>) -> bool {
+    fn move_direction(&mut self, direction: Direction, chamber: &Chamber) -> bool {
         let delta = match direction {
             Direction::Left => (-1, 0),
             Direction::Right => (1, 0),
@@ -71,7 +73,7 @@ impl Rock {
         true
     }
 
-    fn intersects(pixel: &(i64, i64), delta: &(i64, i64), chamber: &HashSet<(i64, i64)>) -> bool {
+    fn intersects(pixel: &(i64, i64), delta: &(i64, i64), chamber: &Chamber) -> bool {
         let coords = (pixel.0 + delta.0, pixel.1 + delta.1);
 
         chamber.contains(&coords) || coords.0 >= CHAMBER_WIDTH || coords.0 < 0 || coords.1 < 0
@@ -93,19 +95,23 @@ impl Rock {
 pub struct Day17;
 
 impl Day17 {
-    fn simulate(input: &str, count: usize) -> i64 {
+    fn simulate(input: &str, count: usize) -> usize {
         let mut rocks = 0;
+        let mut total_height = 0;
 
-        let mut chamber: HashSet<(i64, i64)> = HashSet::new();
-        let mut movements = input.chars().cycle();
+        let mut chamber: Chamber = BTreeSet::new();
+        let mut movements = input.chars().enumerate().cycle();
 
-        let mut max_y = chamber.iter().map(|(_, y)| y).max().unwrap_or(&0);
-        let mut rock = Rock::new(rocks % 5, *max_y);
+        let mut rock = Rock::new(0, 0);
+
+        // Don't use the cache for small inputs
+        let mut use_cache = count < 10000;
+        let mut cache: HashMap<(usize, Chamber), (usize, usize)> = HashMap::new();
 
         loop {
-            let direction = match movements.next() {
-                Some('<') => Direction::Left,
-                Some('>') => Direction::Right,
+            let (index, direction) = match movements.next() {
+                Some((index, '<')) => (index, Direction::Left),
+                Some((index, '>')) => (index, Direction::Right),
                 _ => unreachable!(),
             };
 
@@ -117,22 +123,59 @@ impl Day17 {
                     chamber.insert(pixel);
                 }
 
-                max_y = chamber.iter().map(|(_, y)| y).max().unwrap_or(&0);
-                if rocks >= count - 1 {
-                    return *max_y + 1;
+                // Find the lowest spots from every column and get rid of everything else
+                let cutoff = *(0..7)
+                    .map(|x| {
+                        chamber
+                            .iter()
+                            .filter(|coords| coords.0 == x)
+                            .map(|(_, y)| y)
+                            .max()
+                            .unwrap_or(&0)
+                    })
+                    .min()
+                    .unwrap_or(&0);
+
+                if cutoff > 0 {
+                    chamber.retain(|(_, y)| *y >= cutoff);
+
+                    // Shift all the rocks down
+                    chamber = chamber.into_iter().map(|(x, y)| (x, y - cutoff)).collect();
+
+                    total_height += cutoff as usize;
+
+                    if !use_cache {
+                        if let Some((previous_rocks, previous_height)) =
+                            cache.insert((index, chamber.clone()), (rocks, total_height))
+                        {
+                            let rocks_gained = rocks - previous_rocks;
+                            let height_gained = total_height - previous_height;
+
+                            total_height = previous_height
+                                + ((count - previous_rocks) / rocks_gained) * height_gained;
+                            rocks = count - ((count - previous_rocks) % rocks_gained);
+                            use_cache = true
+                        };
+                    }
                 }
 
-                // Spawn new rock
+                let height = *chamber.iter().map(|(_, y)| y).max().unwrap_or(&0);
+
+                if rocks + 1 >= count {
+                    return total_height + height as usize + 1;
+                }
+
+                // Spawn a new rock
                 rocks += 1;
-                rock = Rock::new(rocks % 5, *max_y + 1);
+                rock = Rock::new(rocks % 5, height + 1);
             }
         }
     }
 }
 
 impl Solution for Day17 {
-    type F = i64;
-    type S = i64;
+    type F = usize;
+    type S = usize;
 
     fn name(&self) -> &'static str {
         "Day 17"
@@ -142,14 +185,12 @@ impl Solution for Day17 {
         include_str!("../../inputs/day17.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<i64, AocError> {
+    fn part_1(&self, input: &str) -> Result<usize, AocError> {
         Ok(Day17::simulate(input, 2022))
     }
 
-    fn part_2(&self, input: &str) -> Result<i64, AocError> {
-        // Ok(Day17::simulate(input, 1000000000000))
-        // TODO
-        Ok(0)
+    fn part_2(&self, input: &str) -> Result<usize, AocError> {
+        Ok(Day17::simulate(input, 1000000000000))
     }
 }
 
@@ -159,9 +200,13 @@ mod tests {
 
     const INPUT: &str = ">>><<><>><<<>><>>><<<>>><<<><<<>><>><<>>";
 
-    #[ignore]
     #[test]
     fn it_solves_part1() {
         assert_eq!(Day17.part_1(INPUT), Ok(3068));
+    }
+
+    #[test]
+    fn it_solves_part2() {
+        assert_eq!(Day17.part_2(INPUT), Ok(1514285714288));
     }
 }
