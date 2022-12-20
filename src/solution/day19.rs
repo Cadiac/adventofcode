@@ -210,27 +210,32 @@ mod tests {
             Each obsidian robot costs 3 ore and 8 clay. \
             Each geode robot costs 3 ore and 12 obsidian.";
 
+    #[ignore]
     #[test]
     fn it_solves_part1_first() {
         assert_eq!(Day19.part_1(INPUT.lines().nth(0).unwrap()), Ok(9));
     }
 
+    #[ignore]
     #[test]
     fn it_solves_part1_second() {
         assert_eq!(Day19.part_1(INPUT.lines().nth(1).unwrap()), Ok(24));
     }
 
+    #[ignore]
     #[test]
     fn it_solves_part1_full() {
         assert_eq!(Day19.part_1(INPUT), Ok(33));
     }
 
+    #[ignore]
     #[test]
     fn it_optimizes_part1_first() {
         let geodes = Day19::simulate(Day19::parse(INPUT).unwrap()[0].clone());
         assert_eq!(geodes, 9);
     }
 
+    #[ignore]
     #[test]
     fn it_optimizes_part1_second() {
         let geodes = Day19::simulate(Day19::parse(INPUT).unwrap()[1].clone());
