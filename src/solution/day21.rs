@@ -105,7 +105,7 @@ impl Solution for Day21 {
 
         match monkeys.get_mut("humn") {
             Some(Operation::Value(humn)) => {
-                // Set the imaginary portion to "1i" and solve it later from the reduced equation
+                // Set the imaginary portion to "0 + i" and solve "i" later from the reduced equation
                 *humn = Complex::new(0.0, 1.0);
             }
             _ => return Err(AocError::logic("no humn")),
