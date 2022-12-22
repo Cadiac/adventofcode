@@ -112,13 +112,13 @@ impl Solution for Day21 {
         };
 
         let (left, right) = match monkeys.get("root") {
-            Some(Operation::Equation { left, right, .. }) => (left, right),
+            Some(Operation::Equation { left, right, .. }) => (*left, *right),
             _ => return Err(AocError::logic("no root")),
         };
 
-        let reduced = Day21::reduce(monkeys.clone());
+        let reduced = Day21::reduce(monkeys);
 
-        match (reduced.get(*left), reduced.get(*right)) {
+        match (reduced.get(left), reduced.get(right)) {
             (Some(Operation::Value(left)), Some(Operation::Value(right))) => {
                 if left.im == 0.0 {
                     Ok(((left.re - right.re) / right.im) as i64)
