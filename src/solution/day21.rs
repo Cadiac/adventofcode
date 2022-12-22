@@ -105,7 +105,7 @@ impl Solution for Day21 {
 
         match monkeys.get_mut("humn") {
             Some(Operation::Value(humn)) => {
-                // Set the imaginary portion to "0 + i" and solve "i" later from the reduced equation
+                // Set humn to "0 + i" and solve the "i" later from the reduced equation
                 *humn = Complex::new(0.0, 1.0);
             }
             _ => return Err(AocError::logic("no humn")),
@@ -120,10 +120,15 @@ impl Solution for Day21 {
 
         match (reduced.get(left), reduced.get(right)) {
             (Some(Operation::Value(left)), Some(Operation::Value(right))) => {
+                // The side with imaginary part contained "humn" originally
                 if left.im == 0.0 {
                     Ok(((left.re - right.re) / right.im) as i64)
-                } else {
+                } else if right.im == 0.0 {
                     Ok(((right.re - left.re) / left.im) as i64)
+                } else {
+                    // The input didn't actually contain this, but if both sides of the
+                    // equation depended on "humn" this would still solve it
+                    Ok(((left.re - right.re) / (right.im - left.im)) as i64)
                 }
             }
             _ => Err(AocError::logic("failed reduce")),
