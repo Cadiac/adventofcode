@@ -1,5 +1,5 @@
 use std::cmp::Ordering;
-use std::collections::{BinaryHeap, HashMap, HashSet};
+use std::collections::{BinaryHeap, HashMap};
 
 use crate::solution::{AocError, Solution};
 
@@ -14,13 +14,6 @@ use nom::{
 type Coords = (i64, i64);
 type Bounds = HashMap<i64, Coords>;
 type World = HashMap<Coords, Tile>;
-
-const DIRECTIONS: [(i64, i64, Direction); 4] = [
-    (1, 0, Direction::Right),
-    (0, 1, Direction::Down),
-    (-1, 0, Direction::Left),
-    (0, -1, Direction::Up),
-];
 
 #[derive(Debug)]
 enum Instruction {
@@ -51,6 +44,13 @@ enum Tile {
     Solid,
 }
 
+const DIRECTIONS: [Direction; 4] = [
+    Direction::Right,
+    Direction::Down,
+    Direction::Left,
+    Direction::Up,
+];
+
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
 enum Direction {
     Right,
@@ -60,25 +60,33 @@ enum Direction {
 }
 
 impl Direction {
+    fn turn_left(&mut self) {
+        match *self {
+            Direction::Right => *self = Direction::Up,
+            Direction::Down => *self = Direction::Right,
+            Direction::Left => *self = Direction::Down,
+            Direction::Up => *self = Direction::Left,
+        }
+    }
+
+    fn turn_right(&mut self) {
+        match *self {
+            Direction::Right => *self = Direction::Down,
+            Direction::Down => *self = Direction::Left,
+            Direction::Left => *self = Direction::Up,
+            Direction::Up => *self = Direction::Right,
+        }
+    }
+
     fn turn(&mut self, instruction: Instruction) {
         match instruction {
-            Instruction::L => match *self {
-                Direction::Right => *self = Direction::Up,
-                Direction::Down => *self = Direction::Right,
-                Direction::Left => *self = Direction::Down,
-                Direction::Up => *self = Direction::Left,
-            },
-            Instruction::R => match *self {
-                Direction::Right => *self = Direction::Down,
-                Direction::Down => *self = Direction::Left,
-                Direction::Left => *self = Direction::Up,
-                Direction::Up => *self = Direction::Right,
-            },
+            Instruction::L => self.turn_left(),
+            Instruction::R => self.turn_right(),
             _ => {}
         }
     }
 
-    fn to_password(&self) -> i64 {
+    fn to_password(self) -> i64 {
         match self {
             Direction::Right => 0,
             Direction::Down => 1,
@@ -87,7 +95,7 @@ impl Direction {
         }
     }
 
-    fn to_delta(&self) -> (i64, i64) {
+    fn to_delta(self) -> (i64, i64) {
         match self {
             Direction::Right => (1, 0),
             Direction::Down => (0, 1),
@@ -96,7 +104,7 @@ impl Direction {
         }
     }
 
-    fn opposite(&self) -> Direction {
+    fn reverse(&self) -> Direction {
         match self {
             Direction::Right => Direction::Left,
             Direction::Down => Direction::Up,
@@ -171,24 +179,59 @@ impl Day22 {
         Ok((world, path, x_bounds, y_bounds))
     }
 
-    // Modified dijkstra style search that runs up to a max distance,
-    // finding edges that should link to each other.
+    fn fold_cube(facets: &mut HashMap<(i64, i64), Facet>) {
+        // The distance can never be more than 16? (not even that realistically)
+        for distance in 1..16 {
+            let keys: Vec<_> = facets.keys().cloned().collect();
+            for source in keys {
+                let current_source = facets.get(&source).unwrap();
+                let empty_directions: Vec<_> = [
+                    Direction::Right,
+                    Direction::Down,
+                    Direction::Left,
+                    Direction::Up,
+                ]
+                .iter()
+                .filter(|direction| !current_source.neighbours.contains_key(direction))
+                .collect();
+
+                for starting_direction in empty_directions.into_iter() {
+                    if let Some((neighbour, arrived_to_direction)) =
+                        Day22::find_neighbour(*starting_direction, &source, &*facets, distance)
+                    {
+                        facets
+                            .get_mut(&source)
+                            .unwrap()
+                            .neighbours
+                            .insert(*starting_direction, (neighbour, arrived_to_direction));
+                        facets
+                            .get_mut(&neighbour)
+                            .unwrap()
+                            .neighbours
+                            .insert(arrived_to_direction, (source, *starting_direction));
+                    }
+                }
+            }
+        }
+    }
+
+    // Modified Dijkstra style search algorithm that runs up to a max distance,
+    // finding edges that should link to each other in the folded cube.
     fn find_neighbour(
         starting_direction: Direction,
         source: &Coords,
         facets: &HashMap<Coords, Facet>,
         max_dist: i32,
     ) -> Option<(Coords, Direction)> {
-        // The direction we arrive from matters
+        // The direction we arrive from matters, so collect distances by those
         let mut dist: HashMap<(Coords, Direction), i32> = HashMap::new();
         let mut heap: BinaryHeap<Search> = BinaryHeap::new();
-
-        let bounds = (-1, 4);
 
         let delta = starting_direction.to_delta();
         let start = (source.0 + delta.0, source.1 + delta.1);
 
-        for (_, _, direction) in DIRECTIONS {
+        // Source and start should be considered as starting points from all directions
+        for direction in DIRECTIONS {
             *dist.entry((*source, direction)).or_insert(0) = 0;
             *dist.entry((start, direction)).or_insert(0) = 0;
         }
@@ -217,42 +260,45 @@ impl Day22 {
             if current != *source {
                 if let Some(neighbour) = facets.get(&(current)) {
                     // The neighbour slot from this direction has to be empty
-                    if neighbour.neighbours.get(&direction.opposite()).is_some() {
+                    if neighbour.neighbours.get(&direction.reverse()).is_some() {
                         continue;
                     }
 
-                    // TODO: Consider the original direction, can't ever have two adjacent neighbours with the same direction?
-                    // Or don't care? Doesn't seem to matter, but could maybe on "'--," shaped cubes?
+                    // NOTE: This should perhaps consider the original direction,
+                    // as there can never be two adjacent neighbours with the same direction?
+                    // Ignoring this doesn't seem to matter in both my input and the examples,
+                    // but it could maybe matter on "S" shaped patterns?
 
-                    // Can only have the same tile once as a neighbour
+                    // Tile can only be used once as a neighbour
                     if !neighbour
                         .neighbours
                         .values()
                         .any(|(existing_neighbour, _)| *existing_neighbour == *source)
                     {
                         // Found a suitable neighbour
-                        return Some((current, direction.opposite()));
+                        return Some((current, direction.reverse()));
                     }
                 }
             }
 
-            for (dx, dy, dir) in DIRECTIONS.iter() {
+            for next_dir in DIRECTIONS.iter() {
+                let (dx, dy) = next_dir.to_delta();
                 let next_pos = (current.0 + dx, current.1 + dy);
-                if next_pos.0 >= bounds.0
+                let bounds = (-1, 4);
+                let is_within_bounds = next_pos.0 >= bounds.0
                     && next_pos.0 <= bounds.1
                     && next_pos.1 >= bounds.0
-                    && next_pos.1 <= bounds.1
-                {
+                    && next_pos.1 <= bounds.1;
+
+                if is_within_bounds {
                     let next = Search {
                         distance: distance + 1,
                         current: next_pos,
-                        direction: *dir,
+                        direction: *next_dir,
                     };
 
-                    // TODO: We care about the direction we're travelling to,
-                    // So this doesn't quite work. Keep dist map of pos + direction?
-                    if next.distance < *dist.get(&(next_pos, *dir)).unwrap_or(&i32::MAX) {
-                        *dist.entry((next_pos, *dir)).or_insert(0) = next.distance;
+                    if next.distance < *dist.get(&(next_pos, *next_dir)).unwrap_or(&i32::MAX) {
+                        *dist.entry((next_pos, *next_dir)).or_insert(0) = next.distance;
                         heap.push(next);
                     }
                 }
@@ -260,6 +306,87 @@ impl Day22 {
         }
 
         None
+    }
+
+    fn find_leftmost_open(
+        world: &HashMap<Coords, Tile>,
+        row_dimensions: &HashMap<i64, Coords>,
+    ) -> Result<Coords, AocError> {
+        let (start, end) = row_dimensions.get(&1).unwrap_or(&(0, 0));
+
+        for x in *start..=*end {
+            if let Some(Tile::Open) = world.get(&(x, 1)) {
+                return Ok((x, 1));
+            }
+        }
+
+        Err(AocError::logic("no leftmost open tile"))
+    }
+
+    fn find_cube_facets(size: i64, world: HashMap<(i64, i64), Tile>, facets: &mut HashMap<(i64, i64), Facet>, leftmost_open: (i64, i64)) -> (i64, i64) {
+        let mut starting_facet: (i64, i64) = (-1, -1);
+
+        // Sample points from the corner of each possible piece to see if the pattern has facet there
+        for id in 0..16 {
+            let x = id % 4;
+            let y = id / 4;
+    
+            let x_world = x * size + 1;
+            let y_world = y * size + 1;
+    
+            if world.contains_key(&(x_world, y_world)) {
+                // Store the original coordinates and tiles by facet coordinates
+                let mut tiles = HashMap::new();
+                for y_facet in 0..size {
+                    for x_facet in 0..size {
+                        let world_coords = (x_world + x_facet, y_world + y_facet);
+                        let tile = world.get(&world_coords).unwrap();
+    
+                        tiles.insert((x_facet, y_facet), (*tile, world_coords));
+                    }
+                }
+    
+                facets.insert(
+                    (x, y),
+                    Facet {
+                        tiles,
+                        neighbours: HashMap::new(),
+                    },
+                );
+    
+                // Find the starting position's facet while doing this
+                if x_world == leftmost_open.0 && y_world == leftmost_open.1 {
+                    starting_facet = (x, y)
+                }
+            };
+        }
+        starting_facet
+    }    
+
+    #[rustfmt::skip]
+    fn translate_position(direction: Direction, arrival_direction: &Direction, max: i64, position: (i64, i64)) -> (i64, i64) {
+        match (direction, arrival_direction) {
+            (Direction::Right, Direction::Left) => (0, position.1),
+            (Direction::Left, Direction::Right) => (max, position.1),
+
+            (Direction::Down, Direction::Up) => (position.0, 0),
+            (Direction::Up, Direction::Down) => (position.0, max),
+
+            (Direction::Down, Direction::Right) => (max, position.0),
+            (Direction::Right, Direction::Down) => (position.1, max),
+
+            (Direction::Down, Direction::Left) => (0, max - position.0),
+            (Direction::Left, Direction::Down) => (max - position.1, max),
+            
+            (Direction::Up, Direction::Right) => (max, max - position.0),
+            (Direction::Right, Direction::Up) => (max - position.1, 0),
+            
+            (Direction::Up, Direction::Left) => (0, position.0),
+            (Direction::Left, Direction::Up) => (position.1, 0),
+
+            (Direction::Down, Direction::Down) | (Direction::Up, Direction::Up) => (max - position.0, position.1),
+            (Direction::Right, Direction::Right) | (Direction::Left, Direction::Left) => (position.0, max - position.1),
+        }
     }
 }
 
@@ -276,175 +403,72 @@ impl Solution for Day22 {
     }
 
     fn part_1(&self, input: &str) -> Result<i64, AocError> {
-        let (world, path, x_bounds, y_bounds) = Day22::parse(input)?;
+        let (world, path, rows, columns) = Day22::parse(input)?;
 
         let mut direction = Direction::Right;
-        let mut position: Coords = (x_bounds.get(&1).unwrap().0, 1);
+        let mut position: Coords = Day22::find_leftmost_open(&world, &rows)?;
 
         for instruction in path {
-            println!(
-                "Position: {position:?}, direction: {direction:?}, instruction: {instruction:?}"
-            );
             match instruction {
                 Instruction::L | Instruction::R => direction.turn(instruction),
                 Instruction::Move(steps) => {
                     for _step in 0..steps {
-                        let delta = match direction {
-                            Direction::Right => (1, 0),
-                            Direction::Down => (0, 1),
-                            Direction::Left => (-1, 0),
-                            Direction::Up => (0, -1),
-                        };
+                        let delta = direction.to_delta();
+                        let target_pos = (position.0 + delta.0, position.1 + delta.1);
 
-                        match world.get(&(position.0 + delta.0, position.1 + delta.1)) {
-                            Some(Tile::Open) => {
-                                position = (position.0 + delta.0, position.1 + delta.1)
-                            }
-                            Some(Tile::Solid) => {
-                                println!("Hit the wall");
-                                break;
-                            }
+                        match world.get(&target_pos) {
+                            Some(Tile::Open) => position = target_pos,
+                            Some(Tile::Solid) => break,
                             None => {
-                                // Wrap around
-                                println!("Wrap around");
+                                // Wrap around to the other side based on the known bounds
                                 let wrap_target = match direction {
                                     Direction::Right => {
-                                        (x_bounds.get(&position.1).unwrap().0, position.1)
+                                        (rows.get(&position.1).unwrap().0, position.1)
                                     }
                                     Direction::Down => {
-                                        (position.0, y_bounds.get(&position.0).unwrap().0)
+                                        (position.0, columns.get(&position.0).unwrap().0)
                                     }
                                     Direction::Left => {
-                                        (x_bounds.get(&position.1).unwrap().1, position.1)
+                                        (rows.get(&position.1).unwrap().1, position.1)
                                     }
                                     Direction::Up => {
-                                        (position.0, y_bounds.get(&position.0).unwrap().1)
+                                        (position.0, columns.get(&position.0).unwrap().1)
                                     }
                                 };
 
                                 match world.get(&wrap_target) {
                                     Some(Tile::Open) => position = wrap_target,
-                                    Some(Tile::Solid) => {
-                                        println!("Hit the wall at wrap");
-                                        break;
-                                    }
-                                    None => unreachable!(),
+                                    Some(Tile::Solid) => break,
+                                    None => return Err(AocError::logic("wrap missed the map")),
                                 };
                             }
-                        };
-
-                        println!("Step: {position:?}");
+                        }
                     }
                 }
             }
         }
-
-        println!("Final position was {position:?} direction {direction:?}");
 
         Ok(1000 * position.1 + 4 * position.0 + direction.to_password())
     }
 
     fn part_2(&self, input: &str) -> Result<i64, AocError> {
-        let (world, path, x_bounds, _) = Day22::parse(input)?;
+        let (world, path, rows, _) = Day22::parse(input)?;
 
-        let cube_size = x_bounds
-            .values()
-            .map(|(min, max)| max - min + 1)
-            .min()
-            .unwrap();
+        let size = rows.values().map(|(min, max)| max - min + 1).min().unwrap();
 
-        // Sample points from the corner of each possible piece to see if the pattern is there
         let mut facets: HashMap<Coords, Facet> = HashMap::new();
+        let leftmost_open: Coords = Day22::find_leftmost_open(&world, &rows)?;
+        let starting_facet = Day22::find_cube_facets(size, world, &mut facets, leftmost_open);
 
-        // TODO: assume the leftmost tile is open
-        let leftmost_open: (i64, i64) = (x_bounds.get(&1).unwrap().0, 1);
-        let mut starting_facet: (i64, i64) = (-1, -1);
-
-        for id in 0..16 {
-            let x = id % 4;
-            let y = id / 4;
-
-            let x_world = x * cube_size + 1;
-            let y_world = y * cube_size + 1;
-
-            if world.contains_key(&(x_world, y_world)) {
-                // Store the original coordinates and tiles by facet coordinates
-                let mut tiles = HashMap::new();
-                for y_facet in 0..cube_size {
-                    for x_facet in 0..cube_size {
-                        let world_coords = (x_world + x_facet, y_world + y_facet);
-                        let tile = world.get(&world_coords).unwrap();
-
-                        tiles.insert((x_facet, y_facet), (*tile, world_coords));
-                    }
-                }
-
-                facets.insert(
-                    (x, y),
-                    Facet {
-                        tiles,
-                        neighbours: HashMap::new(),
-                    },
-                );
-
-                // Find the starting position facet while doing this
-                if x_world == leftmost_open.0 && y_world == leftmost_open.1 {
-                    starting_facet = (x, y)
-                }
-            };
-        }
-
-        // Then collect the neighbours, increasing the search distance
-        // from zero to up until all the neighbours are found
-        // I guess the distance can never be more than 16?
-        for distance in 1..16 {
-            let keys: Vec<_> = facets.keys().cloned().collect();
-            for source in keys {
-                let current_source = facets.get(&source).unwrap();
-                let empty_directions: Vec<_> = [
-                    Direction::Right,
-                    Direction::Down,
-                    Direction::Left,
-                    Direction::Up,
-                ]
-                .iter()
-                .filter(|direction| !current_source.neighbours.contains_key(direction))
-                .collect();
-
-                for starting_direction in empty_directions.into_iter() {
-                    if let Some((neighbour, arrived_to_direction)) =
-                        Day22::find_neighbour(*starting_direction, &source, &facets, distance)
-                    {
-                        println!("Neighbour for source {source:?} -> {starting_direction:?}: {neighbour:?} <- {arrived_to_direction:?}, distance {distance}");
-
-                        facets
-                            .get_mut(&source)
-                            .unwrap()
-                            .neighbours
-                            .insert(*starting_direction, (neighbour, arrived_to_direction));
-                        facets
-                            .get_mut(&neighbour)
-                            .unwrap()
-                            .neighbours
-                            .insert(arrived_to_direction, (source, *starting_direction));
-                    }
-                }
-            }
-        }
-
-        assert!(starting_facet.0 != -1);
-        assert!(starting_facet.1 != -1);
-
-        println!("Facets: {facets:?}");
+        // Then fold the cube and solve neighbour links, increasing the search distance
+        // from one to up until all the neighbours are found.
+        Day22::fold_cube(&mut facets);
 
         let mut facet = starting_facet;
         let mut position = (0, 0);
         let mut direction = Direction::Right;
 
         for instruction in path {
-            println!(
-                "Position: {position:?}, direction: {direction:?}, instruction: {instruction:?}"
-            );
             match instruction {
                 Instruction::L | Instruction::R => direction.turn(instruction),
                 Instruction::Move(steps) => {
@@ -454,59 +478,45 @@ impl Solution for Day22 {
                         let current_facet = facets.get(&facet).unwrap();
 
                         match current_facet.tiles.get(&target_pos) {
-                            Some((Tile::Open, _)) => {
-                                position = target_pos;
-                            }
-                            Some((Tile::Solid, _)) => {
-                                println!("Hit the wall");
-                                break;
-                            }
+                            Some((Tile::Open, _)) => position = target_pos,
+                            Some((Tile::Solid, _)) => break,
                             None => {
-                                // Jump to neighbour
+                                // Jump to a neighbour facet in that direction
                                 match current_facet.neighbours.get(&direction) {
                                     Some((next_facet, arrival_direction)) => {
-                                        let max = cube_size - 1;
-
-                                        let arrival_pos = match (direction, arrival_direction) {
-                                            (Direction::Down, Direction::Right) => (max, position.0),
-                                            (Direction::Down, Direction::Left) => (0, max - position.0),
-                                            (Direction::Up, Direction::Right) => (max, max - position.0),
-                                            (Direction::Up, Direction::Left) => (0, position.0),
-                                            (Direction::Right, Direction::Down) => (position.1, max),
-                                            (Direction::Left, Direction::Down) => (max - position.1, max),
-                                            (Direction::Right, Direction::Up) => (max - position.1, 0),
-                                            (Direction::Left, Direction::Up) => (position.1, 0),
-                                            (Direction::Right, Direction::Left) => (0, position.1),
-                                            (Direction::Down, Direction::Up) => (position.0, 0),
-                                            (Direction::Left, Direction::Right) => (max, position.1),
-                                            (Direction::Up, Direction::Down) => (position.0, max),
-                                            (Direction::Down, Direction::Down) | (Direction::Up, Direction::Up) => (max - position.0, position.1),
-                                            (Direction::Right, Direction::Right) | (Direction::Left, Direction::Left) => (position.0, max - position.1),
-                                        };
+                                        let arrival_position = Day22::translate_position(
+                                            direction,
+                                            arrival_direction,
+                                            size - 1,
+                                            position,
+                                        );
 
                                         // Check if there would be an immediate collision
-                                        let f = facets.get(next_facet).unwrap();
-
-                                        match f.tiles.get(&arrival_pos) {
+                                        match facets
+                                            .get(next_facet)
+                                            .and_then(|f| f.tiles.get(&arrival_position))
+                                        {
                                             Some((Tile::Open, _)) => {
                                                 facet = *next_facet;
-                                                position = arrival_pos;
-                                                direction = arrival_direction.opposite();
-                                                println!("Warped to open tile on facet {facet:?}, new direction {direction:?}");
+                                                position = arrival_position;
+                                                direction = arrival_direction.reverse();
                                             }
-                                            Some((Tile::Solid, _)) => {
-                                                println!("Hit the wall at warp");
-                                                break;
+                                            Some((Tile::Solid, _)) => break,
+                                            None => {
+                                                return Err(AocError::logic(
+                                                    "missing tile at wrap to neighbour",
+                                                ))
                                             }
-                                            None => unreachable!(),
                                         }
                                     }
-                                    None => unreachable!(),
+                                    None => {
+                                        return Err(AocError::logic(
+                                            "missing facet at wrap to neighbour",
+                                        ))
+                                    }
                                 }
                             }
                         }
-
-                        println!("Step: {position:?}");
                     }
                 }
             }
@@ -517,7 +527,7 @@ impl Solution for Day22 {
             Some((_, world_position)) => {
                 Ok(1000 * world_position.1 + 4 * world_position.0 + direction.to_password())
             }
-            None => Err(AocError::logic("no final facet"))
+            None => Err(AocError::logic("final facet missing")),
         }
     }
 }
@@ -551,10 +561,5 @@ mod tests {
     #[test]
     fn it_solves_part2() {
         assert_eq!(Day22.part_2(&INPUT.join("\n")), Ok(5031));
-    }
-
-    #[test]
-    fn it_solves_part2_real() {
-        assert_eq!(Day22.part_2(Day22.default_input()), Ok(5031));
     }
 }
