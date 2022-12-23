@@ -24,8 +24,9 @@ pub mod day18;
 pub mod day19;
 pub mod day20;
 pub mod day21;
+pub mod day22;
 
-pub const MAX_DAYS: u8 = 21;
+pub const MAX_DAYS: u8 = 22;
 
 pub fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
     match day {
@@ -50,6 +51,7 @@ pub fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
         19 => day19::Day19.run(input),
         20 => day20::Day20.run(input),
         21 => day21::Day21.run(input),
+        22 => day22::Day22.run(input),
         _ => unimplemented!(),
     }
 }
