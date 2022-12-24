@@ -99,3 +99,47 @@ footer {
     color: #ffff66;
     text-shadow: 0 0 5px #ffff66;
 }
+
+/* cube.rs */
+.scene {
+    width: 240px;
+    height: 240px;
+    padding: 80px;
+    perspective: 480px;
+    border: 1px solid #333340;
+    background: #10101a;
+}
+
+.cube {
+    width: 240px;
+    height: 240px;
+    position: relative;
+    transform-style: preserve-3d;
+    transform: translateZ(-120px);
+    animation: rotate 30s infinite linear;
+    font-size: 8px;
+    line-height: 0.6;
+}
+
+@keyframes rotate {
+    0% {
+      transform: translateZ(-120px) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+    }
+    100% {
+      transform: translateZ(-120px) rotateX(360deg) rotateY(360deg) rotateZ(360deg);
+    }
+  }
+
+.cube__face {
+    position: absolute;
+    width: 240px;
+    height: 240px;
+    border: 1px solid #009900;
+}
+
+.cube__face--front  { transform: rotateY(  0deg) translateZ(120px); }
+.cube__face--right  { transform: rotateY( 90deg) translateZ(120px); }
+.cube__face--back   { transform: rotateY(180deg) translateZ(120px); }
+.cube__face--left   { transform: rotateY(-90deg) translateZ(120px); }
+.cube__face--top    { transform: rotateX( 90deg) translateZ(120px); }
+.cube__face--bottom { transform: rotateX(-90deg) translateZ(120px); }

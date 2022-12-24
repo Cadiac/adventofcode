@@ -2,11 +2,12 @@ use yew::prelude::*;
 
 use aoc::solution::{run_solution, MAX_DAYS};
 
-use aoc::web::{rope::Rope, lava::Lava};
+use aoc::web::{rope::Rope, lava::Lava, cube::Cube};
 
 enum Scene {
     Rope,
     Lava,
+    Cube,
     Day,
 }
 
@@ -38,6 +39,13 @@ fn App() -> Html {
         let scene = scene.clone();
         move |_| {
             scene.set(Scene::Lava);
+        }
+    };
+
+    let activate_cube = {
+        let scene = scene.clone();
+        move |_| {
+            scene.set(Scene::Cube);
         }
     };
 
@@ -86,6 +94,7 @@ fn App() -> Html {
                             })
                         }
                         <li><button onclick={activate_lava}>{ "[18+]" }</button></li>
+                        <li><button onclick={activate_cube}>{ "[22+]" }</button></li>
                     </ul>
                 </nav>
             </header>
@@ -99,6 +108,9 @@ fn App() -> Html {
                     },
                     Scene::Lava => {
                         html! { <Lava/> }
+                    }
+                    Scene::Cube => {
+                        html! { <Cube/> }
                     }
                 }}
             </main>

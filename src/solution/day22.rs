@@ -11,12 +11,12 @@ use nom::{
     IResult,
 };
 
-type Coords = (i64, i64);
-type Bounds = HashMap<i64, Coords>;
-type World = HashMap<Coords, Tile>;
+pub type Coords = (i64, i64);
+pub type Bounds = HashMap<i64, Coords>;
+pub type World = HashMap<Coords, Tile>;
 
 #[derive(Debug)]
-enum Instruction {
+pub enum Instruction {
     Move(i64),
     L,
     R,
@@ -39,7 +39,7 @@ fn parse_path(input: &str) -> IResult<&str, Vec<Instruction>> {
 }
 
 #[derive(Debug, Clone, Copy)]
-enum Tile {
+pub enum Tile {
     Open,
     Solid,
 }
@@ -52,7 +52,7 @@ const DIRECTIONS: [Direction; 4] = [
 ];
 
 #[derive(Debug, PartialEq, Eq, Hash, Clone, Copy)]
-enum Direction {
+pub enum Direction {
     Right,
     Down,
     Left,
@@ -95,7 +95,7 @@ impl Direction {
         }
     }
 
-    fn to_delta(self) -> (i64, i64) {
+    fn to_delta(self) -> Coords {
         match self {
             Direction::Right => (1, 0),
             Direction::Down => (0, 1),
@@ -104,7 +104,7 @@ impl Direction {
         }
     }
 
-    fn reverse(&self) -> Direction {
+    pub fn reverse(&self) -> Direction {
         match self {
             Direction::Right => Direction::Left,
             Direction::Down => Direction::Up,
@@ -115,9 +115,9 @@ impl Direction {
 }
 
 #[derive(Debug)]
-struct Facet {
-    tiles: HashMap<Coords, (Tile, Coords)>,
-    neighbours: HashMap<Direction, (Coords, Direction)>,
+pub struct Facet {
+    pub tiles: HashMap<Coords, (Tile, Coords)>,
+    pub neighbours: HashMap<Direction, (Coords, Direction)>,
 }
 
 #[derive(Clone, Eq, PartialEq)]
@@ -142,7 +142,7 @@ impl PartialOrd for Search {
 pub struct Day22;
 
 impl Day22 {
-    fn parse(input: &str) -> Result<(World, Vec<Instruction>, Bounds, Bounds), AocError> {
+    pub fn parse(input: &str) -> Result<(World, Vec<Instruction>, Bounds, Bounds), AocError> {
         let mut world = HashMap::new();
 
         let (map, path) = input
@@ -179,7 +179,7 @@ impl Day22 {
         Ok((world, path, x_bounds, y_bounds))
     }
 
-    fn fold_cube(facets: &mut HashMap<(i64, i64), Facet>) {
+    pub fn fold_cube(facets: &mut HashMap<Coords, Facet>) {
         let mut distance = 0;
 
         // Search for folded edges by slowly increasing the search distance one by one.
@@ -306,7 +306,7 @@ impl Day22 {
         None
     }
 
-    fn find_leftmost_open(
+    pub fn find_leftmost_open(
         world: &HashMap<Coords, Tile>,
         row_dimensions: &HashMap<i64, Coords>,
     ) -> Result<Coords, AocError> {
@@ -321,8 +321,8 @@ impl Day22 {
         Err(AocError::logic("no leftmost open tile"))
     }
 
-    fn find_cube_facets(size: i64, world: HashMap<(i64, i64), Tile>, facets: &mut HashMap<(i64, i64), Facet>, leftmost_open: (i64, i64)) -> (i64, i64) {
-        let mut starting_facet: (i64, i64) = (-1, -1);
+    pub fn find_cube_facets(size: i64, world: HashMap<Coords, Tile>, facets: &mut HashMap<Coords, Facet>, leftmost_open: Coords) -> Coords {
+        let mut starting_facet: Coords = (-1, -1);
 
         // Sample points from the corner of each possible piece to see if the pattern has facet there
         for id in 0..16 {
@@ -362,7 +362,7 @@ impl Day22 {
     }    
 
     #[rustfmt::skip]
-    fn translate_position(direction: Direction, arrival_direction: &Direction, max: i64, position: (i64, i64)) -> (i64, i64) {
+    fn translate_position(direction: Direction, arrival_direction: &Direction, max: i64, position: Coords) -> Coords {
         match (direction, arrival_direction) {
             (Direction::Right, Direction::Left) => (0, position.1),
             (Direction::Left, Direction::Right) => (max, position.1),
@@ -386,6 +386,66 @@ impl Day22 {
             (Direction::Right, Direction::Right) | (Direction::Left, Direction::Left) => (position.0, max - position.1),
         }
     }
+
+    pub fn follow_path(starting_facet: Coords, path: Vec<Instruction>, facets: &HashMap<Coords, Facet>, size: i64) -> Result<(Coords, Coords, Direction), AocError> {
+        let mut facet = starting_facet;
+        let mut position = (0, 0);
+        let mut direction = Direction::Right;
+        for instruction in path {
+            match instruction {
+                Instruction::L | Instruction::R => direction.turn(instruction),
+                Instruction::Move(steps) => {
+                    for _step in 0..steps {
+                        let delta = direction.to_delta();
+                        let target_pos = (position.0 + delta.0, position.1 + delta.1);
+                        let current_facet = facets.get(&facet).unwrap();
+    
+                        match current_facet.tiles.get(&target_pos) {
+                            Some((Tile::Open, _)) => position = target_pos,
+                            Some((Tile::Solid, _)) => break,
+                            None => {
+                                // Jump to a neighbour facet in that direction
+                                match current_facet.neighbours.get(&direction) {
+                                    Some((next_facet, arrival_direction)) => {
+                                        let arrival_position = Day22::translate_position(
+                                            direction,
+                                            arrival_direction,
+                                            size - 1,
+                                            position,
+                                        );
+    
+                                        // Check if there would be an immediate collision
+                                        match facets
+                                            .get(next_facet)
+                                            .and_then(|f| f.tiles.get(&arrival_position))
+                                        {
+                                            Some((Tile::Open, _)) => {
+                                                facet = *next_facet;
+                                                position = arrival_position;
+                                                direction = arrival_direction.reverse();
+                                            }
+                                            Some((Tile::Solid, _)) => break,
+                                            None => {
+                                                return Err(AocError::logic(
+                                                    "missing tile at wrap to neighbour",
+                                                ))
+                                            }
+                                        }
+                                    }
+                                    None => {
+                                        return Err(AocError::logic(
+                                            "missing facet at wrap to neighbour",
+                                        ))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Ok((facet, position, direction))
+    }    
 }
 
 impl Solution for Day22 {
@@ -462,63 +522,7 @@ impl Solution for Day22 {
         // from one to up until all the neighbours are found.
         Day22::fold_cube(&mut facets);
 
-        let mut facet = starting_facet;
-        let mut position = (0, 0);
-        let mut direction = Direction::Right;
-
-        for instruction in path {
-            match instruction {
-                Instruction::L | Instruction::R => direction.turn(instruction),
-                Instruction::Move(steps) => {
-                    for _step in 0..steps {
-                        let delta = direction.to_delta();
-                        let target_pos = (position.0 + delta.0, position.1 + delta.1);
-                        let current_facet = facets.get(&facet).unwrap();
-
-                        match current_facet.tiles.get(&target_pos) {
-                            Some((Tile::Open, _)) => position = target_pos,
-                            Some((Tile::Solid, _)) => break,
-                            None => {
-                                // Jump to a neighbour facet in that direction
-                                match current_facet.neighbours.get(&direction) {
-                                    Some((next_facet, arrival_direction)) => {
-                                        let arrival_position = Day22::translate_position(
-                                            direction,
-                                            arrival_direction,
-                                            size - 1,
-                                            position,
-                                        );
-
-                                        // Check if there would be an immediate collision
-                                        match facets
-                                            .get(next_facet)
-                                            .and_then(|f| f.tiles.get(&arrival_position))
-                                        {
-                                            Some((Tile::Open, _)) => {
-                                                facet = *next_facet;
-                                                position = arrival_position;
-                                                direction = arrival_direction.reverse();
-                                            }
-                                            Some((Tile::Solid, _)) => break,
-                                            None => {
-                                                return Err(AocError::logic(
-                                                    "missing tile at wrap to neighbour",
-                                                ))
-                                            }
-                                        }
-                                    }
-                                    None => {
-                                        return Err(AocError::logic(
-                                            "missing facet at wrap to neighbour",
-                                        ))
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        let (facet, position, direction) = Day22::follow_path(starting_facet, path, &facets, size)?;
 
         let final_facet = facets.get(&facet).unwrap();
         match final_facet.tiles.get(&position) {
@@ -535,14 +539,14 @@ mod tests {
     use super::*;
 
     const INPUT: &[&str] = &[
-        "        ...#",
-        "        .#..",
-        "        #...",
-        "        ....",
-        "...#.......#",
-        "........#...",
-        "..#....#....",
-        "..........#.",
+        "        ...#    ",
+        "        .#..    ",
+        "        #...    ",
+        "        ....    ",
+        "...#.......#    ",
+        "........#...    ",
+        "..#....#....    ",
+        "..........#.    ",
         "        ...#....",
         "        .....#..",
         "        .#......",
