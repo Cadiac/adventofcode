@@ -180,24 +180,22 @@ impl Day22 {
     }
 
     fn fold_cube(facets: &mut HashMap<(i64, i64), Facet>) {
-        // The distance can never be more than 16? (not even that realistically)
-        for distance in 1..16 {
+        let mut distance = 0;
+
+        // Search for folded edges by slowly increasing the search distance one by one.
+        // This causes the inner neighbours to be found first, and the far away opposite sides last.
+        while facets.iter().any(|(_, facet)| facet.neighbours.len() != 4) {
+            distance += 1;
+
             let keys: Vec<_> = facets.keys().cloned().collect();
             for source in keys {
-                let current_source = facets.get(&source).unwrap();
-                let empty_directions: Vec<_> = [
-                    Direction::Right,
-                    Direction::Down,
-                    Direction::Left,
-                    Direction::Up,
-                ]
-                .iter()
-                .filter(|direction| !current_source.neighbours.contains_key(direction))
-                .collect();
+                for starting_direction in DIRECTIONS.iter() {
+                    if facets.get(&source).unwrap().neighbours.contains_key(starting_direction) {
+                        continue;
+                    }
 
-                for starting_direction in empty_directions.into_iter() {
                     if let Some((neighbour, arrived_to_direction)) =
-                        Day22::find_neighbour(*starting_direction, &source, &*facets, distance)
+                        Day22::find_neighbour(*starting_direction, &source, facets, distance)
                     {
                         facets
                             .get_mut(&source)
@@ -223,14 +221,14 @@ impl Day22 {
         facets: &HashMap<Coords, Facet>,
         max_dist: i32,
     ) -> Option<(Coords, Direction)> {
-        // The direction we arrive from matters, so collect distances by those
+        // The arrival direction matters, so collect distances by those
         let mut dist: HashMap<(Coords, Direction), i32> = HashMap::new();
         let mut heap: BinaryHeap<Search> = BinaryHeap::new();
 
         let delta = starting_direction.to_delta();
         let start = (source.0 + delta.0, source.1 + delta.1);
 
-        // Source and start should be considered as starting points from all directions
+        // Consider source and start as starting points from all directions
         for direction in DIRECTIONS {
             *dist.entry((*source, direction)).or_insert(0) = 0;
             *dist.entry((start, direction)).or_insert(0) = 0;
@@ -252,7 +250,7 @@ impl Day22 {
                 continue;
             }
 
-            // We've already found a shorter way
+            // A shorter path has already been found
             if distance > *dist.get(&(current, direction)).unwrap_or(&i32::MAX) {
                 continue;
             }
@@ -269,13 +267,13 @@ impl Day22 {
                     // Ignoring this doesn't seem to matter in both my input and the examples,
                     // but it could maybe matter on "S" shaped patterns?
 
-                    // Tile can only be used once as a neighbour
+                    // No tile can have the same tile as neighbour twice from different directions
                     if !neighbour
                         .neighbours
                         .values()
                         .any(|(existing_neighbour, _)| *existing_neighbour == *source)
                     {
-                        // Found a suitable neighbour
+                        // Suitable neighbour found
                         return Some((current, direction.reverse()));
                     }
                 }
