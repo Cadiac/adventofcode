@@ -104,6 +104,7 @@ impl Day24 {
     ) -> Option<i32> {
         let mut dist: HashMap<(Coords, (i32, i32)), i32> = HashMap::new();
         let mut heap: BinaryHeap<Search> = BinaryHeap::new();
+        let mut blizzards_by_minute: HashMap<i32, Vec<Coords>> = HashMap::new();
 
         dist.insert(
             (start, (start_time % width, start_time % height)),
@@ -136,18 +137,25 @@ impl Day24 {
 
                 if is_within_bounds || is_start || is_end {
                     let next_minute = minute + 1;
-                    let is_blizzard_next_minute =
-                        blizzards.iter().any(|(initial_pos, direction)| {
-                            let blizzard_pos = Day24::blizzard_position(
-                                *initial_pos,
-                                *direction,
-                                next_minute,
-                                width,
-                                height,
-                            );
-
-                            next.0 == blizzard_pos.0 && next.1 == blizzard_pos.1
-                        });
+                    let is_blizzard_next_minute = blizzards_by_minute
+                        .entry(next_minute)
+                        .or_insert_with_key(|minute| {
+                            // Calculate the blizzard locations only once for each minute
+                            blizzards
+                                .iter()
+                                .map(|(initial_pos, direction)| {
+                                    Day24::blizzard_position(
+                                        *initial_pos,
+                                        *direction,
+                                        *minute,
+                                        width,
+                                        height,
+                                    )
+                                })
+                                .collect()
+                        })
+                        .iter()
+                        .any(|blizzard| next.0 == blizzard.0 && next.1 == blizzard.1);
 
                     if is_blizzard_next_minute {
                         continue;
