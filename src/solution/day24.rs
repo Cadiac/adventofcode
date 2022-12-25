@@ -10,8 +10,6 @@ const ACTIONS: [(i32, i32); 5] = [(1, 0), (-1, 0), (0, 1), (0, -1), (0, 0)];
 type Coords = (i32, i32);
 type Blizzards = Vec<(Coords, Direction)>;
 
-pub struct Day12;
-
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct Search {
     coords: Coords,
