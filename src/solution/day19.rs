@@ -2,50 +2,18 @@ use std::{hash::Hash, collections::HashSet};
 
 use crate::solution::{AocError, Solution};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Resource {
-    Ore,
-    Clay,
-    Obsidian,
-    Geode,
-}
+type Resources = [u32; 4];
+type Resource = usize;
 
-impl From<&str> for Resource {
-    fn from(input: &str) -> Resource {
-        match input {
-            "ore" => Resource::Ore,
-            "clay" => Resource::Clay,
-            "obsidian" => Resource::Obsidian,
-            "geode" => Resource::Geode,
-            _ => unimplemented!(),
-        }
-    }
-}
+const ORE: usize = 0;
+const CLAY: usize = 1;
+const OBSIDIAN: usize = 2;
+const GEODE: usize = 3;
 
-#[derive(PartialEq, Eq, Hash)]
-enum Plan {
-    OreRobot,
-    ClayRobot,
-    ObsidianRobot,
-    GeodeRobot,
-    Idle,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct Blueprint {
     id: u32,
-    ore: Ores,
-    clay: Ores,
-    obsidian: Ores,
-    geode: Ores,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-struct Ores {
-    ore: u32,
-    clay: u32,
-    obsidian: u32,
-    geode: u32,
+    costs: [[u32; 3]; 4],
 }
 
 pub struct Day19;
@@ -55,182 +23,126 @@ impl Day19 {
         let mut blueprints = Vec::new();
 
         for line in input.lines() {
-            let (id, ore_robot, clay_robot, obsidian_robot_ore, obsidian_robot_clay, geode_robot_ore, geode_robot_obsidian): (u32, u32, u32, u32, u32, u32, u32) = 
+            let (id, ore_ore, clay_ore, obsidian_ore, obsidian_clay, geode_ore, geode_obsidian): (u32, u32, u32, u32, u32, u32, u32) = 
                 serde_scan::scan!("Blueprint {}: Each ore robot costs {} ore. Each clay robot costs {} ore. Each obsidian robot costs {} ore and {} clay. Each geode robot costs {} ore and {} obsidian." <- line)
                     .map_err(|err| AocError::parse("input", err))?;
 
+            let costs = [
+                [ore_ore, 0, 0],
+                [clay_ore, 0, 0],
+                [obsidian_ore, obsidian_clay, 0],
+                [geode_ore, 0, geode_obsidian],
+            ];
+
             blueprints.push(Blueprint {
                 id,
-                ore: Ores { ore: ore_robot, ..Ores::default() },
-                clay: Ores { ore: clay_robot, ..Ores::default() },
-                obsidian: Ores { ore: obsidian_robot_ore, clay: obsidian_robot_clay, ..Ores::default() },
-                geode: Ores { ore: geode_robot_ore, obsidian: geode_robot_obsidian, ..Ores::default() },
+                costs,
             });
         }
 
         Ok(blueprints)
     }
 
-    fn max_resource_spend(blueprint: &Blueprint) -> Ores {
-        let max_ore = *[blueprint.clay.ore, blueprint.obsidian.ore, blueprint.geode.ore].iter().max().unwrap_or(&0);
-        let max_clay = blueprint.obsidian.clay;
-        let max_obsidian = blueprint.geode.obsidian;
+    fn max_resource_spend(blueprint: &Blueprint) -> Resources {
+        let max_ore_spend = *[
+            blueprint.costs[CLAY][ORE],
+            blueprint.costs[OBSIDIAN][ORE],
+            blueprint.costs[GEODE][ORE]
+        ].iter().max().unwrap_or(&0);
 
-        Ores { ore: max_ore, clay: max_clay, obsidian: max_obsidian, geode: 0 }
+        let max_clay_spend = blueprint.costs[OBSIDIAN][CLAY];
+        let max_obsidian_spend = blueprint.costs[GEODE][OBSIDIAN];
+
+        [max_ore_spend, max_clay_spend, max_obsidian_spend, u32::MAX]
     }
 
-    fn plan_next(blueprint: &Blueprint, inventory: Ores, production: Ores, max_spend: Ores, minute: u32, time_limit: u32) -> HashSet<(Plan, u32)> {
-        let mut plans: HashSet<(Plan, u32)> = HashSet::new();
+    fn plan_next(blueprint: &Blueprint, inventory: &Resources, production: &Resources, max_spend: &Resources, minute: u32, time_limit: u32) -> Vec<(Option<Resource>, u32)> {
+        let mut plans: Vec<(Option<Resource>, u32)> = Vec::new();
 
         // TODO: Consider if the current inventory is enough to run the production until time runs out, if so don't expand
 
-        if production.obsidian > 0 {
-            // Consider how long does it take to produce resources for this and skip to that time
-            let required_ore = blueprint.geode.ore.saturating_sub(inventory.ore);
-            let required_obsidian = blueprint.geode.obsidian.saturating_sub(inventory.obsidian);
+        for resource in ORE..=GEODE {
+            if production[resource as usize] < max_spend[resource as usize] {
+                // Consider how long does it take to produce resources for this robot and skip to that time
+                let times: Vec<u32> = blueprint.costs[resource as usize].iter().enumerate().flat_map(|(ingredient, cost)| {
+                    if *cost <= inventory[ingredient] {
+                        return Some(0)
+                    }
 
-            let minutes_to_produce = u32::max((required_ore + production.ore - 1) / production.ore, (required_obsidian + production.obsidian - 1) / production.obsidian);
+                    if production[ingredient] == 0 {
+                        return None
+                    }
 
-            if minutes_to_produce == 0 {
-                plans.insert((Plan::GeodeRobot, 0));
-            } else {
-                if minute + (minutes_to_produce as u32) < time_limit {
-                    plans.insert((Plan::GeodeRobot, minutes_to_produce as u32));
-                } else {
-                    // assert!(time_limit > minute, "{}, {}", time_limit, minute);
-                    plans.insert((Plan::Idle, time_limit - minute));
+                    let required = cost.saturating_sub(inventory[ingredient]);
+                    Some((required + production[ingredient] - 1) / production[ingredient])
+                }).collect();
+
+                let have_production = times.len() == 3;
+
+                if have_production {
+                    let minutes_to_produce = times.iter().max().unwrap();
+
+                    if minute + minutes_to_produce < time_limit {
+                        plans.push((Some(resource), *minutes_to_produce));
+                    }
                 }
             }
         }
 
-        if production.ore < max_spend.ore {
-            // Consider how long does it take to produce resources for this and skip to that time
-            let required_resources = blueprint.ore.ore.saturating_sub(inventory.ore);
-            let minutes_to_produce = (required_resources + production.ore - 1) / production.ore;
-
-            if minutes_to_produce == 0 {
-                plans.insert((Plan::OreRobot, 0));
-            } else {
-                if minute + (minutes_to_produce as u32) < time_limit {
-                    plans.insert((Plan::OreRobot, minutes_to_produce as u32));
-                } else {
-                    plans.insert((Plan::Idle, time_limit - minute));
-                }
-            }
-        }
-
-        if production.clay < max_spend.clay {
-            // Consider how long does it take to produce resources for this and skip to that time
-            let required_resources = blueprint.clay.ore.saturating_sub(inventory.ore);
-            let minutes_to_produce = (required_resources + production.ore - 1) / production.ore;
-
-            if minutes_to_produce == 0 {
-                plans.insert((Plan::ClayRobot, 0));
-            } else {
-                if minute + (minutes_to_produce as u32) < time_limit {
-                    plans.insert((Plan::ClayRobot, minutes_to_produce as u32));
-                } else {
-                    plans.insert((Plan::Idle, time_limit - minute));
-                }
-            }
-        }
-
-        if production.clay > 0 && production.obsidian < max_spend.obsidian {
-            // Consider how long does it take to produce resources for this and skip to that time
-            let required_ore = blueprint.obsidian.ore.saturating_sub(inventory.ore);
-            let required_clay = blueprint.obsidian.clay.saturating_sub(inventory.clay);
-
-            let minutes_to_produce = u32::max((required_ore + production.ore - 1) / production.ore, (required_clay + production.clay - 1) / production.clay);
-
-            if minutes_to_produce == 0 {
-                plans.insert((Plan::ObsidianRobot, 0));
-            } else {
-                if minute + (minutes_to_produce as u32) < time_limit {
-                    plans.insert((Plan::ObsidianRobot, minutes_to_produce as u32));
-                } else {
-                    plans.insert((Plan::Idle, time_limit - minute));
-                }
-            }
+        // If nothing else just idle to the end
+        if plans.is_empty() {
+            plans.push((None, time_limit - minute));
         }
 
         plans
     }
 
-    fn simulate(blueprint: Blueprint, time_limit: u32) -> u32 {
+    fn simulate(blueprint: &Blueprint, time_limit: u32) -> u32 {
         // Determine how much resources can be spent in a minute at max. Building more doesn't help
         let max_spend = Day19::max_resource_spend(&blueprint);
 
-        let production = Ores { ore: 1, clay: 0, obsidian: 0, geode: 0 };
-        let inventory = Ores { ore: 0, clay: 0, obsidian: 0, geode: 0 };
+        let production = [1, 0, 0, 0];
+        let inventory = [0, 0, 0, 0];
 
-        Day19::run(blueprint, max_spend, production, inventory, time_limit, 1)
+        Day19::run(blueprint, &max_spend, &production, &inventory, time_limit, 1)
     }
 
-    fn run(blueprint: Blueprint, max_spend: Ores, production: Ores, inventory: Ores, time_limit: u32, minute: u32) -> u32 {
+    fn run(blueprint: &Blueprint, max_spend: &Resources, production: &Resources, inventory: &Resources, time_limit: u32, minute: u32) -> u32 {
         if minute > time_limit {
-            return inventory.geode;
+            return inventory[GEODE];
         }
     
-        let mut best = 0;
+        let mut most_geodes = 0;
        
         let plans = Day19::plan_next(&blueprint, inventory, production, max_spend, minute, time_limit);
 
         // Consider each plan
         for (plan, skipped_minutes) in plans {
-            let mut next_inventory = inventory;
-            let mut next_production = production;
+            let mut next_inventory = inventory.clone();
+            let mut next_production = production.clone();
             let next_minute = minute + skipped_minutes;
 
-            // Resources produced during the skipped minutes
-            next_inventory.ore += production.ore * skipped_minutes;
-            next_inventory.clay += production.clay * skipped_minutes;
-            next_inventory.obsidian += production.obsidian * skipped_minutes;
-            next_inventory.geode += production.geode * skipped_minutes;
+            // Resources produced during the skipped minutes and this minute
+            for resource in ORE..=GEODE {
+                next_inventory[resource] += production[resource] * (skipped_minutes + 1);
+            }
     
-            // Pay the costs
-            match plan {
-                Plan::GeodeRobot => {
-                    next_inventory.ore -= blueprint.geode.ore;
-                    next_inventory.obsidian -= blueprint.geode.obsidian;
-                },
-                Plan::ObsidianRobot => {
-                    next_inventory.ore -= blueprint.obsidian.ore;
-                    next_inventory.clay -= blueprint.obsidian.clay;
-                },
-                Plan::ClayRobot => {
-                    next_inventory.ore -= blueprint.clay.ore;
-                },
-                Plan::OreRobot => {
-                    next_inventory.ore -= blueprint.ore.ore;
-                },
-                Plan::Idle => ()
-            };
-    
-            // Production phase between build and it finishing
-            // TODO: Combine this to the skipped production and just skip to this point
-            next_inventory.ore += production.ore;
-            next_inventory.clay += production.clay;
-            next_inventory.obsidian += production.obsidian;
-            next_inventory.geode += production.geode;
-    
-            // println!("Collected {production:?}; you now have {inventory:?}.");
-    
-            // Finish building whatever we were building
-            match plan {
-                Plan::GeodeRobot => next_production.geode += 1,
-                Plan::ObsidianRobot => next_production.obsidian += 1,
-                Plan::ClayRobot => next_production.clay += 1,
-                Plan::OreRobot => next_production.ore += 1,
-                Plan::Idle => ()
-            };
-    
-            let total_geodes = Day19::run(blueprint, max_spend, next_production, next_inventory, time_limit, next_minute + 1);
-            if total_geodes > best {
-                best = total_geodes;
+            // Pay the costs and finish building whatever we were building if any
+            if let Some(planned) = plan {
+                for (resource, robot_cost) in blueprint.costs[planned as usize].iter().enumerate() {
+                    next_inventory[resource] -= robot_cost;
+                }
+                next_production[planned as usize] += 1
+            }
+
+            // DFS
+            let total_geodes = Day19::run(blueprint, max_spend, &next_production, &next_inventory, time_limit, next_minute + 1);
+            if total_geodes > most_geodes {
+                most_geodes = total_geodes;
             }
         }
 
-        best
+        most_geodes
     }
 }
 
@@ -248,23 +160,16 @@ impl Solution for Day19 {
 
     fn part_1(&self, input: &str) -> Result<u32, AocError> {
         let blueprints = Day19::parse(input)?;
-        Ok(blueprints.into_iter().map(|blueprint| {
-            let id = blueprint.id;
-            let geodes = Day19::simulate(blueprint, 24);
-            println!("Blueprint {}: found {geodes} geodes", id);
 
-            geodes * id
+        Ok(blueprints.into_iter().map(|blueprint| {
+            Day19::simulate(&blueprint, 24) * blueprint.id
         }).sum())
     }
 
     fn part_2(&self, input: &str) -> Result<u32, AocError> {
         let blueprints = Day19::parse(input)?;
         Ok(blueprints.into_iter().take(3).map(|blueprint| {
-            let id = blueprint.id;
-            let geodes = Day19::simulate(blueprint, 32);
-            println!("Blueprint {}: found {geodes} geodes", id);
-
-            geodes
+            Day19::simulate(&blueprint, 32)
         }).product())
     }
 }
@@ -305,27 +210,31 @@ mod tests {
     #[ignore]
     #[test]
     fn it_optimizes_part1_first() {
-        let geodes = Day19::simulate(Day19::parse(INPUT).unwrap()[0].clone(), 24);
+        let blueprint = &Day19::parse(INPUT).unwrap()[0].clone();
+        let geodes = Day19::simulate(&blueprint, 24);
         assert_eq!(geodes, 9);
     }
 
     #[ignore]
     #[test]
     fn it_optimizes_part1_second() {
-        let geodes = Day19::simulate(Day19::parse(INPUT).unwrap()[1].clone(), 24);
+        let blueprint = Day19::parse(INPUT).unwrap()[1].clone();
+        let geodes = Day19::simulate(&blueprint, 24);
         assert_eq!(geodes, 12);
     }
 
     #[ignore]
     #[test]
     fn it_optimizes_part2_first() {
-        let geodes = Day19::simulate(Day19::parse(INPUT).unwrap()[0].clone(), 32);
+        let blueprint = Day19::parse(INPUT).unwrap()[0].clone();
+        let geodes = Day19::simulate(&blueprint, 32);
         assert_eq!(geodes, 56);
     }
 
     #[test]
     fn it_optimizes_part2_second() {
-        let geodes = Day19::simulate(Day19::parse(INPUT).unwrap()[1].clone(), 32);
+        let blueprint = Day19::parse(INPUT).unwrap()[1].clone();
+        let geodes = Day19::simulate(&blueprint, 32);
         assert_eq!(geodes, 62);
     }
 }
