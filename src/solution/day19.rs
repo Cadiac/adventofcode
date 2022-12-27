@@ -1,5 +1,3 @@
-use std::{hash::Hash, collections::HashSet};
-
 use crate::solution::{AocError, Solution};
 
 type Resources = [u32; 4];
@@ -24,7 +22,11 @@ impl Day19 {
 
         for line in input.lines() {
             let (id, ore_ore, clay_ore, obsidian_ore, obsidian_clay, geode_ore, geode_obsidian): (u32, u32, u32, u32, u32, u32, u32) = 
-                serde_scan::scan!("Blueprint {}: Each ore robot costs {} ore. Each clay robot costs {} ore. Each obsidian robot costs {} ore and {} clay. Each geode robot costs {} ore and {} obsidian." <- line)
+                serde_scan::scan!("Blueprint {}: \
+                    Each ore robot costs {} ore. \
+                    Each clay robot costs {} ore. \
+                    Each obsidian robot costs {} ore and {} clay. \
+                    Each geode robot costs {} ore and {} obsidian." <- line)
                     .map_err(|err| AocError::parse("input", err))?;
 
             let costs = [
@@ -53,45 +55,53 @@ impl Day19 {
         let max_clay_spend = blueprint.costs[OBSIDIAN][CLAY];
         let max_obsidian_spend = blueprint.costs[GEODE][OBSIDIAN];
 
-        [max_ore_spend, max_clay_spend, max_obsidian_spend, u32::MAX]
+        [max_ore_spend, max_clay_spend, max_obsidian_spend, 1000]
     }
 
     fn plan_next(blueprint: &Blueprint, inventory: &Resources, production: &Resources, max_spend: &Resources, minute: u32, time_limit: u32) -> Vec<(Option<Resource>, u32)> {
         let mut plans: Vec<(Option<Resource>, u32)> = Vec::new();
-
-        // TODO: Consider if the current inventory is enough to run the production until time runs out, if so don't expand
+        let remaining_time = time_limit - minute;
 
         for resource in ORE..=GEODE {
-            if production[resource as usize] < max_spend[resource as usize] {
-                // Consider how long does it take to produce resources for this robot and skip to that time
-                let times: Vec<u32> = blueprint.costs[resource as usize].iter().enumerate().flat_map(|(ingredient, cost)| {
-                    if *cost <= inventory[ingredient] {
-                        return Some(0)
-                    }
+            // Don't consider producing more if the production meets max spending
+            if production[resource as usize] >= max_spend[resource as usize] {
+                continue;
+            }
 
-                    if production[ingredient] == 0 {
-                        return None
-                    }
+            // If the current inventory is enough to keep expanding until time runs out don't expand
+            let production_shortage = max_spend[resource as usize] - production[resource as usize];
+            if inventory[resource] >= production_shortage * remaining_time {
+                continue;
+            }
 
-                    let required = cost.saturating_sub(inventory[ingredient]);
-                    Some((required + production[ingredient] - 1) / production[ingredient])
-                }).collect();
+            // Consider how long does it take to produce resources for this robot and skip to that time
+            let durations: Vec<u32> = blueprint.costs[resource as usize].iter().enumerate().flat_map(|(ingredient, cost)| {
+                if *cost <= inventory[ingredient] {
+                    return Some(0)
+                }
 
-                let have_production = times.len() == 3;
+                if production[ingredient] == 0 {
+                    return None
+                }
 
-                if have_production {
-                    let minutes_to_produce = times.iter().max().unwrap();
+                let required = cost.saturating_sub(inventory[ingredient]);
+                Some((required + production[ingredient] - 1) / production[ingredient])
+            }).collect();
 
-                    if minute + minutes_to_produce < time_limit {
-                        plans.push((Some(resource), *minutes_to_produce));
-                    }
+            let can_produce_ingredients = durations.len() == 3;
+
+            if can_produce_ingredients {
+                let minutes_to_produce = durations.iter().max().unwrap();
+
+                if minute + minutes_to_produce < time_limit {
+                    plans.push((Some(resource), *minutes_to_produce));
                 }
             }
         }
 
         // If nothing else just idle to the end
         if plans.is_empty() {
-            plans.push((None, time_limit - minute));
+            plans.push((None, remaining_time));
         }
 
         plans
@@ -99,7 +109,7 @@ impl Day19 {
 
     fn simulate(blueprint: &Blueprint, time_limit: u32) -> u32 {
         // Determine how much resources can be spent in a minute at max. Building more doesn't help
-        let max_spend = Day19::max_resource_spend(&blueprint);
+        let max_spend = Day19::max_resource_spend(blueprint);
 
         let production = [1, 0, 0, 0];
         let inventory = [0, 0, 0, 0];
@@ -114,12 +124,12 @@ impl Day19 {
     
         let mut most_geodes = 0;
        
-        let plans = Day19::plan_next(&blueprint, inventory, production, max_spend, minute, time_limit);
+        let plans = Day19::plan_next(blueprint, inventory, production, max_spend, minute, time_limit);
 
         // Consider each plan
         for (plan, skipped_minutes) in plans {
-            let mut next_inventory = inventory.clone();
-            let mut next_production = production.clone();
+            let mut next_inventory = *inventory;
+            let mut next_production = *production;
             let next_minute = minute + skipped_minutes;
 
             // Resources produced during the skipped minutes and this minute
@@ -189,25 +199,21 @@ mod tests {
             Each obsidian robot costs 3 ore and 8 clay. \
             Each geode robot costs 3 ore and 12 obsidian.";
 
-    #[ignore]
     #[test]
     fn it_solves_part1_first() {
         assert_eq!(Day19.part_1(INPUT.lines().nth(0).unwrap()), Ok(9));
     }
 
-    #[ignore]
     #[test]
     fn it_solves_part1_second() {
         assert_eq!(Day19.part_1(INPUT.lines().nth(1).unwrap()), Ok(24));
     }
 
-    #[ignore]
     #[test]
     fn it_solves_part1_full() {
         assert_eq!(Day19.part_1(INPUT), Ok(33));
     }
 
-    #[ignore]
     #[test]
     fn it_optimizes_part1_first() {
         let blueprint = &Day19::parse(INPUT).unwrap()[0].clone();
@@ -215,7 +221,6 @@ mod tests {
         assert_eq!(geodes, 9);
     }
 
-    #[ignore]
     #[test]
     fn it_optimizes_part1_second() {
         let blueprint = Day19::parse(INPUT).unwrap()[1].clone();
@@ -223,7 +228,6 @@ mod tests {
         assert_eq!(geodes, 12);
     }
 
-    #[ignore]
     #[test]
     fn it_optimizes_part2_first() {
         let blueprint = Day19::parse(INPUT).unwrap()[0].clone();
