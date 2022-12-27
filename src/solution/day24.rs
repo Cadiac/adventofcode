@@ -1,6 +1,6 @@
 use std::{
     cmp::Ordering,
-    collections::{BinaryHeap, HashMap},
+    collections::{VecDeque, HashMap},
 };
 
 use crate::solution::{AocError, Solution};
@@ -101,19 +101,19 @@ impl Day24 {
         (width, height): Coords,
     ) -> Option<i32> {
         let mut dist: HashMap<(Coords, (i32, i32)), i32> = HashMap::new();
-        let mut heap: BinaryHeap<Search> = BinaryHeap::new();
+        let mut queue: VecDeque<Search> = VecDeque::new();
         let mut blizzards_by_minute: HashMap<i32, Vec<Coords>> = HashMap::new();
 
         dist.insert(
             (start, (start_time % width, start_time % height)),
             start_time,
         );
-        heap.push(Search {
+        queue.push_back(Search {
             minute: start_time,
             coords: start,
         });
 
-        while let Some(Search { coords, minute }) = heap.pop() {
+        while let Some(Search { coords, minute }) = queue.pop_front() {
             let current = (coords, (minute % width, minute % height));
 
             if coords == end {
@@ -163,7 +163,7 @@ impl Day24 {
                     let known_fastest = dist.entry(next_key).or_insert(i32::MAX);
 
                     if next_minute < *known_fastest {
-                        heap.push(Search {
+                        queue.push_back(Search {
                             minute: next_minute,
                             coords: next,
                         });
