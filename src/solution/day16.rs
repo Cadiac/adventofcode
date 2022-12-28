@@ -198,7 +198,7 @@ impl Day16 {
 
         let mut best = 0;
 
-        for combination in 0..valve_opening_combinations {
+        for combination in 0..valve_opening_combinations/2 {
             let mask = (1 << valve_count) - 1;
             let inverse = !combination & mask;
 
