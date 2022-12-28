@@ -1,48 +1,40 @@
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{HashMap, HashSet};
 use std::{cmp::Ordering, collections::BinaryHeap};
 
 use crate::solution::{AocError, Solution};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct Valve {
-    name: String,
+struct Valve<'a> {
+    name: &'a str,
     flow_rate: u32,
-    tunnels: HashMap<String, u32>,
-    distances: HashMap<String, u32>,
-}
-
-#[derive(PartialEq, Eq, PartialOrd, Ord, Hash)]
-struct State {
-    pressure_released: u32,
-    activated: BTreeSet<usize>,
-    current: (usize, usize),
-    minute: u32,
+    tunnels: HashMap<&'a str, u32>,
+    distances: HashMap<&'a str, u32>,
 }
 
 #[derive(Clone, Eq, PartialEq)]
-struct Search {
-    valve: String,
+struct Search<'a> {
+    valve: &'a str,
     distance: u32,
 }
 
-impl Ord for Search {
+impl<'a> Ord for Search<'a> {
     fn cmp(&self, other: &Self) -> Ordering {
         other.distance.cmp(&self.distance)
     }
 }
 
-impl PartialOrd for Search {
+impl<'a> PartialOrd for Search<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
 
 // Use dijkstra to determine the distances between valves
-fn dijkstra(valves: HashMap<String, Valve>, source: String, target: String) -> Option<u32> {
-    let mut dist: HashMap<String, u32> = HashMap::new();
+fn dijkstra(valves: &HashMap<&str, Valve>, source: &str, target: &str) -> Option<u32> {
+    let mut dist: HashMap<&str, u32> = HashMap::new();
     let mut heap: BinaryHeap<Search> = BinaryHeap::new();
 
-    *dist.entry(source.clone()).or_insert(0) = 0;
+    *dist.entry(source).or_insert(0) = 0;
 
     heap.push(Search {
         distance: 0,
@@ -51,22 +43,22 @@ fn dijkstra(valves: HashMap<String, Valve>, source: String, target: String) -> O
 
     while let Some(Search { valve, distance }) = heap.pop() {
         if valve == target {
-            return Some(dist[&valve]);
+            return Some(dist[valve]);
         }
 
         // we've already found a better way
-        if distance > *dist.get(&valve).unwrap_or(&u32::MAX) {
+        if distance > *dist.get(valve).unwrap_or(&u32::MAX) {
             continue;
         }
 
-        for (tunnel, length) in valves[&valve].tunnels.iter() {
+        for (tunnel, length) in valves[valve].tunnels.iter() {
             let next = Search {
                 distance: distance + length,
-                valve: tunnel.clone(),
+                valve: tunnel,
             };
 
             if next.distance < *dist.get(tunnel).unwrap_or(&u32::MAX) {
-                *dist.entry(tunnel.clone()).or_insert(0) = next.distance;
+                *dist.entry(tunnel).or_insert(0) = next.distance;
                 heap.push(next);
             }
         }
@@ -82,14 +74,14 @@ impl Day16 {
         let mut valves = HashMap::new();
 
         for line in input.lines() {
-            let (name, flow_rate, tunnels): (String, u32, String) =
+            let (name, flow_rate, tunnels): (&str, u32, &str) =
                 serde_scan::scan!("Valve {} has flow rate={}; tunnels lead to valves {}" <- line)
                     .map_err(|err| AocError::parse(line, err))?;
 
             let valve = Valve {
-                name: name.clone(),
+                name,
                 flow_rate,
-                tunnels: tunnels.split(", ").map(|s| (s.to_owned(), 1)).collect(),
+                tunnels: tunnels.split(", ").map(|s| (s, 1)).collect(),
                 distances: HashMap::new(),
             };
 
@@ -99,7 +91,7 @@ impl Day16 {
         let v = valves.clone();
         for (target, valve) in valves.iter_mut() {
             for source in v.clone().into_keys() {
-                if let Some(distance) = dijkstra(v.clone(), source.clone(), target.clone()) {
+                if let Some(distance) = dijkstra(&v, source, target) {
                     if distance != 0 {
                         valve.distances.insert(source, distance);
                     }
@@ -119,7 +111,7 @@ impl Day16 {
                         let length_to_removed = source.tunnels.remove(&removed.name).unwrap_or(1);
                         for (target, length) in removed.tunnels.iter() {
                             if new_source != target {
-                                *source.tunnels.entry(target.clone()).or_insert(0) +=
+                                *source.tunnels.entry(target).or_insert(0) +=
                                     length + length_to_removed;
                             }
                         }
@@ -133,12 +125,12 @@ impl Day16 {
 
     fn find_best_actions(
         activated: &mut HashSet<usize>,
-        current: String,
+        current: &str,
         remaining: u32,
         pressure_released: u32,
         valves: &[&Valve],
     ) -> u32 {
-        if activated.len() == valves.len() || remaining <= 0 {
+        if activated.len() == valves.len() || remaining == 0 {
             return pressure_released;
         }
 
@@ -151,8 +143,7 @@ impl Day16 {
 
                 // Moving costs time
                 let target = valves[next];
-                //let distance = valves[current].distances.get(&target.name).unwrap();
-                let distance = target.distances.get(&current).unwrap();
+                let distance = target.distances.get(current).unwrap();
 
                 // Spend one minute per step moving + 1 minute on arrival to open the valve
                 let next_remaining = remaining.saturating_sub(distance + 1);
@@ -162,14 +153,13 @@ impl Day16 {
 
                 let pressure_released = Day16::find_best_actions(
                     activated,
-                    valves[next].name.clone(),
+                    valves[next].name,
                     next_remaining,
                     next_pressure_released,
                     valves,
                 );
-                if pressure_released > best {
-                    best = pressure_released;
-                }
+
+                best = best.max(pressure_released);
                 activated.remove(&next);
             }
         }
@@ -180,18 +170,16 @@ impl Day16 {
         // My original solution would run for many hours, finding the best solution after ~2 hours and I got the star.
         // This solution was a bruteforce TSP based on the part 1.
 
-        // Current faster approach is based on an observation by /u/nirgle on Reddit:
+        // This faster approach is based on an observation by /u/nirgle on Reddit:
         // Consider the pressure released by the elephant separately, visiting all the
         // valves that the protagonist doesn't visit. To do this efficiently,
         // precalculate the 26min scores for each combination of valves opened first,
         // and use each combination and its opposite to find the max pressure released.
 
         let valve_count = valves.len();
-        let valve_opening_combinations = 2_u32.pow(valve_count as u32);
+        let valve_opening_combinations = 1 << valve_count;
 
         let mut pressure_by_combination = Vec::with_capacity(valve_opening_combinations as usize);
-
-        println!("Precalculating {valve_opening_combinations} combinations");
 
         for combination in 0..valve_opening_combinations {
             let mut combination_valves = Vec::with_capacity(valve_count);
@@ -202,20 +190,11 @@ impl Day16 {
                 }
             }
 
-            let pressure_released = Day16::find_best_actions(
-                &mut HashSet::new(),
-                String::from("AA"),
-                26,
-                0,
-                &combination_valves,
-            );
+            let pressure_released =
+                Day16::find_best_actions(&mut HashSet::new(), "AA", 26, 0, &combination_valves);
 
             pressure_by_combination.push(pressure_released);
         }
-
-        println!("Combinations precalculated");
-
-        println!("most: {:?}", pressure_by_combination.iter().max());
 
         let mut best = 0;
 
@@ -227,7 +206,6 @@ impl Day16 {
             let elephant_released = pressure_by_combination[inverse as usize];
 
             let total = protagonist_released + elephant_released;
-            println!("{combination:15b}/{inverse:15b}: released {total:?}, me {protagonist_released}, elephant {elephant_released}");
 
             best = best.max(total)
         }
@@ -252,16 +230,13 @@ impl Solution for Day16 {
         let valves = Day16::parse(input)?;
         let valves: Vec<&Valve> = valves.iter().collect();
 
-        let pressure_released =
-            Day16::find_best_actions(&mut HashSet::new(), String::from("AA"), 30, 0, &valves);
+        let pressure_released = Day16::find_best_actions(&mut HashSet::new(), "AA", 30, 0, &valves);
 
         Ok(pressure_released)
     }
 
     fn part_2(&self, input: &str) -> Result<u32, AocError> {
-        println!("Part 2 starts");
         let valves = Day16::parse(input)?;
-        println!("Parsed");
 
         let pressure_released = Day16::find_with_elephant(&valves);
 
@@ -289,7 +264,6 @@ mod tests {
         assert_eq!(Day16.part_1(INPUT), Ok(1651));
     }
 
-    #[ignore]
     #[test]
     fn it_solves_part2() {
         assert_eq!(Day16.part_2(INPUT), Ok(1707));
