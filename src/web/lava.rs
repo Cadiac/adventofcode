@@ -5,10 +5,8 @@ use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{window, Window};
 use yew::prelude::*;
 
-use crate::solution::{
-    day18::{Day18, Label},
-    Solution,
-};
+use crate::solution::Solution;
+use crate::y2022::day18::{Day18, Label};
 
 pub enum Msg {
     KeyPress(char),

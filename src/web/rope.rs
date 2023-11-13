@@ -5,7 +5,7 @@ use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{window, Window};
 use yew::prelude::*;
 
-use crate::{solution::day09::Day09, utils::Coords};
+use crate::{utils::Coords, y2022::day09::Day09};
 
 pub enum Msg {
     KeyPress(char),
@@ -120,7 +120,7 @@ impl Component for Rope {
                             } else {
                                 format!("{knot}")
                             }
-                        } else if self.visited.contains(&Coords{x, y}) {
+                        } else if self.visited.contains(&Coords { x, y }) {
                             "#".to_string()
                         } else {
                             ".".to_string()

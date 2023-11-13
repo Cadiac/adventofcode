@@ -2,10 +2,8 @@ use std::collections::HashMap;
 
 use yew::prelude::*;
 
-use crate::solution::{
-    day22::{Coords, Day22, Direction, Facet, Tile},
-    Solution,
-};
+use crate::solution::Solution;
+use crate::y2022::day22::{Coords, Day22, Direction, Facet, Tile};
 
 pub struct Cube {
     facets: HashMap<Coords, Facet>,
@@ -31,8 +29,7 @@ impl Component for Cube {
 
         Day22::fold_cube(&mut facets);
 
-        let (facet, position, _) =
-            Day22::follow_path(starting_facet, path, &facets, size).unwrap();
+        let (facet, position, _) = Day22::follow_path(starting_facet, path, &facets, size).unwrap();
 
         Self {
             facets,

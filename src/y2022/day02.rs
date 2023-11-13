@@ -85,7 +85,7 @@ impl Solution for Day02 {
                     RPS::Scissors => Outcome::Draw,
                 },
             };
-    
+
             total += score(selected, outcome);
         }
 

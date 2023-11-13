@@ -1,8 +1,8 @@
 use yew::prelude::*;
 
-use aoc::solution::{run_solution, MAX_DAYS};
+use aoc::y2022::{run_solution, MAX_DAYS};
 
-use aoc::web::{rope::Rope, lava::Lava, cube::Cube};
+use aoc::web::{cube::Cube, lava::Lava, rope::Rope};
 
 enum Scene {
     Rope,
@@ -13,18 +13,20 @@ enum Scene {
 
 #[function_component]
 fn App() -> Html {
-    let console = use_state(|| vec![
-        "                               ".to_string(),
-        "               *               ".to_string(),
-        "               ^^              ".to_string(),
-        "              ^^o              ".to_string(),
-        "              o^^              ".to_string(),
-        "              ^^o^             ".to_string(),
-        "             o^^^^o            ".to_string(),
-        "             ^^o^^^^           ".to_string(),
-        "        _______||_______       ".to_string(),
-        "            AoC 2022           ".to_string(),
-    ]);
+    let console = use_state(|| {
+        vec![
+            "                               ".to_string(),
+            "               *               ".to_string(),
+            "               ^^              ".to_string(),
+            "              ^^o              ".to_string(),
+            "              o^^              ".to_string(),
+            "              ^^o^             ".to_string(),
+            "             o^^^^o            ".to_string(),
+            "             ^^o^^^^           ".to_string(),
+            "        _______||_______       ".to_string(),
+            "            AoC 2022           ".to_string(),
+        ]
+    });
 
     let scene = use_state(|| Scene::Day);
 

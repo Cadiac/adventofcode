@@ -5,7 +5,8 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
-use aoc::solution::{run_all, run_solution};
+use aoc::y2022;
+use aoc::y2023;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -13,6 +14,10 @@ struct Args {
     /// Day of the Solution
     #[clap(short, long, value_name = "<1-25>")]
     day: Option<u8>,
+
+    /// Year of the Solution
+    #[clap(short, long, value_name = "<2022-2023>")]
+    year: Option<u32>,
 
     /// Path to the input file
     #[clap(short, long, value_hint = ValueHint::FilePath)]
@@ -29,7 +34,15 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     match cli.day {
         None => {
-            run_all();
+            match cli.year {
+                Some(2022) => {
+                    y2022::run_all();
+                }
+                Some(2023) | None => {
+                    y2023::run_all();
+                }
+                _ => {}
+            };
         }
         Some(day) => {
             let input = match cli.file {
@@ -43,7 +56,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                 }
             };
 
-            run_solution(day, input);
+            match cli.year {
+                Some(2022) => {
+                    y2022::run_solution(day, input);
+                }
+                Some(2023) | None => {
+                    y2023::run_solution(day, input);
+                }
+                _ => {}
+            }
         }
     };
 
