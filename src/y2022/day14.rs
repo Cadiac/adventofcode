@@ -99,12 +99,12 @@ impl Solution for Day14 {
     type F = usize;
     type S = usize;
 
-    fn name(&self) -> &'static str {
-        "Day 14"
+    fn meta(&self) -> (u32, u32) {
+        (14, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day14.txt")
+        include_str!("../../inputs/2022/day14.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<usize, AocError> {
@@ -123,10 +123,7 @@ impl Solution for Day14 {
 
         // This should be wide enough
         for x in 0..1000 {
-            world
-                .entry(x)
-                .or_default()
-                .insert(floor_level);
+            world.entry(x).or_default().insert(floor_level);
         }
 
         Ok(Day14::simulate(world))

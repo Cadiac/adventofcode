@@ -1,6 +1,6 @@
 use std::{
     cmp::Ordering,
-    collections::{VecDeque, HashMap},
+    collections::{HashMap, VecDeque},
 };
 
 use crate::solution::{AocError, Solution};
@@ -181,12 +181,12 @@ impl Solution for Day24 {
     type F = i32;
     type S = i32;
 
-    fn name(&self) -> &'static str {
-        "Day 24"
+    fn meta(&self) -> (u32, u32) {
+        (24, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day24.txt")
+        include_str!("../../inputs/2022/day24.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<i32, AocError> {

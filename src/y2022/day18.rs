@@ -160,12 +160,12 @@ impl Solution for Day18 {
     type F = usize;
     type S = usize;
 
-    fn name(&self) -> &'static str {
-        "Day 18"
+    fn meta(&self) -> (u32, u32) {
+        (18, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day18.txt")
+        include_str!("../../inputs/2022/day18.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<usize, AocError> {

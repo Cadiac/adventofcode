@@ -37,12 +37,12 @@ impl Solution for Day10 {
     type F = i32;
     type S = String;
 
-    fn name(&self) -> &'static str {
-        "Day 10"
+    fn meta(&self) -> (u32, u32) {
+        (11, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day10.txt")
+        include_str!("../../inputs/2022/day10.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<i32, AocError> {
@@ -136,7 +136,7 @@ impl Solution for Day10 {
 mod tests {
     use super::*;
 
-    const LONG_EXAMPLE: &str = include_str!("../../inputs/day10-example.txt");
+    const LONG_EXAMPLE: &str = include_str!("../../inputs/2022/day10-example.txt");
 
     #[test]
     fn it_solves_part1_example_small() {

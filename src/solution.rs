@@ -35,7 +35,7 @@ pub trait Solution {
     type F: fmt::Display;
     type S: fmt::Display;
 
-    fn name(&self) -> &'static str;
+    fn meta(&self) -> (u32, u32);
     fn default_input(&self) -> &'static str;
 
     fn part_1(&self, input: &str) -> Result<Self::F, AocError>;
@@ -43,17 +43,17 @@ pub trait Solution {
 
     fn run(&self, input: Option<String>) -> Vec<String> {
         let input = input.unwrap_or_else(|| self.default_input().to_owned());
-        let name = self.name();
+        let (day, year) = self.meta();
         let mut output = Vec::new();
 
         match self.part_1(&input) {
             Ok(result) => {
-                let logline = format!("[{name}][Part 1] {result}");
+                let logline = format!("[{year}/{day:0>2}][Part 1] {result}");
                 info!("{logline}");
                 output.push(logline);
             }
             Err(err) => {
-                let logline = format!("[{name}][Part 1] Error: {err}");
+                let logline = format!("[{year}/{day:0>2}][Part 1] Error: {err}");
                 error!("{logline}");
                 output.push(logline);
             }
@@ -61,12 +61,12 @@ pub trait Solution {
 
         match self.part_2(&input) {
             Ok(result) => {
-                let logline = format!("[{name}][Part 2] {result}");
+                let logline = format!("[{year}/{day:0>2}][Part 2] {result}");
                 info!("{logline}");
                 output.push(logline);
             }
             Err(err) => {
-                let logline = format!("[{name}][Part 2] Error: {err}");
+                let logline = format!("[{year}/{day:0>2}][Part 2] Error: {err}");
                 error!("{logline}");
                 output.push(logline);
             }

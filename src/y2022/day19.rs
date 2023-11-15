@@ -21,13 +21,20 @@ impl Day19 {
         let mut blueprints = Vec::new();
 
         for line in input.lines() {
-            let (id, ore_ore, clay_ore, obsidian_ore, obsidian_clay, geode_ore, geode_obsidian): (u32, u32, u32, u32, u32, u32, u32) = 
-                serde_scan::scan!("Blueprint {}: \
+            let (id, ore_ore, clay_ore, obsidian_ore, obsidian_clay, geode_ore, geode_obsidian): (
+                u32,
+                u32,
+                u32,
+                u32,
+                u32,
+                u32,
+                u32,
+            ) = serde_scan::scan!("Blueprint {}: \
                     Each ore robot costs {} ore. \
                     Each clay robot costs {} ore. \
                     Each obsidian robot costs {} ore and {} clay. \
                     Each geode robot costs {} ore and {} obsidian." <- line)
-                    .map_err(|err| AocError::parse("input", err))?;
+            .map_err(|err| AocError::parse("input", err))?;
 
             let costs = [
                 [ore_ore, 0, 0],
@@ -36,10 +43,7 @@ impl Day19 {
                 [geode_ore, 0, geode_obsidian],
             ];
 
-            blueprints.push(Blueprint {
-                id,
-                costs,
-            });
+            blueprints.push(Blueprint { id, costs });
         }
 
         Ok(blueprints)
@@ -49,8 +53,11 @@ impl Day19 {
         let max_ore_spend = *[
             blueprint.costs[CLAY][ORE],
             blueprint.costs[OBSIDIAN][ORE],
-            blueprint.costs[GEODE][ORE]
-        ].iter().max().unwrap_or(&0);
+            blueprint.costs[GEODE][ORE],
+        ]
+        .iter()
+        .max()
+        .unwrap_or(&0);
 
         let max_clay_spend = blueprint.costs[OBSIDIAN][CLAY];
         let max_obsidian_spend = blueprint.costs[GEODE][OBSIDIAN];
@@ -58,7 +65,14 @@ impl Day19 {
         [max_ore_spend, max_clay_spend, max_obsidian_spend, 1000]
     }
 
-    fn plan_next(blueprint: &Blueprint, inventory: &Resources, production: &Resources, max_spend: &Resources, minute: u32, time_limit: u32) -> Vec<(Option<Resource>, u32)> {
+    fn plan_next(
+        blueprint: &Blueprint,
+        inventory: &Resources,
+        production: &Resources,
+        max_spend: &Resources,
+        minute: u32,
+        time_limit: u32,
+    ) -> Vec<(Option<Resource>, u32)> {
         let mut plans: Vec<(Option<Resource>, u32)> = Vec::new();
         let remaining_time = time_limit - minute;
 
@@ -75,18 +89,22 @@ impl Day19 {
             }
 
             // Consider how long does it take to produce resources for this robot and skip to that time
-            let durations: Vec<u32> = blueprint.costs[resource as usize].iter().enumerate().flat_map(|(ingredient, cost)| {
-                if *cost <= inventory[ingredient] {
-                    return Some(0)
-                }
+            let durations: Vec<u32> = blueprint.costs[resource as usize]
+                .iter()
+                .enumerate()
+                .flat_map(|(ingredient, cost)| {
+                    if *cost <= inventory[ingredient] {
+                        return Some(0);
+                    }
 
-                if production[ingredient] == 0 {
-                    return None
-                }
+                    if production[ingredient] == 0 {
+                        return None;
+                    }
 
-                let required = cost.saturating_sub(inventory[ingredient]);
-                Some((required + production[ingredient] - 1) / production[ingredient])
-            }).collect();
+                    let required = cost.saturating_sub(inventory[ingredient]);
+                    Some((required + production[ingredient] - 1) / production[ingredient])
+                })
+                .collect();
 
             let can_produce_ingredients = durations.len() == 3;
 
@@ -114,17 +132,33 @@ impl Day19 {
         let production = [1, 0, 0, 0];
         let inventory = [0, 0, 0, 0];
 
-        Day19::run(blueprint, &max_spend, &production, &inventory, time_limit, 1)
+        Day19::run(
+            blueprint,
+            &max_spend,
+            &production,
+            &inventory,
+            time_limit,
+            1,
+        )
     }
 
-    fn run(blueprint: &Blueprint, max_spend: &Resources, production: &Resources, inventory: &Resources, time_limit: u32, minute: u32) -> u32 {
+    fn run(
+        blueprint: &Blueprint,
+        max_spend: &Resources,
+        production: &Resources,
+        inventory: &Resources,
+        time_limit: u32,
+        minute: u32,
+    ) -> u32 {
         if minute > time_limit {
             return inventory[GEODE];
         }
-    
+
         let mut most_geodes = 0;
-       
-        let plans = Day19::plan_next(blueprint, inventory, production, max_spend, minute, time_limit);
+
+        let plans = Day19::plan_next(
+            blueprint, inventory, production, max_spend, minute, time_limit,
+        );
 
         // Consider each plan
         for (plan, skipped_minutes) in plans {
@@ -136,7 +170,7 @@ impl Day19 {
             for resource in ORE..=GEODE {
                 next_inventory[resource] += production[resource] * (skipped_minutes + 1);
             }
-    
+
             // Pay the costs and finish building whatever we were building if any
             if let Some(planned) = plan {
                 for (resource, robot_cost) in blueprint.costs[planned as usize].iter().enumerate() {
@@ -146,7 +180,14 @@ impl Day19 {
             }
 
             // DFS
-            let total_geodes = Day19::run(blueprint, max_spend, &next_production, &next_inventory, time_limit, next_minute + 1);
+            let total_geodes = Day19::run(
+                blueprint,
+                max_spend,
+                &next_production,
+                &next_inventory,
+                time_limit,
+                next_minute + 1,
+            );
             if total_geodes > most_geodes {
                 most_geodes = total_geodes;
             }
@@ -160,27 +201,30 @@ impl Solution for Day19 {
     type F = u32;
     type S = u32;
 
-    fn name(&self) -> &'static str {
-        "Day 19"
+    fn meta(&self) -> (u32, u32) {
+        (19, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day19.txt")
+        include_str!("../../inputs/2022/day19.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<u32, AocError> {
         let blueprints = Day19::parse(input)?;
 
-        Ok(blueprints.into_iter().map(|blueprint| {
-            Day19::simulate(&blueprint, 24) * blueprint.id
-        }).sum())
+        Ok(blueprints
+            .into_iter()
+            .map(|blueprint| Day19::simulate(&blueprint, 24) * blueprint.id)
+            .sum())
     }
 
     fn part_2(&self, input: &str) -> Result<u32, AocError> {
         let blueprints = Day19::parse(input)?;
-        Ok(blueprints.into_iter().take(3).map(|blueprint| {
-            Day19::simulate(&blueprint, 32)
-        }).product())
+        Ok(blueprints
+            .into_iter()
+            .take(3)
+            .map(|blueprint| Day19::simulate(&blueprint, 32))
+            .product())
     }
 }
 

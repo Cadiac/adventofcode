@@ -64,7 +64,10 @@ impl Rock {
 
     fn pixels(&self) -> Vec<(i64, i64)> {
         let base_pixels = SHAPES[self.shape];
-        base_pixels.iter().map(|(x, y)| (self.x + x, self.y + y)).collect()
+        base_pixels
+            .iter()
+            .map(|(x, y)| (self.x + x, self.y + y))
+            .collect()
     }
 }
 
@@ -153,12 +156,12 @@ impl Solution for Day17 {
     type F = u64;
     type S = u64;
 
-    fn name(&self) -> &'static str {
-        "Day 17"
+    fn meta(&self) -> (u32, u32) {
+        (17, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day17.txt")
+        include_str!("../../inputs/2022/day17.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<u64, AocError> {

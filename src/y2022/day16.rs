@@ -198,7 +198,7 @@ impl Day16 {
 
         let mut best = 0;
 
-        for combination in 0..valve_opening_combinations/2 {
+        for combination in 0..valve_opening_combinations / 2 {
             let mask = (1 << valve_count) - 1;
             let inverse = !combination & mask;
 
@@ -218,12 +218,12 @@ impl Solution for Day16 {
     type F = u32;
     type S = u32;
 
-    fn name(&self) -> &'static str {
-        "Day 16"
+    fn meta(&self) -> (u32, u32) {
+        (16, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day16.txt")
+        include_str!("../../inputs/2022/day16.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<u32, AocError> {

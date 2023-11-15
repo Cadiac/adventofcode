@@ -10,7 +10,7 @@ fn parse(input: &str) -> Result<Pairs, AocError> {
 
     let first = pairs
         .next()
-        .ok_or_else( || AocError::parse("first", "no pair"))?
+        .ok_or_else(|| AocError::parse("first", "no pair"))?
         .split('-')
         .map(|value| value.parse::<u32>())
         .collect::<Result<Vec<u32>, ParseIntError>>()
@@ -18,7 +18,7 @@ fn parse(input: &str) -> Result<Pairs, AocError> {
 
     let second = pairs
         .next()
-        .ok_or_else( || AocError::parse("second", "no pair"))?
+        .ok_or_else(|| AocError::parse("second", "no pair"))?
         .split('-')
         .map(|value| value.parse::<u32>())
         .collect::<Result<Vec<u32>, ParseIntError>>()
@@ -31,12 +31,12 @@ impl Solution for Day04 {
     type F = usize;
     type S = usize;
 
-    fn name(&self) -> &'static str {
-        "Day 04"
+    fn meta(&self) -> (u32, u32) {
+        (4, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day04.txt")
+        include_str!("../../inputs/2022/day04.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<usize, AocError> {

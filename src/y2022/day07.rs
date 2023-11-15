@@ -37,7 +37,10 @@ fn parse(input: &str) -> Result<FsNode, AocError> {
 
             if line.starts_with("dir") {
                 let name = scan!("dir {}" <- line).map_err(|err| AocError::parse(line, err))?;
-                target.directories.entry(name).or_insert_with(FsNode::default);
+                target
+                    .directories
+                    .entry(name)
+                    .or_insert_with(FsNode::default);
             } else {
                 let (size, name) =
                     scan!("{} {}" <- line).map_err(|err| AocError::parse(line, err))?;
@@ -79,12 +82,12 @@ impl Solution for Day07 {
     type F = usize;
     type S = usize;
 
-    fn name(&self) -> &'static str {
-        "Day 07"
+    fn meta(&self) -> (u32, u32) {
+        (7, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day07.txt")
+        include_str!("../../inputs/2022/day07.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<usize, AocError> {

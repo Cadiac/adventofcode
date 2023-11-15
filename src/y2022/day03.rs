@@ -20,12 +20,12 @@ impl Solution for Day03 {
     type F = u32;
     type S = u32;
 
-    fn name(&self) -> &'static str {
-        "Day 03"
+    fn meta(&self) -> (u32, u32) {
+        (3, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day03.txt")
+        include_str!("../../inputs/2022/day03.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<u32, AocError> {
@@ -54,9 +54,7 @@ impl Solution for Day03 {
                 .into_iter()
                 .map(|elf| HashSet::<u8>::from_iter(elf.bytes()));
 
-            let mut common = unique
-                .next()
-                .ok_or_else(|| AocError::logic("no groups"))?;
+            let mut common = unique.next().ok_or_else(|| AocError::logic("no groups"))?;
 
             for another in unique {
                 common.retain(|item| another.contains(item));

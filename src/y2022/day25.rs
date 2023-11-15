@@ -53,12 +53,12 @@ impl Solution for Day25 {
     type F = String;
     type S = String;
 
-    fn name(&self) -> &'static str {
-        "Day 25"
+    fn meta(&self) -> (u32, u32) {
+        (25, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day25.txt")
+        include_str!("../../inputs/2022/day25.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<String, AocError> {
@@ -74,7 +74,8 @@ impl Solution for Day25 {
     }
 
     fn part_2(&self, _input: &str) -> Result<String, AocError> {
-        Ok(["",
+        Ok([
+            "",
             "                               ",
             "               *               ",
             "               ^^              ",

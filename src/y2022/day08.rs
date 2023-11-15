@@ -35,12 +35,12 @@ impl Solution for Day08 {
     type F = i32;
     type S = i32;
 
-    fn name(&self) -> &'static str {
-        "Day 08"
+    fn meta(&self) -> (u32, u32) {
+        (8, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day08.txt")
+        include_str!("../../inputs/2022/day08.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<i32, AocError> {

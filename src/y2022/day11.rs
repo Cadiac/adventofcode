@@ -133,12 +133,12 @@ impl Solution for Day11 {
     type F = u64;
     type S = u64;
 
-    fn name(&self) -> &'static str {
-        "Day 11"
+    fn meta(&self) -> (u32, u32) {
+        (12, 2022)
     }
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../inputs/day11.txt")
+        include_str!("../../inputs/2022/day11.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<u64, AocError> {
