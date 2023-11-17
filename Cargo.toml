@@ -1,28 +1,4 @@
-[package]
-name = "aoc"
-default-run = "cli"
-version = "0.1.0"
-authors = ["Jaakko Husso <jaakko.t.husso@gmail.com>"]
-edition = "2018"
-
-[dependencies]
-itertools = "0.10.5"
-nom = "7.1.1"
-serde_scan = "0.4.1"
-cached = "0.40.0"
-rayon = "1.6.0"
-log = "0.4.17"
-env_logger = "0.8.4"
-clap = { version = "3.2.8", features = ["derive"] }
-yew = { version = "0.20.0", features = ["csr"] }
-wasm-logger = "0.2.0"
-wasm-bindgen = "0.2.88"
-web-sys = "0.3.60"
-num = "0.4.0"
-
-[dev-dependencies]
-criterion = "0.4"
-
-[[bench]]
-name = "benchmark"
-harness = false
+[workspace]
+members = ["aoc-cli", "aoc-solver", "aoc-web"]
+default-members = ["aoc-cli"]
+resolver = "2"

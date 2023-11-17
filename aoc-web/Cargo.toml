@@ -1,0 +1,14 @@
+[package]
+name = "aoc-web"
+version = "0.1.0"
+authors = ["Jaakko Husso <jaakko.t.husso@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+itertools = "0.10.5"
+log = "0.4.17"
+yew = { version = "0.20.0", features = ["csr"] }
+wasm-logger = "0.2.0"
+wasm-bindgen = "0.2.88"
+web-sys = "0.3.60"
+aoc-solver = { path = "../aoc-solver" }
