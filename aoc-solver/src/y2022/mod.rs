@@ -55,7 +55,7 @@ pub fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
         23 => day23::Day23.run(input),
         24 => day24::Day24.run(input),
         25 => day25::Day25.run(input),
-        _ => unimplemented!(),
+        _ => vec![String::from("Solution not implemented (yet?)")],
     }
 }
 

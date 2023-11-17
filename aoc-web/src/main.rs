@@ -1,134 +1,90 @@
-pub mod cube;
-pub mod lava;
-pub mod rope;
+pub mod home;
+pub mod solution;
+pub mod y2021;
+pub mod y2022;
+pub mod y2023;
 
+use home::Home;
 use yew::prelude::*;
+use yew_router::prelude::*;
 
-use aoc_solver::y2022::{run_solution, MAX_DAYS};
+use crate::solution::Solution;
 
-use crate::{cube::Cube, lava::Lava, rope::Rope};
-
-enum Scene {
+#[derive(Clone, Routable, PartialEq)]
+enum Route {
+    #[at("/")]
+    Home,
+    #[at("/:year/:day")]
+    Solution { year: u32, day: u8 },
+    #[at("/2022/9/rope")]
     Rope,
+    #[at("/2022/18/lava")]
     Lava,
+    #[at("/2022/22/cube")]
     Cube,
-    Day,
+    #[not_found]
+    #[at("/404")]
+    NotFound,
 }
 
-#[function_component]
-fn App() -> Html {
-    let console = use_state(|| {
-        vec![
-            "                               ".to_string(),
-            "               *               ".to_string(),
-            "               ^^              ".to_string(),
-            "              ^^o              ".to_string(),
-            "              o^^              ".to_string(),
-            "              ^^o^             ".to_string(),
-            "             o^^^^o            ".to_string(),
-            "             ^^o^^^^           ".to_string(),
-            "        _______||_______       ".to_string(),
-            "            AoC 2022           ".to_string(),
-        ]
-    });
-
-    let scene = use_state(|| Scene::Day);
-
-    let activate_rope = {
-        let scene = scene.clone();
-        move |_| {
-            scene.set(Scene::Rope);
+fn router(route: Route) -> Html {
+    let header = match route {
+        Route::Home | Route::Solution { year: 2023, day: _ } => html! { <y2023::Header/> },
+        Route::Solution { year: 2022, day: _ } | Route::Lava | Route::Rope | Route::Cube => {
+            html! { <y2022::Header/> }
         }
+        Route::Solution { year: 2021, day: _ } => html! { <y2021::Header/> },
+        _ => html! { <y2021::Header/> },
     };
 
-    let activate_lava = {
-        let scene = scene.clone();
-        move |_| {
-            scene.set(Scene::Lava);
+    let main = match route {
+        Route::Home => html! { <Home/> },
+        Route::Solution { year, day } => {
+            html! { <Solution year={year} day={day} />}
         }
-    };
-
-    let activate_cube = {
-        let scene = scene.clone();
-        move |_| {
-            scene.set(Scene::Cube);
+        Route::Rope => {
+            html! { <y2022::Rope/> }
         }
-    };
-
-    // TODO: Disabled for now, make this run all of the solutions
-    // simultaneously using web workers or something
-    // let run_all = {
-    //     let console = console.clone();
-    //     let view_rope = view_rope.clone();
-    //     move |_| {
-    //         view_rope.set(false);
-    //         let output = run_all();
-    //         console.set(output);
-    //     }
-    // };
-
-    let run_day = |day: u8| {
-        let console = console.clone();
-        let scene = scene.clone();
-        move |_| {
-            scene.set(Scene::Day);
-            let output = run_solution(day, None);
-            console.set(output);
+        Route::Lava => {
+            html! { <y2022::Lava/> }
         }
+        Route::Cube => {
+            html! { <y2022::Cube/> }
+        }
+        Route::NotFound => html! {<h1>{ "Not Found :(" }</h1>},
     };
 
     html! {
         <>
-            <header>
-                <h1>{"AoC 2022"}</h1>
-                <nav>
-                    <ul>
-                        // <li><button onclick={run_all}>{ "[All]" }</button></li>
-                        {
-                            for (1..=9).map(|day| {
-                                html! {
-                                    <li><button onclick={run_day(day)}>{format!("[{}]", day)}</button></li>
-                                }
-                            })
-                        }
-                        <li><button onclick={activate_rope}>{ "[9+]" }</button></li>
-                        {
-                            for (10..=MAX_DAYS).map(|day| {
-                                html! {
-                                    <li><button onclick={run_day(day)}>{format!("[{}]", day)}</button></li>
-                                }
-                            })
-                        }
-                        <li><button onclick={activate_lava}>{ "[18+]" }</button></li>
-                        <li><button onclick={activate_cube}>{ "[22+]" }</button></li>
-                    </ul>
-                </nav>
-            </header>
-            <main>
-                {match *scene {
-                    Scene::Day => {
-                        html! { <pre><code>{ console.join("\n") }</code></pre> }
-                    },
-                    Scene::Rope => {
-                        html! { <Rope/> }
-                    },
-                    Scene::Lava => {
-                        html! { <Lava/> }
-                    }
-                    Scene::Cube => {
-                        html! { <Cube/> }
-                    }
-                }}
-            </main>
-            <footer>
-                <small>
-                    {"Made by "}
-                    <a href="https://github.com/Cadiac">{"Cadiac"}</a>
-                    {". Source code can be be found "}
-                    <a href="https://github.com/Cadiac/adventofcode">{"here"}</a>
-                    {"."}
-                </small>
-            </footer>
+            { header }
+            { main }
+        </>
+    }
+}
+
+#[function_component(Footer)]
+fn footer() -> Html {
+    html! {
+        <footer>
+            <small>
+                {"Made by "}
+                <a href="https://github.com/Cadiac">{"Cadiac"}</a>
+                {". Source code can be be found "}
+                <a href="https://github.com/Cadiac/adventofcode">{"here"}</a>
+                {"."}
+            </small>
+        </footer>
+    }
+}
+
+#[function_component(App)]
+fn app() -> Html {
+    html! {
+        <>
+            <BrowserRouter>
+                <Switch<Route> render={router} />
+            </BrowserRouter>
+            <Footer />
         </>
     }
 }
