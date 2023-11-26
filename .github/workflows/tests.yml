@@ -96,6 +96,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: aoc-web
+          path: ./aoc-web
       - name: Publish
         uses: netlify/actions/cli@master
         with:
