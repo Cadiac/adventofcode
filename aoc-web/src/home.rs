@@ -10,13 +10,15 @@ pub fn Home(props: &HomeProps) -> Html {
     html! { <pre><code>{ vec![
         "                               ",
         "               *               ",
+        "               o^              ",
         "               ^^              ",
         "              ^^o              ",
         "              o^^              ",
         "              ^^o^             ",
         "             o^^^^o            ",
-        "             ^^o^^^^           ",
-        "        _______||_______       ",
+        "            ^^o^^^^^           ",
+        "               ░               ",
+        "        ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒       ",
         format!("            AoC {}           ", props.year).as_str(),
     ].join("\n") }</code></pre> }
 }

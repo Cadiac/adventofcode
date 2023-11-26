@@ -1,4 +1,6 @@
+pub mod header;
 pub mod home;
+pub mod navlink;
 pub mod solution;
 pub mod y2021;
 pub mod y2022;
@@ -9,7 +11,7 @@ use home::Home;
 use yew::prelude::*;
 use yew_router::prelude::*;
 
-use crate::solution::Solution;
+use crate::{header::Header, navlink::NavLink, solution::Solution};
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum Route {
@@ -31,29 +33,10 @@ pub enum Route {
 }
 
 fn router(route: Route) -> Html {
-    let header = match route {
-        Route::Index | Route::Home { year: 2023 } => {
-            html! { <y2023::Header/> }
-        }
-        Route::Home { year: 2022 } => {
-            html! { <y2022::Header/> }
-        }
-        Route::Home { year: 2021 } => {
-            html! { <y2021::Header/> }
-        }
-        Route::Solution { year: 2021, day } => {
-            html! { <y2021::Header day={Some(day)}/> }
-        }
-        Route::Solution { year: 2022, day } => {
-            html! { <y2022::Header day={Some(day)}/> }
-        }
-        Route::Solution { year: 2023, day } => {
-            html! { <y2023::Header day={Some(day)}/> }
-        }
-        Route::Lava | Route::Rope | Route::Cube => {
-            html! { <y2022::Header/> }
-        }
-        _ => html! { <y2023::Header/> },
+    let year = match route {
+        Route::Index | Route::NotFound => 2023,
+        Route::Solution { year, day: _ } | Route::Home { year } => year,
+        Route::Lava | Route::Rope | Route::Cube => 2022,
     };
 
     let main = match route {
@@ -76,8 +59,8 @@ fn router(route: Route) -> Html {
 
     html! {
         <>
-            { header }
-            { main }
+            <Header year={year} route={route} />
+            <main>{ main }</main>
         </>
     }
 }

@@ -1,15 +1,23 @@
 /* Mostly borrowed from https://adventofcode.com/ to get the same look */
 
-body {
+html, body {
     background: #0f0f23;
     color: #cccccc;
     font-family: "Source Code Pro", monospace;
     font-size: 14pt;
+    height: 100%;
     margin: 0;
-    padding: 0;;
+    padding: 0;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 main {
+    flex: 1;
     padding: 1em;
 }
 
@@ -34,10 +42,6 @@ a {
 h1, h2 {
     font-size: 1em;
     font-weight: normal;
-}
-
-pre {
-    margin-left: 1em;
 }
 
 code {
@@ -92,7 +96,6 @@ header h1 {
     font-weight: normal;  
 }
 footer {
-    position: absolute;
     bottom: 0;
     margin: 1em auto 1em auto;
     width: 100%;
