@@ -1,7 +1,12 @@
 use yew::prelude::*;
 
+#[derive(Properties, PartialEq)]
+pub struct HomeProps {
+    pub year: u32,
+}
+
 #[function_component]
-pub fn Home() -> Html {
+pub fn Home(props: &HomeProps) -> Html {
     html! { <pre><code>{ vec![
         "                               ",
         "               *               ",
@@ -12,6 +17,6 @@ pub fn Home() -> Html {
         "             o^^^^o            ",
         "             ^^o^^^^           ",
         "        _______||_______       ",
-        "            AoC 2023           ",
+        format!("            AoC {}           ", props.year).as_str(),
     ].join("\n") }</code></pre> }
 }

@@ -3,6 +3,7 @@ pub mod solution;
 pub mod y2021;
 pub mod y2022;
 pub mod y2023;
+pub mod year;
 
 use home::Home;
 use yew::prelude::*;
@@ -11,9 +12,11 @@ use yew_router::prelude::*;
 use crate::solution::Solution;
 
 #[derive(Clone, Routable, PartialEq)]
-enum Route {
+pub enum Route {
     #[at("/")]
-    Home,
+    Index,
+    #[at("/:year")]
+    Home { year: u32 },
     #[at("/:year/:day")]
     Solution { year: u32, day: u8 },
     #[at("/2022/9/rope")]
@@ -29,16 +32,33 @@ enum Route {
 
 fn router(route: Route) -> Html {
     let header = match route {
-        Route::Home | Route::Solution { year: 2023, day: _ } => html! { <y2023::Header/> },
-        Route::Solution { year: 2022, day: _ } | Route::Lava | Route::Rope | Route::Cube => {
+        Route::Index | Route::Home { year: 2023 } => {
+            html! { <y2023::Header/> }
+        }
+        Route::Home { year: 2022 } => {
             html! { <y2022::Header/> }
         }
-        Route::Solution { year: 2021, day: _ } => html! { <y2021::Header/> },
-        _ => html! { <y2021::Header/> },
+        Route::Home { year: 2021 } => {
+            html! { <y2021::Header/> }
+        }
+        Route::Solution { year: 2021, day } => {
+            html! { <y2021::Header day={Some(day)}/> }
+        }
+        Route::Solution { year: 2022, day } => {
+            html! { <y2022::Header day={Some(day)}/> }
+        }
+        Route::Solution { year: 2023, day } => {
+            html! { <y2023::Header day={Some(day)}/> }
+        }
+        Route::Lava | Route::Rope | Route::Cube => {
+            html! { <y2022::Header/> }
+        }
+        _ => html! { <y2023::Header/> },
     };
 
     let main = match route {
-        Route::Home => html! { <Home/> },
+        Route::Index => html! { <Home year={2023} /> },
+        Route::Home { year } => html! { <Home year={year} /> },
         Route::Solution { year, day } => {
             html! { <Solution year={year} day={day} />}
         }

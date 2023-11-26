@@ -99,6 +99,23 @@ footer {
     text-align: center;
 }
 
+.row {
+    display: flex;
+    flex-direction: row;
+}
+
+.links {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1em;
+    margin-bottom: 1em;
+}
+
+.active-link {
+    color: #99ff99;
+}
+
 .success {
     color: #ffff66;
     text-shadow: 0 0 5px #ffff66;

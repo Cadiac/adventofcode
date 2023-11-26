@@ -2,63 +2,73 @@ mod cube;
 mod lava;
 mod rope;
 
+use yew::prelude::*;
+use yew_router::components::Link;
+
 pub use self::cube::Cube;
 pub use self::lava::Lava;
 pub use self::rope::Rope;
 
-use yew::prelude::*;
-use yew_router::hooks::use_navigator;
-
+use crate::year::Year;
 use crate::Route;
 
+#[derive(Properties, PartialEq)]
+pub struct HeaderProps {
+    pub day: Option<u8>,
+}
+
 #[function_component(Header)]
-pub fn header() -> Html {
-    let navigator = use_navigator().unwrap();
-
-    let day_9_extra = {
-        let navigator = navigator.clone();
-        Callback::from(move |_| navigator.push(&Route::Rope))
-    };
-
-    let day_18_extra = {
-        let navigator = navigator.clone();
-        Callback::from(move |_| navigator.push(&Route::Lava))
-    };
-
-    let day_22_extra = {
-        let navigator = navigator.clone();
-        Callback::from(move |_| navigator.push(&Route::Cube))
-    };
-
+pub fn header(props: &HeaderProps) -> Html {
     html! {
         <header>
-            <h1>{"AoC 2022"}</h1>
-            <nav>
-                <ul>
-                    {
-                        for (1..=9).map(|day| {
-                            let navigator = navigator.clone();
-                            let onclick = Callback::from(move |_| navigator.push(&Route::Solution { year: 2022, day }));
+            <Year current={2022} />
+            <nav class="links">
+                {
+                    for (1..=9).map(|day| {
+                        let active = if Some(day) == props.day {
+                            "active-link"
+                        } else {
+                            ""
+                        };
 
-                            html! {
-                                <li><button onclick={onclick}>{format!("[{day}]")}</button></li>
-                            }
-                        })
-                    }
-                    <li><button onclick={day_9_extra}>{ "[9+]" }</button></li>
-                    {
-                        for (10..=25).map(|day| {
-                            let navigator = navigator.clone();
-                            let onclick = Callback::from(move |_| navigator.push(&Route::Solution { year: 2022, day }));
+                        html! {
+                            <Link<Route>
+                                classes={classes!(active)}
+                                to={Route::Solution { year: 2022, day }}
+                            >
+                                { format!("[{day}]") }
+                            </Link<Route>>
+                        }
+                    })
+                }
+                <Link<Route> classes={classes!("")} to={Route::Rope}>
+                    { format!("[9+]") }
+                </Link<Route>>
+                {
 
-                            html! {
-                                <li><button onclick={onclick}>{format!("[{day}]")}</button></li>
-                            }
-                        })
-                    }
-                    <li><button onclick={day_18_extra}>{ "[18+]" }</button></li>
-                    <li><button onclick={day_22_extra}>{ "[22+]" }</button></li>
-                </ul>
+                    for (10..=25).map(|day| {
+                        let active = if Some(day) == props.day {
+                            "active-link"
+                        } else {
+                            ""
+                        };
+
+                        html! {
+                            <Link<Route>
+                                classes={classes!(active)}
+                                to={Route::Solution { year: 2022, day }}
+                            >
+                                { format!("[{day}]") }
+                            </Link<Route>>
+                        }
+                    })
+                }
+                <Link<Route> classes={classes!("")} to={Route::Lava}>
+                    { format!("[18+]") }
+                </Link<Route>>
+                <Link<Route> classes={classes!("")} to={Route::Cube}>
+                    { format!("[22+]") }
+                </Link<Route>>
             </nav>
         </header>
     }

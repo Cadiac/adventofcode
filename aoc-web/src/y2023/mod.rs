@@ -1,32 +1,37 @@
 use yew::prelude::*;
-use yew_router::hooks::use_navigator;
+use yew_router::components::Link;
 
-use crate::Route;
+use crate::{year::Year, Route};
+
+#[derive(Properties, PartialEq)]
+pub struct HeaderProps {
+    pub day: Option<u8>,
+}
 
 #[function_component(Header)]
-pub fn header() -> Html {
-    let navigator = use_navigator();
-
+pub fn header(props: &HeaderProps) -> Html {
     html! {
         <header>
-            <h1>{"AoC 2023"}</h1>
-            <nav>
-                <ul>
-                    {
-                        for (1..=1).map(|day| {
-                            // TODO: why is navigator no available? is it a feature flag?
-                            let onclick = if let Some(nav) = navigator.clone() {
-                                Callback::from(move |_| nav.push(&Route::Solution { year: 2023, day }))
-                            } else {
-                                Callback::from(move |_| {})
-                            };
+            <Year current={2023} />
+            <nav class="links">
+                {
+                    for (1..=1).map(|day| {
+                        let active = if Some(day) == props.day {
+                            "active-link"
+                        } else {
+                            ""
+                        };
 
-                            html! {
-                                <li><button onclick={onclick}>{format!("[{day}]")}</button></li>
-                            }
-                        })
-                    }
-                </ul>
+                        html! {
+                            <Link<Route>
+                                classes={classes!(active)}
+                                to={Route::Solution { year: 2023, day }}
+                            >
+                                { format!("[{day}]") }
+                            </Link<Route>>
+                        }
+                    })
+                }
             </nav>
         </header>
     }
