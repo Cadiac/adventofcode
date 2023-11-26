@@ -56,6 +56,11 @@ jobs:
       - name: Build
         working-directory: ./aoc-web
         run: trunk build --release
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: aoc-web
+          path: aoc-web/dist
       # - name: Upload GitHub Pages artifact
       #   uses: actions/upload-pages-artifact@v1.0.3
       #   with:
@@ -87,10 +92,14 @@ jobs:
     needs: build-web
 
     steps:
+      - name: Download the artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: aoc-web
       - name: Publish
         uses: netlify/actions/cli@master
         with:
-          args: deploy --dir=aoc-web/dist --prod
+          args: deploy --dir=aoc-web --prod
         env:
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
