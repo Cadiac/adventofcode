@@ -60,8 +60,26 @@ pub fn header(props: &HeaderProps) -> Html {
                         2021 => {
                             html! {
                                 <>
-                                    <NavLink route={Route::Solution { year: 2021, day: 19 }} current={props.route.clone()} text={"19"}/>
-                                    <NavLink route={Route::Solution { year: 2021, day: 20 }} current={props.route.clone()} text={"20"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 1 }} current={props.route.clone()} text={"1"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 2 }} current={props.route.clone()} text={"2"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 3 }} current={props.route.clone()} text={"3"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 4 }} current={props.route.clone()} text={"4"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 5 }} current={props.route.clone()} text={"5"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 6 }} current={props.route.clone()} text={"6"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 7 }} current={props.route.clone()} text={"7"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 8 }} current={props.route.clone()} text={"8"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 9 }} current={props.route.clone()} text={"9"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 10 }} current={props.route.clone()} text={"10"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 11 }} current={props.route.clone()} text={"11"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 12 }} current={props.route.clone()} text={"12"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 13 }} current={props.route.clone()} text={"13"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 14 }} current={props.route.clone()} text={"14"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 15 }} current={props.route.clone()} text={"15"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 16 }} current={props.route.clone()} text={"16"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 17 }} current={props.route.clone()} text={"17"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 18 }} current={props.route.clone()} text={"18"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 21 }} current={props.route.clone()} text={"21"}/>
+                                    <NavLink route={Route::Solution { year: 2021, day: 22 }} current={props.route.clone()} text={"22"}/>
                                 </>
                             }
                         },
