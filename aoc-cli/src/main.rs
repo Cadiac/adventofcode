@@ -5,6 +5,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
+use aoc_solver::y2021;
 use aoc_solver::y2022;
 use aoc_solver::y2023;
 
@@ -35,13 +36,16 @@ fn main() -> Result<(), Box<dyn Error>> {
     match cli.day {
         None => {
             match cli.year {
+                Some(2021) => {
+                    y2021::run_all();
+                }
                 Some(2022) => {
                     y2022::run_all();
                 }
                 Some(2023) | None => {
                     y2023::run_all();
                 }
-                _ => {}
+                _ => unimplemented!(),
             };
         }
         Some(day) => {
@@ -57,13 +61,16 @@ fn main() -> Result<(), Box<dyn Error>> {
             };
 
             match cli.year {
+                Some(2021) => {
+                    y2021::run_solution(day, input);
+                }
                 Some(2022) => {
                     y2022::run_solution(day, input);
                 }
                 Some(2023) | None => {
                     y2023::run_solution(day, input);
                 }
-                _ => {}
+                _ => unimplemented!(),
             }
         }
     };
