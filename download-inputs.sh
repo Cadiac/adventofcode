@@ -5,7 +5,7 @@
 
 set -e
 
-START_YEAR=2021
+START_YEAR=2020
 END_YEAR=2023
 
 if [[ -z "${AOC_SESSION_COOKIE}" ]]; then

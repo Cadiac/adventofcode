@@ -13,6 +13,7 @@ serde_scan = "0.4.1"
 log = "0.4.20"
 num = "0.4.1"
 cached = { version = "0.46.1", features = ["wasm"] }
+regex = "1.10.2"
 
 [dev-dependencies]
 criterion = "0.5.1"

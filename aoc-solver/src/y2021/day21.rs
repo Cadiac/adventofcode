@@ -75,7 +75,7 @@ impl Solution for Day21 {
     type S = usize;
 
     fn meta(&self) -> (u32, u32) {
-        (18, 2021)
+        (21, 2021)
     }
 
     fn default_input(&self) -> &'static str {

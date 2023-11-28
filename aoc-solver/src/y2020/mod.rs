@@ -12,14 +12,6 @@ pub mod day09;
 pub mod day10;
 pub mod day11;
 pub mod day12;
-pub mod day13;
-pub mod day14;
-pub mod day15;
-pub mod day16;
-pub mod day17;
-pub mod day18;
-pub mod day21;
-pub mod day22;
 
 pub fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
     match day {
@@ -35,14 +27,6 @@ pub fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
         10 => day10::Day10.run(input),
         11 => day11::Day11.run(input),
         12 => day12::Day12.run(input),
-        13 => day13::Day13.run(input),
-        14 => day14::Day14.run(input),
-        15 => day15::Day15.run(input),
-        16 => day16::Day16.run(input),
-        17 => day17::Day17.run(input),
-        18 => day18::Day18.run(input),
-        21 => day21::Day21.run(input),
-        22 => day22::Day22.run(input),
         _ => vec![String::from("Solution not implemented (yet?)")],
     }
 }
@@ -50,11 +34,7 @@ pub fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
 pub fn run_all() -> Vec<String> {
     let mut output = Vec::new();
 
-    for day in 1..=18 {
-        output.append(&mut run_solution(day, None));
-        output.push("--".to_string())
-    }
-    for day in 21..=22 {
+    for day in 1..=25 {
         output.append(&mut run_solution(day, None));
         output.push("--".to_string())
     }
