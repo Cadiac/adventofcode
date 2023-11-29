@@ -1,5 +1,6 @@
 use yew::prelude::*;
 
+use aoc_solver::y2020;
 use aoc_solver::y2021;
 use aoc_solver::y2022;
 use aoc_solver::y2023;
@@ -13,6 +14,7 @@ pub struct SolutionProps {
 #[function_component]
 pub fn Solution(props: &SolutionProps) -> Html {
     let output = match props.year {
+        2020 => y2020::run_solution(props.day, None),
         2021 => y2021::run_solution(props.day, None),
         2022 => y2022::run_solution(props.day, None),
         2023 => y2023::run_solution(props.day, None),

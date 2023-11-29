@@ -2,6 +2,7 @@ pub mod header;
 pub mod home;
 pub mod navlink;
 pub mod solution;
+pub mod y2020;
 pub mod y2021;
 pub mod y2022;
 pub mod y2023;
