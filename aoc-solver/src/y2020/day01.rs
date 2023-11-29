@@ -16,6 +16,7 @@ impl Solution for Day01 {
 
     fn part_1(&self, input: &str) -> Result<usize, AocError> {
         let input: Vec<usize> = input
+            .trim()
             .split("\n")
             .map(|num| num.parse::<usize>().expect("parsing"))
             .collect();
@@ -33,6 +34,7 @@ impl Solution for Day01 {
 
     fn part_2(&self, input: &str) -> Result<usize, AocError> {
         let input: Vec<usize> = input
+            .trim()
             .split("\n")
             .map(|num| num.parse::<usize>().expect("parsing"))
             .collect();

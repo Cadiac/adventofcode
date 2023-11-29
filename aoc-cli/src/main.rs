@@ -5,6 +5,7 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
+use aoc_solver::y2020;
 use aoc_solver::y2021;
 use aoc_solver::y2022;
 use aoc_solver::y2023;
@@ -36,6 +37,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     match cli.day {
         None => {
             match cli.year {
+                Some(2020) => {
+                    y2020::run_all();
+                }
                 Some(2021) => {
                     y2021::run_all();
                 }
@@ -61,6 +65,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             };
 
             match cli.year {
+                Some(2020) => {
+                    y2020::run_solution(day, input);
+                }
                 Some(2021) => {
                     y2021::run_solution(day, input);
                 }

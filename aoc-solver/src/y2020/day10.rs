@@ -90,18 +90,12 @@ impl Solver {
             .unwrap()
             .clone()
             .iter()
-            .map(|adapter| {
-                match self.cache.get(&adapter) {
-                    Some(solution) => {
-                        // println!("[DEBUG]: Got solution for {:?} from cache: {:?}", possible, solution);
-                        *solution
-                    }
-                    None => {
-                        // println!("[DEBUG]: Got solution for {:?} not in cache yet, calculating", possible);
-                        let branch_chains = self.find_complete_chains(*adapter);
-                        self.cache.insert(*adapter, branch_chains);
-                        branch_chains
-                    }
+            .map(|adapter| match self.cache.get(&adapter) {
+                Some(solution) => *solution,
+                None => {
+                    let branch_chains = self.find_complete_chains(*adapter);
+                    self.cache.insert(*adapter, branch_chains);
+                    branch_chains
                 }
             })
             .sum()
