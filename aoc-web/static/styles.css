@@ -49,6 +49,7 @@ code {
     display: inline-block;
     margin: 0;
     padding: 0;
+    z-index: 0;
 }
 
 code:before {
@@ -58,8 +59,8 @@ code:before {
     display: block;
     left: -2px;
     right: -2px;
-    top: 3px;
-    bottom: 0px;
+    top: -2px;
+    bottom: -2px;
     border: 1px solid #333340;
     background: #10101a;
 }

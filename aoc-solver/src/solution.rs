@@ -73,3 +73,9 @@ pub trait Solution {
         output
     }
 }
+
+pub trait Solver {
+    fn run_solution(day: u8, input: Option<String>) -> Vec<String>;
+    fn run_all() -> Vec<String>;
+    fn get_source(day: u8) -> &'static str;
+}

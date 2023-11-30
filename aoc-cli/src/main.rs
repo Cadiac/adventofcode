@@ -5,10 +5,11 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
-use aoc_solver::y2020;
-use aoc_solver::y2021;
-use aoc_solver::y2022;
-use aoc_solver::y2023;
+use aoc_solver::solution::Solver;
+use aoc_solver::y2020::Y2020;
+use aoc_solver::y2021::Y2021;
+use aoc_solver::y2022::Y2022;
+use aoc_solver::y2023::Y2023;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -38,16 +39,16 @@ fn main() -> Result<(), Box<dyn Error>> {
         None => {
             match cli.year {
                 Some(2020) => {
-                    y2020::run_all();
+                    Y2020::run_all();
                 }
                 Some(2021) => {
-                    y2021::run_all();
+                    Y2021::run_all();
                 }
                 Some(2022) => {
-                    y2022::run_all();
+                    Y2022::run_all();
                 }
                 Some(2023) | None => {
-                    y2023::run_all();
+                    Y2023::run_all();
                 }
                 _ => unimplemented!(),
             };
@@ -66,16 +67,16 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             match cli.year {
                 Some(2020) => {
-                    y2020::run_solution(day, input);
+                    Y2020::run_solution(day, input);
                 }
                 Some(2021) => {
-                    y2021::run_solution(day, input);
+                    Y2021::run_solution(day, input);
                 }
                 Some(2022) => {
-                    y2022::run_solution(day, input);
+                    Y2022::run_solution(day, input);
                 }
                 Some(2023) | None => {
-                    y2023::run_solution(day, input);
+                    Y2023::run_solution(day, input);
                 }
                 _ => unimplemented!(),
             }
