@@ -94,6 +94,9 @@ fn app() -> Html {
 }
 
 fn main() {
-    wasm_logger::init(wasm_logger::Config::new(log::Level::Info));
-    yew::Renderer::<App>::new().render();
+    let document = gloo::utils::document();
+    let container = document.query_selector("#aoc").unwrap().unwrap();
+
+    yew::Renderer::<App>::with_root(container).render();
+    wasm_logger::init(wasm_logger::Config::default());
 }

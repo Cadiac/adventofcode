@@ -1,26 +1,119 @@
 <!DOCTYPE html>
 <html lang="en" prefix="og: https://ogp.me/ns#">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>"
+    />
 
-        <meta property="og:title" content="Advent of Code" />
-        <meta property="og:type" content="website" />
-        <meta property="og:url" content="https://aoc.cadi.ac/" />
-        <meta property="og:description" content="Advent of Code - 2023 solutions" />
+    <meta property="og:title" content="Advent of Code" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://aoc.cadi.ac/" />
+    <meta property="og:description" content="Advent of Code - 2023 solutions" />
 
-        <title>Advent of Code</title>
+    <title>Advent of Code</title>
 
-        <base data-trunk-public-url />
+    <base data-trunk-public-url />
 
-        <link data-trunk rel="css" href="static/styles.css" />
-        <link data-trunk rel="copy-file" href="static/_redirects"/>
+    <link
+      data-trunk
+      rel="rust"
+      href="Cargo.toml"
+      data-wasm-opt="z"
+      data-bin="aoc-web"
+      data-type="main"
+    />
+    <link data-trunk rel="css" href="static/styles.css" />
+    <link data-trunk rel="copy-file" href="static/_redirects" />
+    <link data-trunk rel="copy-file" href="static/fragment.glsl" />
 
-        <meta name="theme-color" content="#0f0f23">
-    </head>
-    <body>
-        <link data-trunk rel="rust" href="Cargo.toml" data-wasm-opt="z" data-bin="aoc-web" data-type="main" />
-        <!-- <link data-trunk rel="rust" href="Cargo.toml" data-wasm-opt="z" data-bin="worker" data-type="worker" /> -->
-    </body>
+    <meta name="theme-color" content="#0f0f23" />
+
+    <script>
+      let canvas, program, gl, width, height;
+
+      async function run() {
+        const res = await fetch("fragment.glsl");
+        const fragmentShader = await res.text();
+        const epoch = performance.now();
+
+        function render() {
+          const now = performance.now() - epoch;
+
+          if (width != window.innerWidth || height != window.innerHeight) {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            (width = window.innerWidth), (height = window.innerHeight);
+          }
+
+          gl.viewport(0, 0, width, height);
+
+          gl.clearColor(0, 0, 0, 1);
+          gl.clear(gl.COLOR_BUFFER_BIT);
+
+          gl.useProgram(program);
+          gl.uniform1f(gl.getUniformLocation(program, "iTime"), now / 2000);
+          gl.uniform2f(
+            gl.getUniformLocation(program, "iResolution"),
+            width,
+            height
+          );
+
+          gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+          window.requestAnimationFrame(render);
+        }
+
+        (function setup() {
+          // Setup canvas for snowflakes
+          canvas = document.createElement("canvas");
+          document.body.insertBefore(canvas, document.body.firstChild);
+
+          canvas.width = window.innerWidth;
+          canvas.height = window.innerHeight;
+          canvas.style.position = "fixed";
+          canvas.style.left = 0;
+          canvas.style.top = 0;
+
+          gl = canvas.getContext("webgl");
+          program = gl.createProgram();
+
+          const vertexShader = `attribute vec2 p;void main(){gl_Position=vec4(p,0,1);}`;
+
+          const vs = gl.createShader(gl.VERTEX_SHADER);
+          gl.shaderSource(vs, vertexShader);
+          gl.compileShader(vs);
+          gl.attachShader(program, vs);
+
+          const fs = gl.createShader(gl.FRAGMENT_SHADER);
+          gl.shaderSource(fs, fragmentShader);
+          gl.compileShader(fs);
+          gl.attachShader(program, fs);
+
+          gl.linkProgram(program);
+
+          const vertices = [1, 1, 1, -1, -1, 1, -1, -1];
+
+          gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+          gl.bufferData(
+            gl.ARRAY_BUFFER,
+            new Float32Array(vertices),
+            gl.STATIC_DRAW
+          );
+
+          gl.enableVertexAttribArray(0);
+          gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+          window.requestAnimationFrame(render);
+        })();
+      }
+
+      run();
+    </script>
+  </head>
+  <body>
+    <div id="aoc"></div>
+  </body>
 </html>
