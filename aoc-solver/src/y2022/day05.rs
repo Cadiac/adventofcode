@@ -56,10 +56,6 @@ impl Solution for Day05 {
     type F = String;
     type S = String;
 
-    fn meta(&self) -> (u32, u32) {
-        (5, 2022)
-    }
-
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day05.txt")
     }

@@ -218,10 +218,6 @@ impl Solution for Day16 {
     type F = u32;
     type S = u32;
 
-    fn meta(&self) -> (u32, u32) {
-        (16, 2022)
-    }
-
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day16.txt")
     }

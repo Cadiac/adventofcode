@@ -110,10 +110,6 @@ impl Solution for Day10 {
     type F = i64;
     type S = i64;
 
-    fn meta(&self) -> (u32, u32) {
-        (10, 2020)
-    }
-
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day10.txt")
     }

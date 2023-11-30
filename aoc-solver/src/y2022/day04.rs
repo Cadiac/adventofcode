@@ -31,10 +31,6 @@ impl Solution for Day04 {
     type F = usize;
     type S = usize;
 
-    fn meta(&self) -> (u32, u32) {
-        (4, 2022)
-    }
-
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day04.txt")
     }

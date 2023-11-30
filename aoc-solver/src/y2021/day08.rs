@@ -133,10 +133,6 @@ impl Solution for Day08 {
     type F = usize;
     type S = u32;
 
-    fn meta(&self) -> (u32, u32) {
-        (8, 2021)
-    }
-
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day08.txt")
     }

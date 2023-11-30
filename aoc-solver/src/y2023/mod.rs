@@ -6,7 +6,7 @@ pub const MAX_DAYS: u8 = 1;
 
 pub fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
     match day {
-        1 => day01::Day01.run(input),
+        1 => day01::Day01.run(input, 1, 2023),
         _ => vec![String::from("Solution not implemented (yet?)")],
     }
 }
