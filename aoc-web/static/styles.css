@@ -46,27 +46,6 @@ h1, h2 {
     font-weight: normal;
 }
 
-code {
-    position: relative;
-    display: inline-block;
-    margin: 0;
-    padding: 0;
-    z-index: 0;
-}
-
-code:before {
-    z-index: -1;
-    content: "";
-    position: absolute;
-    display: block;
-    left: -2px;
-    right: -2px;
-    top: -2px;
-    bottom: -2px;
-    border: 1px solid #333340;
-    background: #10101a;
-}
-
 .source {
     font-size: 10pt;
 }
@@ -180,3 +159,18 @@ footer {
 .cube__face--left   { transform: rotateY(-90deg) translateZ(120px); }
 .cube__face--top    { transform: rotateX( 90deg) translateZ(120px); }
 .cube__face--bottom { transform: rotateX(-90deg) translateZ(120px); }
+
+main {
+    opacity: 0;
+    animation: fadeInAnimation ease-in 400ms;
+    animation-fill-mode: forwards;
+}
+
+@keyframes fadeInAnimation {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}
