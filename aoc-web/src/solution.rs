@@ -40,7 +40,7 @@ pub fn Solution(props: &SolutionProps) -> Html {
                 <code>{ output.join("\n") }</code>
             </pre>
             <pre>
-                <code>{ source }</code>
+                <code class="source">{ source }</code>
             </pre>
         </div>
     }
