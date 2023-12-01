@@ -1,28 +1,10 @@
-use regex::Regex;
-
 use crate::solution::{AocError, Solution};
+
 pub struct Day01;
 
-fn to_number(input: &str) -> Result<u32, AocError> {
-    if input.len() == 1 {
-        return input
-            .parse()
-            .map_err(|err| AocError::parse("invalid digit", err));
-    }
-
-    match input {
-        "one" => Ok(1),
-        "two" => Ok(2),
-        "three" => Ok(3),
-        "four" => Ok(4),
-        "five" => Ok(5),
-        "six" => Ok(6),
-        "seven" => Ok(7),
-        "eight" => Ok(8),
-        "nine" => Ok(9),
-        _ => Err(AocError::logic("invalid text digit")),
-    }
-}
+const NUMBERS: [&str; 9] = [
+    "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+];
 
 impl Solution for Day01 {
     type F = u32;
@@ -38,24 +20,20 @@ impl Solution for Day01 {
             .lines()
             .map(|line| {
                 let mut first = None;
-                let mut second = None;
+                let mut last = None;
 
                 for digit in line.chars() {
-                    if digit.is_numeric() {
-                        let value = digit
-                            .to_digit(10)
-                            .ok_or_else(|| AocError::logic("invalid digit"))?;
-
+                    if let Some(value) = digit.to_digit(10) {
                         if first.is_none() {
                             first = Some(value);
                         }
 
-                        second = Some(value);
+                        last = Some(value);
                     }
                 }
 
-                match (first, second) {
-                    (Some(first), Some(second)) => Ok(first * 10 + second),
+                match (first, last) {
+                    (Some(first), Some(last)) => Ok(first * 10 + last),
                     _ => Err(AocError::logic("didn't match both calibration values")),
                 }
             })
@@ -63,33 +41,39 @@ impl Solution for Day01 {
     }
 
     fn part_2(&self, input: &str) -> Result<u32, AocError> {
-        let num_regex = Regex::new(r"(\d|one|two|three|four|five|six|seven|eight|nine)").unwrap();
-
         input
             .trim()
             .lines()
             .map(|line| {
                 let mut first = None;
-                let mut second = None;
+                let mut last = None;
 
-                for i in 0..line.len() {
-                    if let Some(capture) = num_regex.captures(&line[i..]) {
-                        let matched = to_number(
-                            capture
-                                .get(1)
-                                .ok_or_else(|| AocError::logic("invalid capture"))?
-                                .as_str(),
-                        )?;
+                for cursor in 0..line.len() {
+                    let slice = &line[cursor..];
 
-                        if first.is_none() {
-                            first = Some(matched);
+                    let mut value = NUMBERS.iter().enumerate().find_map(|(index, number)| {
+                        if slice.starts_with(number) {
+                            return Some((index as u32) + 1);
                         }
-                        second = Some(matched);
+                        None
+                    });
+
+                    if value.is_none() {
+                        if let Some(character) = slice.chars().next() {
+                            value = character.to_digit(10);
+                        }
+                    }
+
+                    if let Some(value) = value {
+                        if first.is_none() {
+                            first = Some(value)
+                        }
+                        last = Some(value);
                     }
                 }
 
-                match (first, second) {
-                    (Some(first), Some(second)) => Ok(first * 10 + second),
+                match (first, last) {
+                    (Some(first), Some(last)) => Ok(first * 10 + last),
                     _ => Err(AocError::logic("didn't match both calibration values")),
                 }
             })
