@@ -61,7 +61,7 @@ fn router(route: Route) -> Html {
     html! {
         <>
             <Header year={year} route={route} />
-            <main>{ main }</main>
+            <main class="fade-in">{ main }</main>
         </>
     }
 }

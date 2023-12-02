@@ -9,10 +9,9 @@ void main() {
   float snow = 0.0;
   for (int k = 0; k < 3; k++) {
     for (int i = 0; i < 8; i++) {
-      float cellSize =
-          2.0 + (float(i) * iResolution.x / 640.); // (float(i) * 3.);
+      float cellSize = floor(2.0 + (float(i) * iResolution.x / 800.));
       float downSpeed =
-          0.3 + (sin(iTime * 0.4 + float(k + i * 20)) + 1.0) * 0.00008;
+          0.2 + (sin(iTime * 0.4 + float(k + i * 20)) + 1.0) * 0.00008;
       vec2 uv = (gl_FragCoord.xy / iResolution.x) +
                 vec2(0.01 * sin((iTime + float(k * 6185)) * 0.6 + float(i)) *
                          (5.0 / float(i)),
@@ -39,7 +38,7 @@ void main() {
 
       float omiVal =
           fract(sin(dot(uvStep.xy, vec2(32.4691, 94.615))) * 31572.1684);
-      if (omiVal < 0.08 ? true : false) {
+      if (omiVal < 0.15) {
         float newd =
             (x + 1.0) * 0.4 *
             clamp(1.9 - d * (15.0 + (x * 6.3)) * (cellSize / 1.4), 0.0, 1.0);

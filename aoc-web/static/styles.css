@@ -1,4 +1,4 @@
-/* Mostly borrowed from https://adventofcode.com/ to get the same look */
+/* Base theme borrowed from https://adventofcode.com/ to get the same look */
 
 html,
 body {
@@ -178,12 +178,6 @@ footer {
   transform: rotateX(-90deg) translateZ(120px);
 }
 
-main {
-  opacity: 0;
-  animation: fadeInAnimation ease-in 400ms;
-  animation-fill-mode: forwards;
-}
-
 @keyframes fadeInAnimation {
   0% {
     opacity: 0;
@@ -217,11 +211,17 @@ code:before {
 
 .highlighted pre {
   font-size: 10pt;
-  display: inline-block;
+  max-width: 900px;
   margin: 0;
   padding: 1rem;
   opacity: 90%;
   overflow-x: scroll;
   background: #10101a !important;
   border: 1px solid #333340;
+}
+
+.fade-in {
+  opacity: 0;
+  animation: fadeInAnimation ease-in 400ms;
+  animation-fill-mode: forwards;
 }

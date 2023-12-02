@@ -56,7 +56,7 @@ pub fn solution(props: &Props) -> Html {
     };
 
     html! {
-        <div>
+        <div class="fade-in">
             <pre>
                 <code>{ output.join("\n") }</code>
             </pre>
