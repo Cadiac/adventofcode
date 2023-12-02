@@ -2,7 +2,7 @@ use yew::prelude::*;
 
 use syntect::highlighting::ThemeSet;
 use syntect::html::highlighted_html_for_string;
-use syntect::parsing::SyntaxSet;
+use syntect::parsing::{SyntaxDefinition, SyntaxSetBuilder};
 
 use aoc_solver::solution::Solver;
 use aoc_solver::y2020::Y2020;
@@ -29,13 +29,17 @@ pub fn source_viewer(props: &Props) -> Html {
             _ => "",
         };
 
-        let ss = SyntaxSet::load_defaults_newlines();
-        let ts = ThemeSet::load_defaults();
+        let rust_syntax = include_str!("../static/syntax/rust.sublime-syntax");
 
-        let theme = &ts.themes["base16-eighties.dark"];
-        let sr = ss.find_syntax_by_extension("rs").unwrap();
+        let mut builder = SyntaxSetBuilder::new();
+        builder.add(SyntaxDefinition::load_from_str(rust_syntax, true, None).unwrap());
 
-        highlighted_html_for_string(source, &ss, &sr, theme).unwrap()
+        let syntax_set = builder.build();
+        let theme_set = ThemeSet::load_defaults();
+        let theme = &theme_set.themes["base16-eighties.dark"];
+        let syntax_reference = syntax_set.find_syntax_by_extension("rs").unwrap();
+
+        highlighted_html_for_string(source, &syntax_set, &syntax_reference, theme).unwrap()
     });
 
     let div = gloo::utils::document().create_element("div").unwrap();
