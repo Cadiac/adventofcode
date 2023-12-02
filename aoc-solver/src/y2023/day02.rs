@@ -1,5 +1,3 @@
-use itertools::Itertools;
-
 use crate::solution::{AocError, Solution};
 
 pub struct Day02;
@@ -22,59 +20,46 @@ fn parse(input: &str) -> Result<Game, AocError> {
         .next()
         .and_then(|s| s.strip_prefix("Game "))
         .and_then(|s| s.parse::<u32>().ok())
-        .ok_or(AocError::logic("no game ID header"))?;
+        .ok_or(AocError::parse(input, "invalid game id header"))?;
 
     let hands = iter
         .next()
-        .map(|hands_str| -> Result<Vec<Hand>, AocError> {
-            hands_str
-                .split("; ")
-                .map(|hand_str: &str| -> Result<Hand, _> {
-                    let mut hand = Hand {
-                        red: 0,
-                        green: 0,
-                        blue: 0,
-                    };
+        .ok_or(AocError::parse(input, "missing hands"))?
+        .split("; ")
+        .map(|hand_str: &str| {
+            let mut hand = Hand {
+                red: 0,
+                green: 0,
+                blue: 0,
+            };
 
-                    for color in hand_str.split(", ").map(|color| color.split_once(' ')) {
+            for shown_hand in hand_str.split(", ").map(|color| color.split_once(' ')) {
+                match shown_hand {
+                    Some((amount, color)) => {
+                        let amount = amount
+                            .parse::<u32>()
+                            .map_err(|err| AocError::parse(amount, err))?;
+
                         match color {
-                            Some((amount, "red")) => {
-                                hand.red = amount
-                                    .parse::<u32>()
-                                    .map_err(|err| AocError::parse(hand_str, err))?
-                            }
-                            Some((amount, "green")) => {
-                                hand.green = amount
-                                    .parse::<u32>()
-                                    .map_err(|err| AocError::parse(hand_str, err))?
-                            }
-                            Some((amount, "blue")) => {
-                                hand.blue = amount
-                                    .parse::<u32>()
-                                    .map_err(|err| AocError::parse(hand_str, err))?
-                            }
-                            _ => return Err(AocError::parse(hand_str, "invalid color")),
+                            "red" => hand.red = amount,
+                            "green" => hand.green = amount,
+                            "blue" => hand.blue = amount,
+                            _ => return Err(AocError::parse(color, "invalid color")),
                         }
                     }
+                    None => return Err(AocError::parse(hand_str, "invalid hand")),
+                }
+            }
 
-                    Ok(hand)
-                })
-                .try_collect()
+            Ok(hand)
         })
-        .ok_or(AocError::logic("no hands"))??;
+        .collect::<Result<_, _>>()?;
 
     Ok(Game { id, hands })
 }
 
-fn max_color_value(
-    hands: &[Hand],
-    color_extractor: impl Fn(&Hand) -> u32,
-) -> Result<u32, AocError> {
-    hands
-        .iter()
-        .map(&color_extractor)
-        .max()
-        .ok_or_else(|| AocError::logic("no max value found for color"))
+fn max_color_seen(hands: &[Hand], color_extractor: impl Fn(&Hand) -> u32) -> u32 {
+    hands.iter().map(&color_extractor).max().unwrap_or(0)
 }
 
 impl Solution for Day02 {
@@ -115,9 +100,9 @@ impl Solution for Day02 {
             .map(parse)
             .try_fold(0, |acc, parse_result| {
                 parse_result.and_then(|game| {
-                    let red = max_color_value(&game.hands, |hand| hand.red)?;
-                    let blue = max_color_value(&game.hands, |hand| hand.blue)?;
-                    let green = max_color_value(&game.hands, |hand| hand.green)?;
+                    let red = max_color_seen(&game.hands, |hand| hand.red);
+                    let blue = max_color_seen(&game.hands, |hand| hand.blue);
+                    let green = max_color_seen(&game.hands, |hand| hand.green);
 
                     Ok(acc + red * blue * green)
                 })

@@ -174,3 +174,24 @@ main {
         opacity: 1;
     }
 }
+
+code {
+    position: relative;
+    display: inline-block;
+    margin: 0;
+    padding: 1em;
+    z-index: 0;
+}
+
+code:before {
+    z-index: -1;
+    content: "";
+    position: absolute;
+    display: block;
+    left: -2px;
+    right: -2px;
+    top: -2px;
+    bottom: -2px;
+    border: 1px solid #333340;
+    background: #10101a;
+}

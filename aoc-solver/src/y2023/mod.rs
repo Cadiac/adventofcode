@@ -30,6 +30,7 @@ impl Solver for Y2023 {
     fn get_source(day: u8) -> &'static str {
         match day {
             1 => include_str!("./day01.rs"),
+            2 => include_str!("./day02.rs"),
             _ => unimplemented!(),
         }
     }
