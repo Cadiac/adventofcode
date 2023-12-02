@@ -8,17 +8,17 @@ pub struct HomeProps {
 #[function_component]
 pub fn Home(props: &HomeProps) -> Html {
     html! { <pre><code>{ vec![
-        "                               ",
-        "               *               ",
-        "               o^              ",
-        "               ^^              ",
-        "              ^^o              ",
-        "              o^^              ",
-        "              ^^o^             ",
-        "             o^^^^o            ",
-        "            ^^o^^^^^           ",
-        "               ░               ",
-        "        ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒       ",
-        format!("            AoC {}           ", props.year).as_str(),
+        "                            ",
+        "             *              ",
+        "             o^             ",
+        "             ^^             ",
+        "            ^^o             ",
+        "            o^^             ",
+        "            ^^o^            ",
+        "           o^^^^o           ",
+        "          ^^o^^^^^          ",
+        "             ░              ",
+        "      ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒      ",
+        format!("          AoC {}          ", props.year).as_str(),
     ].join("\n") }</code></pre> }
 }
