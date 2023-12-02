@@ -9,7 +9,7 @@ void main() {
   float snow = 0.0;
   for (int k = 0; k < 3; k++) {
     for (int i = 0; i < 8; i++) {
-      float cellSize = floor(2.0 + (float(i) * iResolution.x / 800.));
+      float cellSize = floor(2.0 + (float(i) * 3.0));
       float downSpeed =
           0.2 + (sin(iTime * 0.4 + float(k + i * 20)) + 1.0) * 0.00008;
       vec2 uv = (gl_FragCoord.xy / iResolution.x) +
