@@ -1,8 +1,9 @@
 use crate::solution::{Solution, Solver};
 
 pub mod day01;
+pub mod day02;
 
-pub const MAX_DAYS: u8 = 1;
+pub const MAX_DAYS: u8 = 2;
 
 pub struct Y2023;
 
@@ -10,6 +11,7 @@ impl Solver for Y2023 {
     fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
         match day {
             1 => day01::Day01.run(input, 1, 2023),
+            2 => day02::Day02.run(input, 2, 2023),
             _ => vec![String::from("Solution not implemented (yet?)")],
         }
     }

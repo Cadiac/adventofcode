@@ -14,13 +14,19 @@ Follow [Rust](https://www.rust-lang.org/en-US/install.html) installation instruc
 
 The project is split into separate binaries within one cargo project.
 
-You can run individual solutions using custom inputs with
+You can run individual solutions with
+
+```bash
+$ cargo run -- --day 1 --year 2023
+```
+
+or using custom inputs with
 
 ```bash
 $ cargo run -- --day 1 --year 2023 --file inputs/2023/day01.txt
 ```
 
-or all solutions of the current year using defaults inputs from `inputs/` directory with
+All solutions of the current year can be run using defaults inputs from `inputs/` directory with
 
 ```bash
 $ cargo run
@@ -66,4 +72,5 @@ This should start the server at `localhost:8080`.
 
 ## Solutions
 
-❄️ [Day 01](src/aoc-solver/src/y2023/day01.rs)
+❄️ [Day 01](aoc-solver/src/y2023/day01.rs)
+❄️ [Day 02](aoc-solver/src/y2023/day02.rs)
