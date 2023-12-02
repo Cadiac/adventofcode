@@ -206,7 +206,6 @@ code:before {
   bottom: -2px;
   background: #10101a;
   border: 1px solid #333340;
-  opacity: 90%;
 }
 
 .highlighted pre {
@@ -214,7 +213,6 @@ code:before {
   max-width: 900px;
   margin: 0;
   padding: 1rem;
-  opacity: 90%;
   overflow-x: scroll;
   background: #10101a !important;
   border: 1px solid #333340;
