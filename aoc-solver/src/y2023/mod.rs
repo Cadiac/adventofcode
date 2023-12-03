@@ -2,8 +2,9 @@ use crate::solution::{Solution, Solver};
 
 pub mod day01;
 pub mod day02;
+pub mod day03;
 
-pub const MAX_DAYS: u8 = 2;
+pub const MAX_DAYS: u8 = 3;
 
 pub struct Y2023;
 
@@ -12,6 +13,7 @@ impl Solver for Y2023 {
         match day {
             1 => day01::Day01.run(input, 1, 2023),
             2 => day02::Day02.run(input, 2, 2023),
+            3 => day03::Day03.run(input, 3, 2023),
             _ => vec![String::from("Solution not implemented (yet?)")],
         }
     }
@@ -31,6 +33,7 @@ impl Solver for Y2023 {
         match day {
             1 => include_str!("./day01.rs"),
             2 => include_str!("./day02.rs"),
+            3 => include_str!("./day03.rs"),
             _ => unimplemented!(),
         }
     }
