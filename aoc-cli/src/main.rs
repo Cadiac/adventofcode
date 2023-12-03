@@ -57,7 +57,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             let input = match cli.file {
                 None => None,
                 Some(path) => {
-                    let mut file = File::open(&path)?;
+                    let mut file = File::open(path)?;
                     let mut input = String::new();
                     file.read_to_string(&mut input)?;
 

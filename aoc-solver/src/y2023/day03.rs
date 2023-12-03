@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 
-use crate::solution::{AocError, Solution};
+use crate::{
+    solution::{AocError, Solution},
+    utils::Coords,
+};
 
 pub struct Day03;
 
@@ -11,61 +14,36 @@ const NEIGHBOUR_OFFSETS: [(i32, i32); 8] = [
     (-1, 1), (0, 1), (1, 1),
 ];
 
-#[derive(Debug, PartialEq, Eq, Hash)]
-struct Coord {
-    x: i32,
-    y: i32,
-}
-
-type Symbols = HashMap<Coord, char>;
-type Numbers = HashMap<(Coord, Coord), u32>;
+type Symbols = HashMap<Coords<usize>, char>;
+type Numbers = HashMap<(Coords<usize>, Coords<usize>), u32>;
 
 fn parse(input: &str) -> Result<(Symbols, Numbers), AocError> {
     let mut symbols: Symbols = HashMap::new();
     let mut numbers: Numbers = HashMap::new();
 
-    let mut current_number = vec![];
     for (y, line) in input.trim().lines().enumerate() {
+        let mut current_number = vec![];
+
         for (x, c) in line.chars().enumerate() {
             if c.is_ascii_alphanumeric() {
                 current_number.push(c);
+            } else if c != '.' {
+                symbols.insert(Coords { x, y }, c);
             }
 
-            if (!c.is_ascii_alphanumeric() || x == line.len() - 1) && !current_number.is_empty() {
-                let start = (x - current_number.len()) as i32;
-                let end = x as i32 - 1;
+            if !current_number.is_empty() && (!c.is_ascii_alphanumeric() || x == line.len() - 1) {
+                let start = x - current_number.len();
+                let end = x - 1;
 
                 let number = current_number
                     .into_iter()
                     .collect::<String>()
                     .parse::<u32>()
-                    .unwrap();
+                    .map_err(|err| AocError::parse(line, err))?;
 
-                numbers.insert(
-                    (
-                        Coord {
-                            x: start,
-                            y: y as i32,
-                        },
-                        Coord {
-                            x: end,
-                            y: y as i32,
-                        },
-                    ),
-                    number,
-                );
+                numbers.insert((Coords { x: start, y }, Coords { x: end, y }), number);
 
                 current_number = vec![];
-            }
-
-            if !c.is_ascii_alphanumeric() && c != '.' {
-                symbols.insert(
-                    Coord {
-                        x: x as i32,
-                        y: y as i32,
-                    },
-                    c,
-                );
             }
         }
     }
@@ -86,14 +64,15 @@ impl Solution for Day03 {
         let sum = numbers
             .iter()
             .filter(|((start, end), _)| {
-                (start.x..=end.x).any(|x| {
-                    NEIGHBOUR_OFFSETS.iter().any(|(dx, dy)| {
-                        symbols.contains_key(&Coord {
-                            x: x as i32 + dx,
-                            y: start.y + dy,
-                        })
-                    })
-                })
+                for y in start.y.saturating_sub(1)..=(end.y + 1) {
+                    for x in start.x.saturating_sub(1)..=(end.x + 1) {
+                        if symbols.contains_key(&Coords { x, y }) {
+                            return true;
+                        }
+                    }
+                }
+
+                false
             })
             .map(|(_, number)| number)
             .sum();
@@ -106,15 +85,21 @@ impl Solution for Day03 {
 
         let sum = symbols
             .into_iter()
-            .filter(|(_, symbol)| *symbol == '*')
-            .filter_map(|(coords, _)| {
+            .filter_map(|(coords, symbol)| {
+                if symbol != '*' {
+                    return None;
+                }
+
+                let x = coords.x as i32;
+                let y = coords.y as i32;
+
                 let adjacent_numbers: Vec<u32> = numbers
                     .iter()
                     .filter_map(|((start, end), number)| {
-                        for (nx, ny) in NEIGHBOUR_OFFSETS {
-                            let has_adjacent_number = coords.y + ny == start.y
-                                && coords.x + nx >= start.x
-                                && coords.x + nx <= end.x;
+                        for (dx, dy) in NEIGHBOUR_OFFSETS {
+                            let has_adjacent_number = y + dy == start.y as i32
+                                && x + dx >= start.x as i32
+                                && x + dx <= end.x as i32;
 
                             if has_adjacent_number {
                                 return Some(*number);
@@ -125,11 +110,11 @@ impl Solution for Day03 {
                     })
                     .collect();
 
-                if adjacent_numbers.len() == 2 {
-                    return Some(adjacent_numbers.iter().product::<u32>());
+                if adjacent_numbers.len() != 2 {
+                    return None;
                 }
 
-                None
+                Some(adjacent_numbers.iter().product::<u32>())
             })
             .sum();
 
@@ -161,7 +146,7 @@ mod tests {
     }
 
     #[test]
-    fn it_solves_part1_example_advanced() {
+    fn it_solves_part1_example_special_cases() {
         assert_eq!(
             Day03.part_1(
                 "467..114..\n\
