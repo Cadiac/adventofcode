@@ -11,8 +11,8 @@ fn parse(input: &str) -> HashMap<&str, Vec<&str>> {
         let name = parts[0];
         let neighbour = parts[1];
 
-        caves.entry(name).or_insert_with(Vec::new).push(neighbour);
-        caves.entry(neighbour).or_insert_with(Vec::new).push(name);
+        caves.entry(name).or_default().push(neighbour);
+        caves.entry(neighbour).or_default().push(name);
     }
 
     caves

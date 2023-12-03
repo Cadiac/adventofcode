@@ -76,16 +76,16 @@ impl Solution for Day02 {
             .lines()
             .map(parse)
             .try_fold(0, |acc, parse_result| {
-                parse_result.and_then(|game| {
+                parse_result.map(|game| {
                     let is_possible = game
                         .hands
                         .iter()
                         .all(|hand| hand.red <= 12 && hand.green <= 13 && hand.blue <= 14);
 
                     if is_possible {
-                        Ok(acc + game.id)
+                        acc + game.id
                     } else {
-                        Ok(acc)
+                        acc
                     }
                 })
             })?;
@@ -99,12 +99,12 @@ impl Solution for Day02 {
             .lines()
             .map(parse)
             .try_fold(0, |acc, parse_result| {
-                parse_result.and_then(|game| {
+                parse_result.map(|game| {
                     let red = max_color_seen(&game.hands, |hand| hand.red);
                     let blue = max_color_seen(&game.hands, |hand| hand.blue);
                     let green = max_color_seen(&game.hands, |hand| hand.green);
 
-                    Ok(acc + red * blue * green)
+                    acc + red * blue * green
                 })
             })?;
 

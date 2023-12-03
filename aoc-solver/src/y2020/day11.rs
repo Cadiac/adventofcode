@@ -41,7 +41,7 @@ impl GameOfSeats {
         let width = input.lines().next().unwrap().chars().count();
 
         GameOfSeats {
-            seats: seats,
+            seats,
             step: 0,
             dimensions: (width, height),
         }
@@ -54,9 +54,9 @@ impl GameOfSeats {
             for x in 0..self.dimensions.0 {
                 print!("{}", self.seats.get(&(x as i32, y as i32)).unwrap());
             }
-            print!("\n");
+            println!();
         }
-        print!("\n");
+        println!();
     }
 
     fn occupied_seats_count(&self) -> usize {
@@ -67,10 +67,7 @@ impl GameOfSeats {
     }
 
     fn is_occupied(&self, seat: (i32, i32)) -> bool {
-        match self.seats.get(&seat) {
-            Some('#') => true,
-            _ => false,
-        }
+        matches!(self.seats.get(&seat), Some('#'))
     }
 
     fn adjacent_occupied_count(&self, seat: (i32, i32)) -> usize {

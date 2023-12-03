@@ -55,7 +55,7 @@ impl Solution for Day25 {
     }
 
     fn part_2(&self, _input: &str) -> Result<String, AocError> {
-        let output = vec![
+        let output = [
             "                               ",
             "               *               ",
             "               o^              ",

@@ -374,70 +374,34 @@ mod tests {
 
     #[test]
     fn it_checks_if_cuboid_contains_another() {
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .contains_cuboid(&Cuboid::new(-5, 5, -5, 5, -5, 5)),
-            true
-        );
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .contains_cuboid(&Cuboid::new(5, 15, -5, 5, -5, 5)),
-            false
-        );
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .contains_cuboid(&Cuboid::new(5, 10, -5, 5, -5, 5)),
-            true
-        );
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .contains_cuboid(&Cuboid::new(-20, 20, -20, 20, -20, 20)),
-            false
-        );
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .contains_cuboid(&Cuboid::new(5, 10, 5, 10, 5, 10)),
-            true
-        );
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .contains_cuboid(&Cuboid::new(11, 21, -10, 10, -10, 10)),
-            false
-        );
+        assert!(Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .contains_cuboid(&Cuboid::new(-5, 5, -5, 5, -5, 5)));
+        assert!(!Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .contains_cuboid(&Cuboid::new(5, 15, -5, 5, -5, 5)));
+        assert!(Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .contains_cuboid(&Cuboid::new(5, 10, -5, 5, -5, 5)));
+        assert!(!Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .contains_cuboid(&Cuboid::new(-20, 20, -20, 20, -20, 20)));
+        assert!(Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .contains_cuboid(&Cuboid::new(5, 10, 5, 10, 5, 10)));
+        assert!(!Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .contains_cuboid(&Cuboid::new(11, 21, -10, 10, -10, 10)));
     }
 
     #[test]
     fn it_checks_if_cuboid_intersects_another() {
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .intersects_cuboid(&Cuboid::new(-5, 5, -5, 5, -5, 5)),
-            true
-        );
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .intersects_cuboid(&Cuboid::new(5, 15, -5, 5, -5, 5)),
-            true
-        );
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .intersects_cuboid(&Cuboid::new(5, 10, -5, 5, -5, 5)),
-            true
-        );
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .intersects_cuboid(&Cuboid::new(-20, 20, -20, 20, -20, 20)),
-            true
-        );
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .contains_cuboid(&Cuboid::new(5, 10, 5, 10, 5, 10)),
-            true
-        );
-        assert_eq!(
-            Cuboid::new(-10, 10, -10, 10, -10, 10)
-                .intersects_cuboid(&Cuboid::new(11, 21, -10, 10, -10, 10)),
-            false
-        );
+        assert!(Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .intersects_cuboid(&Cuboid::new(-5, 5, -5, 5, -5, 5)),);
+        assert!(Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .intersects_cuboid(&Cuboid::new(5, 15, -5, 5, -5, 5)),);
+        assert!(Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .intersects_cuboid(&Cuboid::new(5, 10, -5, 5, -5, 5)),);
+        assert!(Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .intersects_cuboid(&Cuboid::new(-20, 20, -20, 20, -20, 20)),);
+        assert!(Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .contains_cuboid(&Cuboid::new(5, 10, 5, 10, 5, 10)),);
+        assert!(!Cuboid::new(-10, 10, -10, 10, -10, 10)
+            .intersects_cuboid(&Cuboid::new(11, 21, -10, 10, -10, 10)),);
     }
 
     #[test]

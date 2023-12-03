@@ -16,14 +16,14 @@ fn count_trees(
 
     while current.1 < rows {
         if trees.contains(&current) {
-            hits = hits + 1;
+            hits += 1;
         }
 
         current.0 = (current.0 + right) % columns;
-        current.1 = current.1 + down;
+        current.1 += down;
     }
 
-    return hits;
+    hits
 }
 
 fn parse(input: &str) -> (HashSet<(usize, usize)>, usize, usize) {
@@ -40,7 +40,7 @@ fn parse(input: &str) -> (HashSet<(usize, usize)>, usize, usize) {
     let rows = input.lines().count();
     let columns = input.lines().next().unwrap().len();
 
-    return (trees, columns, rows);
+    (trees, columns, rows)
 }
 
 impl Solution for Day03 {

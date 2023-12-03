@@ -28,29 +28,30 @@ fn parse_fields(input: &str) -> Vec<Field> {
             let valid_2_max = capture.get(5).unwrap().as_str().parse::<u64>().unwrap();
 
             Field {
-                name: name,
-                valid_1_min: valid_1_min,
-                valid_1_max: valid_1_max,
-                valid_2_min: valid_2_min,
-                valid_2_max: valid_2_max,
+                name,
+                valid_1_min,
+                valid_1_max,
+                valid_2_min,
+                valid_2_max,
             }
         })
         .collect()
 }
 
-fn parse_ticket(input: &str, fields: &Vec<Field>) -> Option<Vec<u64>> {
+fn parse_ticket(input: &str, fields: &[Field]) -> Option<Vec<u64>> {
     let ticket = input
-        .split(",")
-        .map(|value| u64::from_str_radix(value, 10).unwrap())
+        .split(',')
+        .map(|value| value.parse::<u64>().unwrap())
         .collect::<Vec<u64>>();
 
     if !is_valid_ticket(&ticket, fields) {
         return None;
     }
-    return Some(ticket);
+
+    Some(ticket)
 }
 
-fn is_valid_ticket(ticket: &Vec<u64>, fields: &Vec<Field>) -> bool {
+fn is_valid_ticket(ticket: &[u64], fields: &[Field]) -> bool {
     ticket.iter().all(|value| {
         fields.iter().any(|rule| {
             (*value >= rule.valid_1_min && *value <= rule.valid_1_max)
@@ -60,8 +61,8 @@ fn is_valid_ticket(ticket: &Vec<u64>, fields: &Vec<Field>) -> bool {
 }
 
 fn find_possible_fields(
-    tickets: &Vec<Vec<u64>>,
-    fields: &Vec<Field>,
+    tickets: &[Vec<u64>],
+    fields: &[Field],
     fields_count: usize,
 ) -> Vec<(usize, String)> {
     let mut possible_fields: Vec<HashSet<String>> = vec![HashSet::new(); fields_count];
@@ -77,7 +78,7 @@ fn find_possible_fields(
                 .map(|field| field.name.clone())
                 .collect();
 
-            if possible_fields[i].len() == 0 {
+            if possible_fields[i].is_empty() {
                 possible_fields[i] = possible;
             } else {
                 possible_fields[i] = possible_fields[i]
@@ -93,7 +94,7 @@ fn find_possible_fields(
     // We've now found something like [["a"], ["a", "b"], ["b", "c"]]
     // Now move the uniquely resolved fields based on these to final vector
     // one by one, always removing them from each indices possible values.
-    while possible_fields.iter().any(|possible| possible.len() > 0) {
+    while possible_fields.iter().any(|possible| !possible.is_empty()) {
         let (i, unique) = possible_fields
             .iter()
             .enumerate()
@@ -101,8 +102,8 @@ fn find_possible_fields(
             .unwrap();
         let unique_name = unique.iter().next().unwrap().clone();
 
-        for i in 0..possible_fields.len() {
-            possible_fields[i] = possible_fields[i]
+        for field in &mut possible_fields {
+            *field = field
                 .clone()
                 .into_iter()
                 .filter(|f| f != &unique_name)
@@ -115,12 +116,15 @@ fn find_possible_fields(
     final_fields
 }
 
-fn parse_part_2(input: &str) -> Option<(Vec<u64>, Vec<(usize, String)>)> {
+type Ticket = Vec<u64>;
+type TicketField = (usize, String);
+
+fn parse_part_2(input: &str) -> Option<(Ticket, Vec<TicketField>)> {
     let mut inputs_iter = input.split("\n\n");
 
     let fields = parse_fields(inputs_iter.next()?);
 
-    let my_ticket_input = inputs_iter.next()?.lines().skip(1).next()?;
+    let my_ticket_input = inputs_iter.next()?.lines().nth(1)?;
     let my_ticket = parse_ticket(my_ticket_input, &fields)?;
     let fields_count = my_ticket.len();
 
@@ -152,15 +156,14 @@ impl Solution for Day16 {
         let fields = parse_fields(inputs_iter.next().unwrap());
 
         let sum = inputs_iter
-            .skip(1) // skip my ticket
-            .next()
+            .nth(1) // skip my ticket
             .unwrap()
             .lines()
             .skip(1)
             .flat_map(|ticket| {
                 ticket
-                    .split(",")
-                    .map(|value| u64::from_str_radix(value, 10).unwrap())
+                    .split(',')
+                    .map(|value| value.parse::<u64>().unwrap())
                     .filter(|value| {
                         !fields.iter().any(|field| {
                             (*value >= field.valid_1_min && *value <= field.valid_1_max)

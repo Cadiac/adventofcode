@@ -17,32 +17,31 @@ fn validate_part1(db_row: &DatabaseRow) -> bool {
         .chars()
         .filter(|c| c == &db_row.check_char)
         .count();
-    return occurences >= db_row.min && occurences <= db_row.max;
+    occurences >= db_row.min && occurences <= db_row.max
 }
 
 fn validate_part2(db_row: &DatabaseRow) -> bool {
     let first_match = db_row.password.chars().nth(db_row.min - 1).unwrap() == db_row.check_char;
     let second_match = db_row.password.chars().nth(db_row.max - 1).unwrap() == db_row.check_char;
-    return first_match ^ second_match;
+    first_match ^ second_match
 }
 
 fn parse_input(input: &str) -> Vec<DatabaseRow> {
     let input_regex = Regex::new(r"^(\d+)-(\d+) (\S): (\S+)$").unwrap();
-    let rows: Vec<DatabaseRow> = input
+
+    input
         .lines()
         .map(|line| {
             let capture = input_regex.captures(line).unwrap();
 
-            return DatabaseRow {
+            DatabaseRow {
                 min: capture[1].parse::<usize>().unwrap(),
                 max: capture[2].parse::<usize>().unwrap(),
                 password: capture[4].parse::<String>().unwrap(),
                 check_char: capture[3].parse::<char>().unwrap(),
-            };
+            }
         })
-        .collect();
-
-    return rows;
+        .collect()
 }
 
 impl Solution for Day02 {
@@ -80,33 +79,24 @@ mod tests {
 
     #[test]
     fn it_validates_part1_pws_correctly() {
-        assert_eq!(
-            validate_part1(&DatabaseRow {
-                password: String::from("abcde"),
-                check_char: 'a',
-                min: 1,
-                max: 3
-            }),
-            true
-        );
-        assert_eq!(
-            validate_part1(&DatabaseRow {
-                password: String::from("cdefg"),
-                check_char: 'b',
-                min: 1,
-                max: 3
-            }),
-            false
-        );
-        assert_eq!(
-            validate_part1(&DatabaseRow {
-                password: String::from("ccccccccc"),
-                check_char: 'c',
-                min: 2,
-                max: 9
-            }),
-            true
-        )
+        assert!(validate_part1(&DatabaseRow {
+            password: String::from("abcde"),
+            check_char: 'a',
+            min: 1,
+            max: 3
+        }));
+        assert!(!validate_part1(&DatabaseRow {
+            password: String::from("cdefg"),
+            check_char: 'b',
+            min: 1,
+            max: 3
+        }));
+        assert!(validate_part1(&DatabaseRow {
+            password: String::from("ccccccccc"),
+            check_char: 'c',
+            min: 2,
+            max: 9
+        }))
     }
 
     #[test]
@@ -119,33 +109,24 @@ mod tests {
 
     #[test]
     fn it_validates_part2_pws_correctly() {
-        assert_eq!(
-            validate_part2(&DatabaseRow {
-                password: String::from("abcde"),
-                check_char: 'a',
-                min: 1,
-                max: 3
-            }),
-            true
-        );
-        assert_eq!(
-            validate_part2(&DatabaseRow {
-                password: String::from("cdefg"),
-                check_char: 'b',
-                min: 1,
-                max: 3
-            }),
-            false
-        );
-        assert_eq!(
-            validate_part2(&DatabaseRow {
-                password: String::from("ccccccccc"),
-                check_char: 'c',
-                min: 2,
-                max: 9
-            }),
-            false
-        )
+        assert!(validate_part2(&DatabaseRow {
+            password: String::from("abcde"),
+            check_char: 'a',
+            min: 1,
+            max: 3
+        }));
+        assert!(!validate_part2(&DatabaseRow {
+            password: String::from("cdefg"),
+            check_char: 'b',
+            min: 1,
+            max: 3
+        }));
+        assert!(!validate_part2(&DatabaseRow {
+            password: String::from("ccccccccc"),
+            check_char: 'c',
+            min: 2,
+            max: 9
+        }))
     }
 
     #[test]

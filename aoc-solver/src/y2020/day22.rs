@@ -28,10 +28,10 @@ fn calculate_score(deck: VecDeque<usize>) -> usize {
 }
 
 fn find_winner(deck_1: VecDeque<usize>, deck_2: VecDeque<usize>) -> (Winner, VecDeque<usize>) {
-    if deck_2.len() == 0 {
-        return (Winner::Player1, deck_1);
+    if deck_2.is_empty() {
+        (Winner::Player1, deck_1)
     } else {
-        return (Winner::Player2, deck_2);
+        (Winner::Player2, deck_2)
     }
 }
 

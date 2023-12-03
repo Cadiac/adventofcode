@@ -78,18 +78,18 @@ impl Day19 {
 
         for resource in ORE..=GEODE {
             // Don't consider producing more if the production meets max spending
-            if production[resource as usize] >= max_spend[resource as usize] {
+            if production[resource] >= max_spend[resource] {
                 continue;
             }
 
             // If the current inventory is enough to keep expanding until time runs out don't expand
-            let production_shortage = max_spend[resource as usize] - production[resource as usize];
+            let production_shortage = max_spend[resource] - production[resource];
             if inventory[resource] >= production_shortage * remaining_time {
                 continue;
             }
 
             // Consider how long does it take to produce resources for this robot and skip to that time
-            let durations: Vec<u32> = blueprint.costs[resource as usize]
+            let durations: Vec<u32> = blueprint.costs[resource]
                 .iter()
                 .enumerate()
                 .flat_map(|(ingredient, cost)| {
@@ -173,10 +173,10 @@ impl Day19 {
 
             // Pay the costs and finish building whatever we were building if any
             if let Some(planned) = plan {
-                for (resource, robot_cost) in blueprint.costs[planned as usize].iter().enumerate() {
+                for (resource, robot_cost) in blueprint.costs[planned].iter().enumerate() {
                     next_inventory[resource] -= robot_cost;
                 }
-                next_production[planned as usize] += 1
+                next_production[planned] += 1
             }
 
             // DFS
@@ -241,7 +241,7 @@ mod tests {
 
     #[test]
     fn it_solves_part1_first() {
-        assert_eq!(Day19.part_1(INPUT.lines().nth(0).unwrap()), Ok(9));
+        assert_eq!(Day19.part_1(INPUT.lines().next().unwrap()), Ok(9));
     }
 
     #[test]
@@ -256,7 +256,7 @@ mod tests {
 
     #[test]
     fn it_optimizes_part1_first() {
-        let blueprint = &Day19::parse(INPUT).unwrap()[0].clone();
+        let blueprint = Day19::parse(INPUT).unwrap()[0].clone();
         let geodes = Day19::simulate(&blueprint, 24);
         assert_eq!(geodes, 9);
     }

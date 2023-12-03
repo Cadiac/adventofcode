@@ -30,7 +30,7 @@ fn shunting_yard(input: &str, is_advanced: bool) -> VecDeque<char> {
                 }
             } else {
                 // In basic mode all operators have the same precedence here
-                while operator_stack.last() != Some(&'(') && operator_stack.last() != None {
+                while operator_stack.last() != Some(&'(') && operator_stack.last().is_some() {
                     output_queue.push_back(operator_stack.pop().unwrap());
                 }
             }

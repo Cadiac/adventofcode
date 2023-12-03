@@ -29,7 +29,7 @@ impl Day25 {
         while decimal > 0 {
             let (quotient, remainder) = decimal.div_rem(&5);
             match remainder {
-                0 | 1 | 2 => {
+                0..=2 => {
                     decimal = quotient;
                     snafu = format!("{remainder}{snafu}")
                 }

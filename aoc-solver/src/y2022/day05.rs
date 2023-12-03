@@ -106,7 +106,7 @@ mod tests {
     fn it_solves_part1_example() {
         assert_eq!(
             Day05.part_1(
-                vec![
+                [
                     "    [D]    ",
                     "[N] [C]    ",
                     "[Z] [M] [P]",
@@ -128,7 +128,7 @@ mod tests {
     fn it_solves_part2_example() {
         assert_eq!(
             Day05.part_2(
-                vec![
+                [
                     "    [D]    ",
                     "[N] [C]    ",
                     "[Z] [M] [P]",

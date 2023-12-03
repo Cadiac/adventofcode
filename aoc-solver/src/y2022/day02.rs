@@ -1,18 +1,18 @@
 use crate::solution::{AocError, Solution};
 
 #[derive(Clone, Copy)]
-enum RPS {
+enum Rps {
     Rock = 1,
     Paper = 2,
     Scissors = 3,
 }
 
-impl From<&str> for RPS {
-    fn from(input: &str) -> RPS {
+impl From<&str> for Rps {
+    fn from(input: &str) -> Rps {
         match input {
-            "A" | "X" => RPS::Rock,
-            "B" | "Y" => RPS::Paper,
-            "C" | "Z" => RPS::Scissors,
+            "A" | "X" => Rps::Rock,
+            "B" | "Y" => Rps::Paper,
+            "C" | "Z" => Rps::Scissors,
             _ => unimplemented!(),
         }
     }
@@ -37,7 +37,7 @@ impl From<&str> for Outcome {
 
 pub struct Day02;
 
-fn score(selected: RPS, outcome: Outcome) -> i64 {
+fn score(selected: Rps, outcome: Outcome) -> i64 {
     selected as i64 + outcome as i64
 }
 
@@ -55,30 +55,30 @@ impl Solution for Day02 {
         for line in input.lines() {
             let mut choices = line.split(' ');
 
-            let opponent: RPS = choices
+            let opponent: Rps = choices
                 .next()
                 .ok_or_else(|| AocError::parse(line, "missing opponent"))?
                 .into();
-            let selected: RPS = choices
+            let selected: Rps = choices
                 .next()
                 .ok_or_else(|| AocError::parse(line, "missing selected"))?
                 .into();
 
             let outcome = match opponent {
-                RPS::Rock => match selected {
-                    RPS::Rock => Outcome::Draw,
-                    RPS::Paper => Outcome::Win,
-                    RPS::Scissors => Outcome::Lose,
+                Rps::Rock => match selected {
+                    Rps::Rock => Outcome::Draw,
+                    Rps::Paper => Outcome::Win,
+                    Rps::Scissors => Outcome::Lose,
                 },
-                RPS::Paper => match selected {
-                    RPS::Rock => Outcome::Lose,
-                    RPS::Paper => Outcome::Draw,
-                    RPS::Scissors => Outcome::Win,
+                Rps::Paper => match selected {
+                    Rps::Rock => Outcome::Lose,
+                    Rps::Paper => Outcome::Draw,
+                    Rps::Scissors => Outcome::Win,
                 },
-                RPS::Scissors => match selected {
-                    RPS::Rock => Outcome::Win,
-                    RPS::Paper => Outcome::Lose,
-                    RPS::Scissors => Outcome::Draw,
+                Rps::Scissors => match selected {
+                    Rps::Rock => Outcome::Win,
+                    Rps::Paper => Outcome::Lose,
+                    Rps::Scissors => Outcome::Draw,
                 },
             };
 
@@ -94,7 +94,7 @@ impl Solution for Day02 {
         for line in input.lines() {
             let mut choices = line.split(' ');
 
-            let opponent: RPS = choices
+            let opponent: Rps = choices
                 .next()
                 .ok_or_else(|| AocError::parse(line, "missing opponent"))?
                 .into();
@@ -104,20 +104,20 @@ impl Solution for Day02 {
                 .into();
 
             let selected = match opponent {
-                RPS::Rock => match outcome {
-                    Outcome::Lose => RPS::Scissors,
-                    Outcome::Draw => RPS::Rock,
-                    Outcome::Win => RPS::Paper,
+                Rps::Rock => match outcome {
+                    Outcome::Lose => Rps::Scissors,
+                    Outcome::Draw => Rps::Rock,
+                    Outcome::Win => Rps::Paper,
                 },
-                RPS::Paper => match outcome {
-                    Outcome::Lose => RPS::Rock,
-                    Outcome::Draw => RPS::Paper,
-                    Outcome::Win => RPS::Scissors,
+                Rps::Paper => match outcome {
+                    Outcome::Lose => Rps::Rock,
+                    Outcome::Draw => Rps::Paper,
+                    Outcome::Win => Rps::Scissors,
                 },
-                RPS::Scissors => match outcome {
-                    Outcome::Lose => RPS::Paper,
-                    Outcome::Draw => RPS::Scissors,
-                    Outcome::Win => RPS::Rock,
+                Rps::Scissors => match outcome {
+                    Outcome::Lose => Rps::Paper,
+                    Outcome::Draw => Rps::Scissors,
+                    Outcome::Win => Rps::Rock,
                 },
             };
 

@@ -27,7 +27,7 @@ fn memory_game(input: &str, turns: u32) -> u32 {
         turn += 1;
     }
 
-    return next_spoken;
+    next_spoken
 }
 
 impl Solution for Day15 {

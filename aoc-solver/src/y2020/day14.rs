@@ -128,14 +128,17 @@ impl Solution for Day14 {
                 // This is to make iterating 'X' binary combinations easier, we can just iterate
                 // decimal numbers, treat each bit as combination for each X and set the values
                 // in each combinations respective masked_addr.
-                for combination in 0..x_combinations {
+
+                for (combination, masked) in
+                    masked_addrs.iter_mut().enumerate().take(x_combinations)
+                {
                     // For each bit we're setting set the bits of matching masked_addr with
                     // the bits of this combination to correct indices.
                     let comb_u64 = combination as u64;
                     for (i, x_index) in x_indices.iter().enumerate() {
                         let i_u64 = i as u64;
                         let bit = (comb_u64 >> i_u64) & 1;
-                        masked_addrs[combination] |= bit << x_index;
+                        *masked |= bit << x_index;
                     }
                 }
 

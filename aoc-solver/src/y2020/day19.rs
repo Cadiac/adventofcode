@@ -33,7 +33,7 @@ fn convert_to_cnf(input: &str) -> (Vec<TerminalRule>, Vec<ProductionRule>) {
             let lhs = iter.next().unwrap().parse().unwrap();
             let rhs = iter.next().unwrap().chars().nth(1).unwrap();
 
-            TerminalRule { lhs: lhs, rhs: rhs }
+            TerminalRule { lhs, rhs }
         })
         .collect();
 
@@ -89,7 +89,7 @@ fn convert_to_cnf(input: &str) -> (Vec<TerminalRule>, Vec<ProductionRule>) {
                     assert_eq!(p.len(), 2);
 
                     rules.push(ProductionRule {
-                        lhs: lhs,
+                        lhs,
                         non_terminal_a: p[0],
                         non_terminal_b: p[1],
                     });
@@ -118,7 +118,7 @@ fn convert_to_cnf(input: &str) -> (Vec<TerminalRule>, Vec<ProductionRule>) {
 
         for rule in existing_production.iter() {
             production_rules.push(ProductionRule {
-                lhs: lhs,
+                lhs,
                 non_terminal_a: rule.non_terminal_a,
                 non_terminal_b: rule.non_terminal_b,
             });
@@ -135,21 +135,14 @@ fn convert_to_cnf(input: &str) -> (Vec<TerminalRule>, Vec<ProductionRule>) {
             .collect();
 
         for rule in existing_terminal.iter() {
-            terminal_rules.push(TerminalRule {
-                lhs: lhs,
-                rhs: rule.rhs,
-            });
+            terminal_rules.push(TerminalRule { lhs, rhs: rule.rhs });
         }
     }
 
     (terminal_rules, production_rules)
 }
 
-fn cyk(
-    w: &str,
-    terminal_rules: &Vec<TerminalRule>,
-    production_rules: &Vec<ProductionRule>,
-) -> bool {
+fn cyk(w: &str, terminal_rules: &[TerminalRule], production_rules: &[ProductionRule]) -> bool {
     // Adapted from https://www.geeksforgeeks.org/cyk-algorithm-for-context-free-grammar/
     let n = w.len();
 

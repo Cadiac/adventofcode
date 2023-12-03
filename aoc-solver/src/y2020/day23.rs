@@ -23,7 +23,7 @@ fn crab_game(mut cups: VecDeque<u32>, moves: u32) -> VecDeque<u32> {
         // If this would select one of the cups that was just picked up, the crab will keep subtracting one
         // until it finds a cup that wasn't just picked up. If at any point in this process the value goes
         // below the lowest value on any cup's label, it wraps around to the highest value on any cup's label instead.
-        let mut dest_val = cups.back().unwrap().clone();
+        let mut dest_val = *cups.back().unwrap();
 
         let dest_idx = 'outer: loop {
             dest_val = if dest_val <= min_cup {

@@ -55,7 +55,7 @@ fn build_rules_tree(input: &str) -> HashMap<String, Rule> {
         }
     }
 
-    return rules;
+    rules
 }
 
 fn find_ancestors(current: String, rules: HashMap<String, Rule>) -> HashSet<String> {
@@ -68,7 +68,7 @@ fn find_ancestors(current: String, rules: HashMap<String, Rule>) -> HashSet<Stri
         ancestors.extend(find_ancestors(parent.clone(), rules.clone()));
     }
 
-    return ancestors;
+    ancestors
 }
 
 fn find_inner_bags_count(current: String, rules: HashMap<String, Rule>) -> usize {

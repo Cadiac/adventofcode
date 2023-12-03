@@ -4,7 +4,7 @@ pub struct Day13;
 
 fn find_first_after(freq: i64, earliest: i64) -> i64 {
     let n = earliest / freq;
-    return freq * (n + 1);
+    freq * (n + 1)
 }
 
 // Modular inverse, taken from
@@ -37,12 +37,12 @@ impl Solution for Day13 {
             .lines()
             .nth(1)
             .unwrap()
-            .split(",")
+            .split(',')
             .flat_map(|bus| {
                 if bus == "x" {
                     return None;
                 }
-                return Some(bus.parse::<i64>().unwrap());
+                Some(bus.parse::<i64>().unwrap())
             })
             .collect();
 
@@ -64,13 +64,13 @@ impl Solution for Day13 {
             .lines()
             .nth(1)
             .unwrap()
-            .split(",")
+            .split(',')
             .enumerate()
             .flat_map(|(offset, freq)| {
                 if freq == "x" {
                     return None;
                 }
-                return Some((freq.parse::<i64>().unwrap(), offset as i64));
+                Some((freq.parse::<i64>().unwrap(), offset as i64))
             })
             .collect();
 

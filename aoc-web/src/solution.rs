@@ -39,7 +39,7 @@ pub fn source_viewer(props: &Props) -> Html {
         let theme = &theme_set.themes["base16-eighties.dark"];
         let syntax_reference = syntax_set.find_syntax_by_extension("rs").unwrap();
 
-        highlighted_html_for_string(source, &syntax_set, &syntax_reference, theme).unwrap()
+        highlighted_html_for_string(source, &syntax_set, syntax_reference, theme).unwrap()
     });
 
     let div = gloo::utils::document().create_element("div").unwrap();

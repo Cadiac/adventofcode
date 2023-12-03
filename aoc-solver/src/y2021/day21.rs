@@ -112,7 +112,7 @@ impl Solution for Day21 {
         roll_dirac_dice(players, active_player)
             .iter()
             .max()
-            .map(|&num| num)
+            .copied()
             .ok_or(AocError::logic("No maximum!"))
     }
 }

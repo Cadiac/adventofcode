@@ -113,7 +113,7 @@ impl BinaryTree {
                 };
 
                 depth -= 1;
-            } else if c.is_digit(10) {
+            } else if c.is_ascii_digit() {
                 let value = c.to_digit(10).unwrap();
                 let node = BTNode::new_value(value);
                 stack.push((depth, node));

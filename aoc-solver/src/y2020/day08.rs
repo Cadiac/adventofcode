@@ -33,7 +33,7 @@ impl GameConsole {
     fn acc(&mut self) -> Flag {
         self.accumulator += self.mem[self.program_counter].arg;
         self.program_counter += 1;
-        return Flag::Running;
+        Flag::Running
     }
 
     // `jmp` jumps to a new instruction relative to itself.
@@ -42,14 +42,14 @@ impl GameConsole {
     fn jmp(&mut self) -> Flag {
         self.program_counter =
             (self.program_counter as i32 + self.mem[self.program_counter].arg) as usize;
-        return Flag::Running;
+        Flag::Running
     }
 
     // `nop` stands for No OPeration - it does nothing. The instruction immediately below it is executed next.
     #[inline]
     fn nop(&mut self) -> Flag {
         self.program_counter += 1;
-        return Flag::Running;
+        Flag::Running
     }
 
     pub fn run_program(&mut self) -> Flag {
@@ -76,14 +76,14 @@ impl GameConsole {
 fn parse_instruction(input: &str) -> IResult<&str, Instruction> {
     let (i, operation) = alt((tag("acc"), tag("jmp"), tag("nop")))(input)?;
     let (i, _ws) = space0(i)?;
-    let arg = i32::from_str_radix(i, 10).unwrap();
+    let arg = i.parse::<i32>().unwrap();
 
     let instruction = Instruction {
         operation: operation.to_string(),
-        arg: arg,
+        arg,
     };
 
-    return Ok(("", instruction));
+    Ok(("", instruction))
 }
 
 impl Solution for Day08 {

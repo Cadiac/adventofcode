@@ -8,13 +8,13 @@ fn solve_part1(input: &str, preamble_len: usize) -> Result<usize, AocError> {
     let mut checksum: VecDeque<usize> = input
         .lines()
         .take(preamble_len)
-        .map(|line| usize::from_str_radix(line, 10).unwrap())
+        .map(|line| line.parse::<usize>().unwrap())
         .collect();
 
     let first_invalid = input
         .lines()
         .skip(preamble_len)
-        .map(|line| usize::from_str_radix(line, 10).unwrap())
+        .map(|line| line.parse::<usize>().unwrap())
         .find(|number| {
             for first in 0..(checksum.len() - 1) {
                 for second in (first + 1)..(checksum.len()) {
@@ -31,7 +31,7 @@ fn solve_part1(input: &str, preamble_len: usize) -> Result<usize, AocError> {
                 }
             }
 
-            return true;
+            true
         });
 
     first_invalid.ok_or(AocError::logic("No solution"))
@@ -42,7 +42,7 @@ fn solve_part2(input: &str, preamble_len: usize) -> Result<usize, AocError> {
 
     let list: Vec<usize> = input
         .lines()
-        .map(|line| usize::from_str_radix(line, 10).unwrap())
+        .map(|line| line.parse::<usize>().unwrap())
         .collect();
 
     for (index, number) in list.iter().enumerate() {

@@ -8,7 +8,7 @@ criterion_main!(benches);
 
 fn benchmark_all(c: &mut Criterion) {
     c.bench_function("all", |b| {
-        b.iter(|| Y2022::run_all());
+        b.iter(Y2022::run_all);
     });
 }
 

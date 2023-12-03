@@ -20,14 +20,6 @@ struct Passport {
     cid: Option<String>,
 }
 
-fn is_char_hex_digit(c: char) -> bool {
-    c.is_ascii() && c.is_digit(16)
-}
-
-fn is_char_digit(c: char) -> bool {
-    return c.is_ascii() && c.is_digit(10);
-}
-
 fn not_whitespace(input: &str) -> IResult<&str, &str> {
     nom::bytes::complete::is_not(" \t\n")(input)
 }
@@ -35,27 +27,27 @@ fn not_whitespace(input: &str) -> IResult<&str, &str> {
 fn birth_year(input: &str) -> IResult<&str, u32> {
     map_res(
         delimited(multispace0, preceded(tag("byr:"), digit1), multispace0),
-        |i: &str| u32::from_str_radix(i, 10),
+        |i: &str| i.parse::<u32>(),
     )(input)
 }
 
 fn issue_year(input: &str) -> IResult<&str, u32> {
     map_res(
         delimited(multispace0, preceded(tag("iyr:"), digit1), multispace0),
-        |i: &str| u32::from_str_radix(i, 10),
+        |i: &str| i.parse::<u32>(),
     )(input)
 }
 
 fn expiration_year(input: &str) -> IResult<&str, u32> {
     map_res(
         delimited(multispace0, preceded(tag("eyr:"), digit1), multispace0),
-        |i: &str| u32::from_str_radix(i, 10),
+        |i: &str| i.parse::<u32>(),
     )(input)
 }
 
 fn parse_centimeters(input: &str) -> IResult<&str, (u32, &str)> {
     pair(
-        map_res(digit1, |i: &str| u32::from_str_radix(i, 10)),
+        map_res(digit1, |i: &str| i.parse::<u32>()),
         alt((tag("cm"), tag("in"))),
     )(input)
 }
@@ -69,7 +61,10 @@ fn height(input: &str) -> IResult<&str, (u32, &str)> {
 }
 
 fn parse_hex_color(input: &str) -> IResult<&str, &str> {
-    preceded(tag("#"), take_while_m_n(6, 6, is_char_hex_digit))(input)
+    preceded(
+        tag("#"),
+        take_while_m_n(6, 6, |c: char| c.is_ascii_hexdigit()),
+    )(input)
 }
 
 fn hair_color(input: &str) -> IResult<&str, &str> {
@@ -101,7 +96,7 @@ fn eye_color(input: &str) -> IResult<&str, &str> {
 }
 
 fn parse_passport_number(input: &str) -> IResult<&str, &str> {
-    take_while_m_n(9, 9, is_char_digit)(input)
+    take_while_m_n(9, 9, |c: char| c.is_ascii_digit())(input)
 }
 
 fn passport_id(input: &str) -> IResult<&str, &str> {
@@ -119,12 +114,9 @@ fn country_id(input: &str) -> IResult<&str, Option<String>> {
         multispace0,
     )(input)?;
 
-    let cid_string = match parsed {
-        Some(c) => Some(c.to_string()),
-        None => None,
-    };
+    let cid_string = parsed.map(|c| c.to_string());
 
-    return Ok((unhandled, cid_string));
+    Ok((unhandled, cid_string))
 }
 
 fn parse_passport_part1(input: &str) -> IResult<&str, ()> {
@@ -172,16 +164,17 @@ fn parse_passport_part2(input: &str) -> IResult<&str, Passport> {
     ))(input)?;
 
     let passport = Passport {
-        byr: byr,
-        iyr: iyr,
-        eyr: eyr,
+        byr,
+        iyr,
+        eyr,
         hgt: (hgt.0, String::from(hgt.1)),
         hcl: String::from(hcl),
         ecl: String::from(ecl),
         pid: String::from(pid),
-        cid: cid,
+        cid,
     };
-    return Ok((unhandled, passport));
+
+    Ok((unhandled, passport))
 }
 
 impl Solution for Day04 {
@@ -207,7 +200,7 @@ impl Solution for Day04 {
             .split("\n\n")
             .map(parse_passport_part2)
             .filter_map(|passport| {
-                if !passport.is_ok() {
+                if passport.is_err() {
                     return None;
                 }
 
@@ -232,7 +225,8 @@ impl Solution for Day04 {
                 if valid.hgt.1 == "in" && (valid.hgt.0 < 59 || valid.hgt.0 > 76) {
                     return None;
                 }
-                return Some(valid);
+
+                Some(valid)
             })
             .count();
 

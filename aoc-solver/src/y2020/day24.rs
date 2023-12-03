@@ -31,10 +31,7 @@ impl GameOfTiles {
             tiles.entry(coords).and_modify(|t| *t = !*t).or_insert(true);
         }
 
-        Self {
-            tiles: tiles,
-            step: 0,
-        }
+        Self { tiles, step: 0 }
     }
 
     fn parse_hex_tile(input: &str) -> CubeCoords {
@@ -122,12 +119,12 @@ impl GameOfTiles {
 
                     // Any black tile with zero or more than 2 black tiles immediately
                     // adjacent to it is flipped to white.
-                    if state == true && adjacent_count == 0 || adjacent_count > 2 {
+                    if state && adjacent_count == 0 || adjacent_count > 2 {
                         new_tiles.insert(coords, false);
                     }
                     // Any white tile with exactly 2 black tiles immediately adjacent
                     // to it is flipped to black.
-                    else if state == false && adjacent_count == 2 {
+                    else if !state && adjacent_count == 2 {
                         new_tiles.insert(coords, true);
                     }
                 }

@@ -7,7 +7,7 @@ pub struct HomeProps {
 
 #[function_component]
 pub fn Home(props: &HomeProps) -> Html {
-    html! { <pre><code>{ vec![
+    html! { <pre><code>{[
         "                            ",
         "             *              ",
         "             o^             ",

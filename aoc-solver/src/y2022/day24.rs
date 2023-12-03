@@ -125,13 +125,11 @@ impl Day24 {
             }
 
             for delta in ACTIONS {
-                let next: (i32, i32) = (coords.0 as i32 + delta.0, coords.1 as i32 + delta.1);
-                let is_within_bounds = next.0 >= 1
-                    && next.1 >= 1
-                    && next.0 < (width as i32 - 1)
-                    && next.1 < (height as i32 - 1);
-                let is_end = next.0 == end.0 as i32 && next.1 == end.1 as i32;
-                let is_start = next.0 == start.0 as i32 && next.1 == start.1 as i32;
+                let next: (i32, i32) = (coords.0 + delta.0, coords.1 + delta.1);
+                let is_within_bounds =
+                    next.0 >= 1 && next.1 >= 1 && next.0 < width - 1 && next.1 < height - 1;
+                let is_end = next.0 == end.0 && next.1 == end.1;
+                let is_start = next.0 == start.0 && next.1 == start.1;
 
                 if is_within_bounds || is_start || is_end {
                     let next_minute = minute + 1;

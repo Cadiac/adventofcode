@@ -23,8 +23,8 @@ fn parse_boarding_pass(input: &str) -> BoardingPass {
     let column = u8::from_str_radix(&binary_str[7..10], 2).unwrap();
 
     BoardingPass {
-        row: row,
-        column: column,
+        row,
+        column,
         id: 8 * row as usize + column as usize,
     }
 }

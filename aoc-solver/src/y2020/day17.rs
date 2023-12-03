@@ -24,10 +24,7 @@ impl GameOfCubes {
             })
             .collect();
 
-        GameOfCubes {
-            cubes: cubes,
-            step: 0,
-        }
+        GameOfCubes { cubes, step: 0 }
     }
 
     #[allow(dead_code)]
@@ -46,16 +43,16 @@ impl GameOfCubes {
             println!("z={}", z);
             for y in y_min..=y_max {
                 for x in x_min..=x_max {
-                    let state = match self.is_active((x as i32, y as i32, z as i32, 0)) {
+                    let state = match self.is_active((x, y, z, 0)) {
                         true => '#',
                         false => '.',
                     };
 
                     print!("{}", state);
                 }
-                print!("\n");
+                println!()
             }
-            print!("\n");
+            println!()
         }
     }
 
@@ -79,15 +76,15 @@ impl GameOfCubes {
                 println!("z={}, w={}", z, w);
                 for y in y_min..=y_max {
                     for x in x_min..=x_max {
-                        let state = match self.is_active((x as i32, y as i32, z as i32, w as i32)) {
+                        let state = match self.is_active((x, y, z, w)) {
                             true => '#',
                             false => '.',
                         };
                         print!("{}", state);
                     }
-                    print!("\n");
+                    println!()
                 }
-                print!("\n");
+                println!()
             }
         }
     }
@@ -98,7 +95,7 @@ impl GameOfCubes {
 
     fn is_active(&self, coords: (i32, i32, i32, i32)) -> bool {
         match self.cubes.get(&coords) {
-            Some(state) => *state == true,
+            Some(state) => *state,
             _ => false,
         }
     }
@@ -140,12 +137,12 @@ impl GameOfCubes {
                             let state = self.is_active(coords);
                             let adjacent_count = self.adjacent_active_count(&coords);
 
-                            if state == true && adjacent_count != 2 && adjacent_count != 3 {
+                            if state && adjacent_count != 2 && adjacent_count != 3 {
                                 new_cubes.insert(coords, false);
                             }
                             // If a cube is inactive but exactly 3 of its neighbors are active,
                             // the cube becomes active. Otherwise, the cube remains inactive.
-                            else if state == false && adjacent_count == 3 {
+                            else if !state && adjacent_count == 3 {
                                 new_cubes.insert(coords, true);
                             }
                         }
@@ -180,12 +177,12 @@ impl GameOfCubes {
                                 let state = self.is_active(coords);
                                 let adjacent_count = self.adjacent_active_count(&coords);
 
-                                if state == true && adjacent_count != 2 && adjacent_count != 3 {
+                                if state && adjacent_count != 2 && adjacent_count != 3 {
                                     new_cubes.insert(coords, false);
                                 }
                                 // If a cube is inactive but exactly 3 of its neighbors are active,
                                 // the cube becomes active. Otherwise, the cube remains inactive.
-                                else if state == false && adjacent_count == 3 {
+                                else if !state && adjacent_count == 3 {
                                     new_cubes.insert(coords, true);
                                 }
                             }

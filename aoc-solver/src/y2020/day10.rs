@@ -48,9 +48,9 @@ impl Solver {
 
         Solver {
             cache: HashMap::new(),
-            adapters: adapters,
-            dbja: dbja,
-            possible_next_adapters: possible_next_adapters,
+            adapters,
+            dbja,
+            possible_next_adapters,
         }
     }
 
@@ -90,7 +90,7 @@ impl Solver {
             .unwrap()
             .clone()
             .iter()
-            .map(|adapter| match self.cache.get(&adapter) {
+            .map(|adapter| match self.cache.get(adapter) {
                 Some(solution) => *solution,
                 None => {
                     let branch_chains = self.find_complete_chains(*adapter);
