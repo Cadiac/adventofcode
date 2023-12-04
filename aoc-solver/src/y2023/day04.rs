@@ -12,45 +12,35 @@ struct ScratchCard {
 }
 
 fn parse(input: &str) -> Result<Vec<ScratchCard>, AocError> {
-    let cards = input
-        .trim()
-        .lines()
-        .map(|line| {
-            line.split(": ")
-                .nth(1)
-                .ok_or_else(|| AocError::parse(input, "missing ':' in line"))
-                .and_then(|rest| {
-                    rest.split_once(" | ")
-                        .ok_or_else(|| AocError::parse(input, "missing '|' in line"))
-                        .and_then(|(winning_str, numbers_str)| {
-                            let winning = winning_str
-                                .split_whitespace()
-                                .map(|s| s.parse::<u32>())
-                                .collect::<Result<HashSet<u32>, _>>()
-                                .map_err(|_| {
-                                    AocError::parse(winning_str, "error parsing winning numbers")
-                                })?;
+    input.trim().lines().map(parse_line).collect()
+}
 
-                            let numbers = numbers_str
-                                .split_whitespace()
-                                .map(|number| number.parse::<u32>())
-                                .collect::<Result<HashSet<u32>, _>>()
-                                .map_err(|_| {
-                                    AocError::parse(numbers_str, "error parsing numbers")
-                                })?;
+fn parse_line(line: &str) -> Result<ScratchCard, AocError> {
+    let (winning, numbers) = line
+        .split(": ")
+        .nth(1)
+        .ok_or_else(|| AocError::parse(line, "Missing ':' in line"))?
+        .split_once(" | ")
+        .ok_or_else(|| AocError::parse(line, "Missing '|' in line"))?;
 
-                            Ok((winning, numbers))
-                        })
-                })
-                .map(|(winning, numbers)| ScratchCard {
-                    winning,
-                    numbers,
-                    copies: 1,
-                })
+    let winning = parse_numbers(winning, line)?;
+    let numbers = parse_numbers(numbers, line)?;
+
+    Ok(ScratchCard {
+        winning,
+        numbers,
+        copies: 1,
+    })
+}
+
+fn parse_numbers(numbers_str: &str, line: &str) -> Result<HashSet<u32>, AocError> {
+    numbers_str
+        .split_whitespace()
+        .map(|num| {
+            num.parse::<u32>()
+                .map_err(|_| AocError::parse(line, "Error parsing number"))
         })
-        .collect::<Result<_, _>>()?;
-
-    Ok(cards)
+        .collect()
 }
 
 impl Solution for Day04 {
