@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 
 use crate::solution::{AocError, Solution};
 
@@ -11,7 +11,7 @@ struct ScratchCard {
     copies: usize,
 }
 
-fn parse(input: &str) -> Result<Vec<ScratchCard>, AocError> {
+fn parse(input: &str) -> Result<VecDeque<ScratchCard>, AocError> {
     input.trim().lines().map(parse_line).collect()
 }
 
@@ -23,8 +23,8 @@ fn parse_line(line: &str) -> Result<ScratchCard, AocError> {
         .split_once(" | ")
         .ok_or_else(|| AocError::parse(line, "Missing '|' in line"))?;
 
-    let winning = parse_numbers(winning, line)?;
-    let numbers = parse_numbers(numbers, line)?;
+    let winning = parse_numbers(winning)?;
+    let numbers = parse_numbers(numbers)?;
 
     Ok(ScratchCard {
         winning,
@@ -33,12 +33,13 @@ fn parse_line(line: &str) -> Result<ScratchCard, AocError> {
     })
 }
 
-fn parse_numbers(numbers_str: &str, line: &str) -> Result<HashSet<u32>, AocError> {
-    numbers_str
+fn parse_numbers(numbers: &str) -> Result<HashSet<u32>, AocError> {
+    numbers
         .split_whitespace()
-        .map(|num| {
-            num.parse::<u32>()
-                .map_err(|_| AocError::parse(line, "Error parsing number"))
+        .map(|number| {
+            number
+                .parse::<u32>()
+                .map_err(|_| AocError::parse(number, "Error parsing number"))
         })
         .collect()
 }
@@ -71,20 +72,16 @@ impl Solution for Day04 {
 
     fn part_2(&self, input: &str) -> Result<usize, AocError> {
         let mut cards = parse(input)?;
-
         let mut total = 0;
 
-        for i in 0..cards.len() {
-            let intersection = cards[i].winning.intersection(&cards[i].numbers);
+        while let Some(card) = cards.pop_front() {
+            let intersection = card.winning.intersection(&card.numbers);
             let wins = intersection.count();
-            let copies = cards[i].copies;
 
-            total += copies;
+            total += card.copies;
 
-            for win in 0..wins {
-                if i + win + 1 < cards.len() {
-                    cards[i + win + 1].copies += copies;
-                }
+            for following_card in cards.iter_mut().take(wins) {
+                following_card.copies += card.copies;
             }
         }
 
