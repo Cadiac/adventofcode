@@ -78,3 +78,4 @@ This should start the server at `localhost:8080`.
 ❄️ [Day 04](aoc-solver/src/y2023/day04.rs)
 ❄️ [Day 05](aoc-solver/src/y2023/day05.rs)
 ❄️ [Day 06](aoc-solver/src/y2023/day06.rs)
+❄️ [Day 07](aoc-solver/src/y2023/day07.rs)
