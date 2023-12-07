@@ -8,9 +8,14 @@ pub struct Day05;
 
 #[derive(Debug, Clone)]
 struct MappingRange {
-    destination_range_start: u64,
-    source_range_start: u64,
-    range_length: u64,
+    destination_start: i64,
+    source_start: i64,
+    range_length: i64,
+}
+
+struct Range {
+    start: i64,
+    end: i64,
 }
 
 #[derive(Debug, Clone)]
@@ -19,141 +24,194 @@ struct Mapping {
     ranges: Vec<MappingRange>,
 }
 
-fn parse(input: &str) -> Result<(Vec<u64>, HashMap<String, Mapping>), AocError> {
+fn parse(input: &str) -> Result<(Vec<i64>, HashMap<String, Mapping>), AocError> {
     let mut chunks = input.trim().split("\n\n");
 
-    let seeds: Vec<u64> = chunks
+    let seeds: Vec<i64> = chunks
         .next()
         .ok_or_else(|| AocError::parse(input, "Missing seeds chunk"))?
         .strip_prefix("seeds: ")
         .ok_or_else(|| AocError::parse(input, "Missing seeds prefix"))?
         .split_ascii_whitespace()
-        .map(|number| number.parse::<u64>().unwrap())
-        .collect();
+        .map(parse_number)
+        .collect::<Result<_, _>>()?;
 
     let mappings = chunks
         .map(|mapping| {
             let mut lines = mapping.lines();
 
-            let header = lines.next().unwrap();
+            let header = lines
+                .next()
+                .ok_or(AocError::parse(mapping, "Missing header"))?;
 
-            let (source, mut destination) = header.split_once("-to-").unwrap();
-            destination = destination.strip_suffix(" map:").unwrap();
+            let (source, destination) = header
+                .split_once("-to-")
+                .ok_or(AocError::parse(header, "Missing -to- delimiter"))?;
 
-            let mut mapping = Mapping {
-                destination: destination.to_owned(),
-                ranges: Vec::new(),
+            let destination = destination
+                .strip_suffix(" map:")
+                .ok_or(AocError::parse(destination, "Missing map suffix"))?
+                .to_owned();
+
+            let ranges = lines
+                .map(|line| {
+                    let (destination_start, source_start, range_length) = line
+                        .splitn(3, ' ')
+                        .collect_tuple()
+                        .ok_or_else(|| AocError::parse(line, "Invalid mapping"))?;
+
+                    Ok(MappingRange {
+                        destination_start: parse_number(destination_start)?,
+                        source_start: parse_number(source_start)?,
+                        range_length: parse_number(range_length)?,
+                    })
+                })
+                .collect::<Result<_, _>>()?;
+
+            let mapping = Mapping {
+                destination,
+                ranges,
             };
 
-            for line in lines {
-                match line.splitn(3, ' ').collect_tuple() {
-                    Some((destination_range_start, source_range_start, range_length)) => {
-                        let d = destination_range_start.parse::<u64>().unwrap();
-                        let s = source_range_start.parse::<u64>().unwrap();
-                        let l = range_length.parse::<u64>().unwrap();
-
-                        mapping.ranges.push(MappingRange {
-                            destination_range_start: d,
-                            source_range_start: s,
-                            range_length: l,
-                        });
-                    }
-                    None => unreachable!("invalid mapping"),
-                }
-            }
-
-            (source.to_owned(), mapping)
+            Ok((source.to_owned(), mapping))
         })
-        .collect();
+        .collect::<Result<_, _>>()?;
 
     Ok((seeds, mappings))
 }
 
+fn parse_number(number: &str) -> Result<i64, AocError> {
+    number
+        .parse()
+        .map_err(|_| AocError::parse(number, "Error parsing number"))
+}
+
 impl Solution for Day05 {
-    type F = u64;
-    type S = u64;
+    type F = i64;
+    type S = i64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day05.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<u64, AocError> {
+    fn part_1(&self, input: &str) -> Result<i64, AocError> {
         let (seeds, mappings) = parse(input)?;
 
         let mut numbers = vec![];
 
         for seed in seeds {
-            let mut current = "seed";
+            let mut category = "seed";
             let mut value = seed;
 
-            while current != "location" {
-                let mapping = mappings.get(current).unwrap();
-
+            while let Some(mapping) = mappings.get(category) {
                 let range = mapping.ranges.iter().find(|range| {
-                    value >= range.source_range_start
-                        && value < range.source_range_start + range.range_length
+                    value >= range.source_start && value < range.source_start + range.range_length
                 });
 
                 if let Some(range) = range {
-                    let range_offset = value - range.source_range_start;
-                    value = range.destination_range_start + range_offset;
+                    let range_offset = value - range.source_start;
+                    value = range.destination_start + range_offset;
                 }
 
-                current = mapping.destination.as_str();
+                category = mapping.destination.as_str();
             }
 
             numbers.push(value);
         }
 
-        let lowest = numbers.iter().min().unwrap_or(&0);
-
-        Ok(*lowest)
+        numbers
+            .into_iter()
+            .min()
+            .ok_or(AocError::logic("No solution"))
     }
 
-    fn part_2(&self, input: &str) -> Result<u64, AocError> {
+    fn part_2(&self, input: &str) -> Result<i64, AocError> {
         let (seeds, mappings) = parse(input)?;
 
-        let seeds = seeds
-            .chunks_exact(2)
-            .flat_map(|range| (range[0]..(range[0] + range[1])).collect::<Vec<u64>>());
+        let seed_ranges = seeds.chunks_exact(2).map(|range| Range {
+            start: range[0],
+            end: range[0] + range[1] - 1,
+        });
 
-        let count = seeds.clone().count();
-        // print!("We have {count} seeds");
+        let lowest = seed_ranges
+            .into_iter()
+            .map(|seed_range| {
+                let mut category = "seed";
+                let mut unmapped = vec![(seed_range.start, seed_range.end)];
 
-        let mut numbers = vec![];
+                while let Some(mapping) = mappings.get(category) {
+                    let mut mapped = vec![];
 
-        let mut progress = 0;
+                    while let Some((range_start, range_end)) = unmapped.pop() {
+                        let mut is_mapped = false;
 
-        for seed in seeds {
-            if progress % 100000 == 0 {
-                // println!("{progress}/{count}")
-            }
-            let mut current = "seed";
-            let mut value = seed;
+                        for mapping_range in mapping.ranges.iter() {
+                            // Only one of the mappings should be applied to each range
+                            if is_mapped {
+                                break;
+                            }
 
-            while current != "location" {
-                let mapping = mappings.get(current).unwrap();
+                            let mapping_start = mapping_range.source_start;
+                            let mapping_end =
+                                mapping_range.source_start + mapping_range.range_length - 1;
+                            let offset =
+                                mapping_range.destination_start - mapping_range.source_start;
 
-                let range = mapping.ranges.iter().find(|range| {
-                    value >= range.source_range_start
-                        && value < range.source_range_start + range.range_length
-                });
+                            if mapping_start <= range_start && mapping_end >= range_end {
+                                // Full overlap, map the entire range
+                                //  567890
+                                // ^^^^^^^^
+                                mapped.push((range_start + offset, range_end + offset));
+                                is_mapped = true;
+                            } else if mapping_start <= range_start && mapping_end >= range_start {
+                                // Left end of the range overlaps
+                                //  567890
+                                // ^^^^^
+                                mapped.push((range_start + offset, mapping_end + offset));
+                                unmapped.push((range_end + 1, range_end));
+                                is_mapped = true;
+                            } else if mapping_end >= range_end && mapping_start <= range_end {
+                                // Right end of the range overlaps
+                                //  567890
+                                //     ^^^^^
+                                unmapped.push((range_start, mapping_start - 1));
+                                mapped.push((mapping_start + offset, range_end + offset));
+                                is_mapped = true;
+                            } else if mapping_start > range_start && mapping_end < range_end {
+                                // Overlap in the middle
+                                //  567890
+                                //   ^^^
+                                unmapped.push((range_start, mapping_start - 1));
+                                mapped.push((mapping_start + offset, mapping_end + offset));
+                                unmapped.push((mapping_end + 1, range_end));
+                                is_mapped = true;
+                            }
+                        }
 
-                if let Some(range) = range {
-                    let range_offset = value - range.source_range_start;
-                    value = range.destination_range_start + range_offset;
+                        if !is_mapped {
+                            // All mappings miss the range, include it unmapped
+                            //  567890
+                            //         ^^^
+                            mapped.push((range_start, range_end));
+                        }
+                    }
+
+                    category = mapping.destination.as_str();
+                    unmapped = mapped;
                 }
 
-                current = mapping.destination.as_str();
-            }
+                unmapped
+                    .into_iter()
+                    .map(|(start, _)| start)
+                    .min()
+                    .ok_or(AocError::logic("No ranges"))
+            })
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .min()
+            .ok_or(AocError::logic("No solution"))?;
 
-            numbers.push(value);
-            progress += 1;
-        }
-
-        let lowest = numbers.iter().min().unwrap_or(&0);
-
-        Ok(*lowest)
+        Ok(lowest)
     }
 }
 
@@ -246,7 +304,10 @@ mod tests {
     }
 
     #[test]
-    fn it_solves_part2_real() {
-        Day05.part_2(include_str!("../../../inputs/2023/day05.txt"));
+    fn it_solves_part2_real_input() {
+        assert_eq!(
+            Day05.part_2(include_str!("../../../inputs/2023/day05.txt")),
+            Ok(26829166)
+        );
     }
 }
