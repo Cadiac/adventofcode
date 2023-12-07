@@ -305,9 +305,6 @@ mod tests {
 
     #[test]
     fn it_solves_part2_real_input() {
-        assert_eq!(
-            Day05.part_2(include_str!("../../../inputs/2023/day05.txt")),
-            Ok(26829166)
-        );
+        assert_eq!(Day05.part_2(Day05.default_input()), Ok(26829166));
     }
 }
