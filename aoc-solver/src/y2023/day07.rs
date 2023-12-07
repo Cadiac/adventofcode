@@ -1,4 +1,7 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, cmp::Ordering};
+
+use itertools::Itertools;
+use log::info;
 
 use crate::solution::{AocError, Solution};
 
@@ -59,7 +62,53 @@ fn parse_number(number: &str) -> Result<u32, AocError> {
 }
 
 fn score_hand(hand: Hand) -> u32 {
-    todo!()
+    let mut counts_by_card: HashMap<u8, u8> = HashMap::new();
+
+    for card in hand {
+        *counts_by_card.entry(card).or_default() += 1;
+    }
+
+    if counts_by_card.values().any(|count| *count == 5) {
+        return 0;
+    }
+
+    if counts_by_card.values().any(|count| *count == 4) {
+        return 1;
+    }
+
+    if counts_by_card.values().any(|count| *count == 3) && counts_by_card.values().any(|count| *count == 2) {
+        return 2;
+    }
+
+    if counts_by_card.values().any(|count| *count == 3) {
+        return 4;
+    }
+
+    if counts_by_card.values().any(|count| *count == 2) && counts_by_card.values().any(|count| *count == 2) {
+        return 3;
+    }
+
+    if counts_by_card.values().any(|count| *count == 2) {
+        return 5;
+    }
+
+    return 6;
+}
+
+fn sort_hands(a: &(Hand, u32, u32), b: &(Hand, u32, u32)) -> Ordering {
+    match a.1.partial_cmp(&b.1) {
+        Some(Ordering::Equal) | None => (),
+        Some(ordering) => return ordering
+    }
+
+    for i in 0..5 {
+        match a.0[i].partial_cmp(&b.0[i]) {
+            Some(Ordering::Equal) | None => (),
+            Some(ordering) => return ordering
+        }
+    }
+
+    Ordering::Equal
 }
 
 impl Solution for Day07 {
@@ -73,7 +122,17 @@ impl Solution for Day07 {
     fn part_1(&self, input: &str) -> Result<u32, AocError> {
         let total_winnings = parse(input)?
             .into_iter()
-            .map(|(hand, bid)| score_hand(hand) * bid)
+            .map(|(hand, bid)| (hand, score_hand(hand), bid))
+            .sorted_by(sort_hands)
+            .collect::<Vec<_>>();
+
+        let _ = total_winnings.iter().enumerate().map(|(rank, (hand, score, bid))| {
+            info!("{rank}: {hand:?} {score} {bid}")
+        });
+
+        let total_winnings = total_winnings.iter()
+            .enumerate()
+            .map(|(rank, (_, _, bid))| (rank as u32 + 1) * bid)
             .sum();
 
         Ok(total_winnings)
@@ -98,6 +157,14 @@ mod tests {
                  KTJJT 220\n\
                  QQQJA 483\n"
             ),
+            Ok(6440)
+        );
+    }
+
+    #[test]
+    fn it_solves_part1_real() {
+        assert_eq!(
+            Day07.part_1(Day07.default_input()),
             Ok(6440)
         );
     }

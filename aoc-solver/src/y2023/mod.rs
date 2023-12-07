@@ -21,7 +21,7 @@ impl Solver for Y2023 {
             4 => day04::Day04.run(input, 4, 2023),
             5 => day05::Day05.run(input, 5, 2023),
             6 => day06::Day06.run(input, 6, 2023),
-            7 => day06::Day06.run(input, 7, 2023),
+            7 => day07::Day07.run(input, 7, 2023),
             _ => vec![String::from("Solution not implemented (yet?)")],
         }
     }
