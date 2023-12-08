@@ -1,6 +1,6 @@
+use std::collections::{HashMap, HashSet};
+
 use crate::solution::{AocError, Solution};
-use itertools::Itertools;
-use std::{collections::HashMap, iter};
 
 pub struct Day08;
 
@@ -9,6 +9,24 @@ struct Node {
     id: String,
     left: String,
     right: String,
+}
+
+fn gcd(a: u64, b: u64) -> u64 {
+    if b == 0 {
+        a
+    } else {
+        gcd(b, a % b)
+    }
+}
+
+fn lcm(a: u64, b: u64) -> u64 {
+    a / gcd(a, b) * b
+}
+
+fn lcm_of_vector(numbers: Vec<u64>) -> u64 {
+    numbers
+        .iter()
+        .fold(1, |acc, &num| lcm(acc, std::cmp::max(num, 1)))
 }
 
 fn parse(input: &str) -> Result<(String, HashMap<String, Node>), AocError> {
@@ -25,12 +43,10 @@ fn parse(input: &str) -> Result<(String, HashMap<String, Node>), AocError> {
             let (id, (left, right)) = line
                 .split_once(" = (")
                 .and_then(|(id, lr_str)| {
-                    let left_right = lr_str.strip_suffix(')').and_then(|s| s.split_once(", "));
-
-                    match left_right {
-                        Some(lr) => Some((id, lr)),
-                        None => None,
-                    }
+                    lr_str
+                        .strip_suffix(')')
+                        .and_then(|s| s.split_once(", "))
+                        .map(|lr| (id, lr))
                 })
                 .ok_or(AocError::parse(line, "Invalid node"))?;
 
@@ -49,14 +65,14 @@ fn parse(input: &str) -> Result<(String, HashMap<String, Node>), AocError> {
 }
 
 impl Solution for Day08 {
-    type F = u32;
-    type S = u32;
+    type F = u64;
+    type S = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day08.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<u32, AocError> {
+    fn part_1(&self, input: &str) -> Result<u64, AocError> {
         let (instructions, nodes) = parse(input)?;
 
         let mut steps = 0;
@@ -86,51 +102,49 @@ impl Solution for Day08 {
         Ok(steps)
     }
 
-    fn part_2(&self, input: &str) -> Result<u32, AocError> {
-        // TODO:
-        // calculate how long does it take to end up on all z's or return to starting position
-        // least common divider
-        unimplemented!();
-
+    fn part_2(&self, input: &str) -> Result<u64, AocError> {
         let (instructions, nodes) = parse(input)?;
 
-        let mut steps = 0;
-        let mut currents: Vec<String> = nodes
-            .keys()
-            .filter(|id| id.ends_with('A'))
-            .cloned()
-            .collect();
+        let mut ends = Vec::new();
 
-        for instruction in instructions.chars().cycle() {
-            if currents.iter().all(|current| current.ends_with('Z')) {
-                break;
-            }
+        for start in nodes.keys().filter(|id| id.ends_with('A')) {
+            let mut current = start;
+            let mut current_ends = Vec::new();
 
-            let mut new_currents = Vec::with_capacity(currents.len());
+            let mut visited: HashSet<(usize, &str)> = HashSet::new();
 
-            for current in currents.into_iter() {
+            for (steps, (index, instruction)) in
+                instructions.chars().enumerate().cycle().enumerate()
+            {
+                if !visited.insert((index, current)) {
+                    break;
+                }
+
+                if current.ends_with('Z') {
+                    current_ends.push(steps as u64);
+                }
+
                 let node = nodes
-                    .get(&current)
+                    .get(current)
                     .ok_or(AocError::logic(format!("Unknown node {current}")))?;
 
-                let next = match instruction {
-                    'L' => node.left.clone(),
-                    'R' => node.right.clone(),
+                match instruction {
+                    'L' => current = &node.left,
+                    'R' => current = &node.right,
                     _ => {
                         return Err(AocError::logic(format!(
                             "Unknown instruction {instruction}"
                         )))
                     }
-                };
-
-                new_currents.push(next)
+                }
             }
 
-            currents = new_currents;
-            steps += 1;
+            ends.push(lcm_of_vector(current_ends));
         }
 
-        Ok(steps)
+        let all_at_z = lcm_of_vector(ends);
+
+        Ok(all_at_z)
     }
 }
 
@@ -187,5 +201,10 @@ mod tests {
             ),
             Ok(6)
         );
+    }
+
+    #[test]
+    fn it_solves_part2_real_input() {
+        assert_eq!(Day08.part_2(Day08.default_input()), Ok(8906539031197));
     }
 }
