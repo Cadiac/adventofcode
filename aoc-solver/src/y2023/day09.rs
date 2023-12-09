@@ -23,23 +23,22 @@ fn parse_numbers(numbers: &str) -> Result<Vec<i32>, AocError> {
 }
 
 fn extrapolate(mut sequence: Vec<i32>, direction: Direction) -> i32 {
-    let mut edges = match direction {
-        Direction::Forward => vec![*sequence.last().unwrap_or(&0)],
-        Direction::Back => vec![*sequence.first().unwrap_or(&0)],
-    };
+    let mut edges = Vec::new();
 
-    while sequence.iter().any(|diff| *diff != 0) {
+    loop {
+        edges.push(match direction {
+            Direction::Forward => *sequence.last().unwrap_or(&0),
+            Direction::Back => *sequence.first().unwrap_or(&0),
+        });
+
+        if sequence.iter().all(|diff| *diff == 0) {
+            break;
+        }
+
         sequence = sequence
             .windows(2)
             .map(|values| values[1] - values[0])
             .collect();
-
-        let edge = match direction {
-            Direction::Forward => *sequence.last().unwrap_or(&0),
-            Direction::Back => *sequence.first().unwrap_or(&0),
-        };
-
-        edges.push(edge);
     }
 
     let prediction = edges.iter().rev().fold(0, |acc, current| match direction {
@@ -59,9 +58,7 @@ impl Solution for Day09 {
     }
 
     fn part_1(&self, input: &str) -> Result<i32, AocError> {
-        let sequences = parse(input)?;
-
-        let sum = sequences
+        let sum = parse(input)?
             .into_iter()
             .map(|sequence| extrapolate(sequence, Direction::Forward))
             .sum();
@@ -70,9 +67,7 @@ impl Solution for Day09 {
     }
 
     fn part_2(&self, input: &str) -> Result<i32, AocError> {
-        let sequences = parse(input)?;
-
-        let sum = sequences
+        let sum = parse(input)?
             .into_iter()
             .map(|sequence| extrapolate(sequence, Direction::Back))
             .sum();
