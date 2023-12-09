@@ -75,8 +75,8 @@ fn play(input: &str, moves: u32) -> Result<String, AocError> {
 }
 
 impl Solution for Day23 {
-    type F = String;
-    type S = u64;
+    type A = String;
+    type B = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day23.txt")

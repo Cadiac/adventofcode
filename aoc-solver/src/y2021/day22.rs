@@ -166,18 +166,18 @@ fn reboot_reactor(input: &str, initialization_procedure: bool) -> usize {
 }
 
 impl Solution for Day22 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day22.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<usize, AocError> {
         Ok(reboot_reactor(input, true))
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<usize, AocError> {
         Ok(reboot_reactor(input, false))
     }
 }

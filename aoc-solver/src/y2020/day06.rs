@@ -25,8 +25,8 @@ fn parse_answers_2(input: &str) -> HashSet<char> {
 }
 
 impl Solution for Day06 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day06.txt")

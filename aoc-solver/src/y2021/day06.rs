@@ -49,18 +49,18 @@ fn solve(input: &str, days: usize) -> u64 {
 }
 
 impl Solution for Day06 {
-    type F = u64;
-    type S = u64;
+    type A = u64;
+    type B = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day06.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<u64, AocError> {
         Ok(solve(input, 80))
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<u64, AocError> {
         Ok(solve(input, 256))
     }
 }

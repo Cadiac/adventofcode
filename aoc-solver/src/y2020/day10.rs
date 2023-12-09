@@ -107,21 +107,21 @@ impl Solver {
 }
 
 impl Solution for Day10 {
-    type F = i64;
-    type S = i64;
+    type A = i64;
+    type B = i64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day10.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<i64, AocError> {
         let solver = Solver::new(input);
         let result = solver.part_1();
 
         Ok(result)
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<i64, AocError> {
         let mut solver = Solver::new(input);
         let result = solver.part_2();
 

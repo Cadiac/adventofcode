@@ -103,18 +103,18 @@ fn parse_with_autocomplete(input: &str) -> Option<Vec<char>> {
 }
 
 impl Solution for Day10 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day10.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<usize, AocError> {
         Ok(input.lines().map(parse).map(score_syntax_error).sum())
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<usize, AocError> {
         let mut scores: Vec<usize> = input
             .lines()
             .flat_map(parse_with_autocomplete)

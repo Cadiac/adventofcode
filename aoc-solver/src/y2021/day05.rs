@@ -68,18 +68,18 @@ fn solve(input: &str, is_allow_diagonal: bool) -> usize {
 }
 
 impl Solution for Day05 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day05.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<usize, AocError> {
         Ok(solve(input, false))
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<usize, AocError> {
         Ok(solve(input, true))
     }
 }

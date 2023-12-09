@@ -50,8 +50,8 @@ impl Day25 {
 }
 
 impl Solution for Day25 {
-    type F = String;
-    type S = String;
+    type A = String;
+    type B = String;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day25.txt")

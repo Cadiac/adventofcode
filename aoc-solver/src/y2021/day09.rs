@@ -77,14 +77,14 @@ fn find_basin_recursive(
 }
 
 impl Solution for Day09 {
-    type F = u32;
-    type S = usize;
+    type A = u32;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day09.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<u32, AocError> {
         let heightmap = parse(input);
 
         let low_spots = find_low_spots(&heightmap)
@@ -95,7 +95,7 @@ impl Solution for Day09 {
         Ok(low_spots)
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<usize, AocError> {
         let heightmap = parse(input);
 
         let low_spots = find_low_spots(&heightmap);

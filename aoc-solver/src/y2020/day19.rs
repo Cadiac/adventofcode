@@ -190,8 +190,8 @@ fn count_valid_grammar(input: &str) -> usize {
 }
 
 impl Solution for Day19 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day19.txt")

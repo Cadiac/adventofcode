@@ -3,14 +3,14 @@ use crate::solution::{AocError, Solution};
 pub struct Day02;
 
 impl Solution for Day02 {
-    type F = i32;
-    type S = i32;
+    type A = i32;
+    type B = i32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day02.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<i32, AocError> {
         let mut position: (i32, i32) = (0, 0);
 
         for command in input.lines() {
@@ -28,7 +28,7 @@ impl Solution for Day02 {
         Ok(position.0 * position.1)
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<i32, AocError> {
         let mut position: (i32, i32) = (0, 0);
         let mut aim = 0;
 

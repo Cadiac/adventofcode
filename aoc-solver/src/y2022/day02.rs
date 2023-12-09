@@ -42,8 +42,8 @@ fn score(selected: Rps, outcome: Outcome) -> i64 {
 }
 
 impl Solution for Day02 {
-    type F = i64;
-    type S = i64;
+    type A = i64;
+    type B = i64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day02.txt")

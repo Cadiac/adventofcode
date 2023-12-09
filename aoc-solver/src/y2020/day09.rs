@@ -69,18 +69,18 @@ fn solve_part2(input: &str, preamble_len: usize) -> Result<usize, AocError> {
 }
 
 impl Solution for Day09 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day09.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<usize, AocError> {
         solve_part1(input, 25)
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<usize, AocError> {
         solve_part2(input, 25)
     }
 }

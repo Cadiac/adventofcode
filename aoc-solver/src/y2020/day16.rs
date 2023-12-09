@@ -143,8 +143,8 @@ fn parse_part_2(input: &str) -> Option<(Ticket, Vec<TicketField>)> {
 }
 
 impl Solution for Day16 {
-    type F = u64;
-    type S = u64;
+    type A = u64;
+    type B = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day16.txt")

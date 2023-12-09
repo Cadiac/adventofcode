@@ -21,8 +21,8 @@ fn parse(input: &str) -> Result<Vec<u64>, AocError> {
 }
 
 impl Solution for Day01 {
-    type F = u64;
-    type S = u64;
+    type A = u64;
+    type B = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day01.txt")

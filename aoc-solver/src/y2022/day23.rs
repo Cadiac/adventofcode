@@ -94,8 +94,8 @@ impl Day23 {
 }
 
 impl Solution for Day23 {
-    type F = i64;
-    type S = usize;
+    type A = i64;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day23.txt")

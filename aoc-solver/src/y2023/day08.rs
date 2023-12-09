@@ -65,8 +65,8 @@ fn parse(input: &str) -> Result<(String, HashMap<String, Node>), AocError> {
 }
 
 impl Solution for Day08 {
-    type F = u64;
-    type S = u64;
+    type A = u64;
+    type B = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day08.txt")

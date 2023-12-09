@@ -360,21 +360,21 @@ fn add_list(input: &str) -> BinaryTree {
 }
 
 impl Solution for Day18 {
-    type F = u32;
-    type S = u32;
+    type A = u32;
+    type B = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day18.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<u32, AocError> {
         let result = add_list(input);
         let magnitude = result.magnitude();
 
         Ok(magnitude)
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<u32, AocError> {
         let mut largest_magnitude = 0;
 
         for (first, second) in input.lines().tuple_combinations() {

@@ -102,14 +102,14 @@ fn fold_paper(dots: &mut HashSet<Coords>, fold: Fold) {
 }
 
 impl Solution for Day13 {
-    type F = usize;
-    type S = String;
+    type A = usize;
+    type B = String;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day13.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<usize, AocError> {
         let (mut dots, folds) = parse(input);
 
         folds
@@ -120,7 +120,7 @@ impl Solution for Day13 {
         Ok(dots.len())
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<String, AocError> {
         let (mut dots, folds) = parse(input);
 
         folds

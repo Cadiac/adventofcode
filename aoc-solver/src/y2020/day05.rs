@@ -30,8 +30,8 @@ fn parse_boarding_pass(input: &str) -> BoardingPass {
 }
 
 impl Solution for Day05 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day05.txt")

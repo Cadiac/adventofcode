@@ -15,8 +15,8 @@ fn find_marker(signal: Vec<char>, marker_len: usize) -> Result<usize, AocError> 
 }
 
 impl Solution for Day06 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day06.txt")

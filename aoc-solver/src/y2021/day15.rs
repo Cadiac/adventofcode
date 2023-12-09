@@ -123,19 +123,19 @@ fn solve(grid: Vec<Vec<u32>>) -> Result<u32, AocError> {
 }
 
 impl Solution for Day15 {
-    type F = u32;
-    type S = u32;
+    type A = u32;
+    type B = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day15.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<u32, AocError> {
         let grid = parse_repeating(input, 1);
         solve(grid)
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<u32, AocError> {
         let grid = parse_repeating(input, 5);
         solve(grid)
     }

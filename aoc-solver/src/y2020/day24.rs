@@ -143,8 +143,8 @@ impl GameOfTiles {
 }
 
 impl Solution for Day24 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day24.txt")

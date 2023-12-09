@@ -87,14 +87,14 @@ fn parse_instruction(input: &str) -> IResult<&str, Instruction> {
 }
 
 impl Solution for Day08 {
-    type F = i32;
-    type S = i32;
+    type A = i32;
+    type B = i32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day08.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<i32, AocError> {
         let instructions: Vec<Instruction> = input
             .lines()
             .filter_map(|line| parse_instruction(line).ok())
@@ -111,7 +111,7 @@ impl Solution for Day08 {
         Ok(console.accumulator)
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<i32, AocError> {
         let corrupted_instructions: Vec<Instruction> = input
             .lines()
             .filter_map(|line| parse_instruction(line).ok())

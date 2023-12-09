@@ -88,20 +88,20 @@ fn find_max_height(target_area: TargetArea, initial_x_v: i32, initial_y_v: i32) 
 }
 
 impl Solution for Day17 {
-    type F = i32;
-    type S = usize;
+    type A = i32;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day17.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<i32, AocError> {
         let (part_1, _) = solve(input);
 
         Ok(part_1)
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<usize, AocError> {
         let (_, part_2) = solve(input);
 
         Ok(part_2)

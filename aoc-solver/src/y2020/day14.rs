@@ -7,8 +7,8 @@ use crate::solution::{AocError, Solution};
 pub struct Day14;
 
 impl Solution for Day14 {
-    type F = u64;
-    type S = u64;
+    type A = u64;
+    type B = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day14.txt")

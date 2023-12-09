@@ -13,14 +13,14 @@ fn parse(input: &str) -> Vec<usize> {
 }
 
 impl Solution for Day07 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day07.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<usize, AocError> {
         let depths = parse(input);
 
         let max_depth = *depths.iter().max().unwrap_or(&0);
@@ -40,7 +40,7 @@ impl Solution for Day07 {
         costs.into_iter().min().ok_or(AocError::logic("No minimum"))
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<usize, AocError> {
         let depths = parse(input);
 
         let max_depth = *depths.iter().max().unwrap_or(&0);

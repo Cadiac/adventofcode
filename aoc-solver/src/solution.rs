@@ -32,13 +32,13 @@ impl std::fmt::Display for AocError {
 }
 
 pub trait Solution {
-    type F: fmt::Display;
-    type S: fmt::Display;
+    type A: fmt::Display;
+    type B: fmt::Display;
 
     fn default_input(&self) -> &'static str;
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError>;
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError>;
+    fn part_1(&self, input: &str) -> Result<Self::A, AocError>;
+    fn part_2(&self, input: &str) -> Result<Self::B, AocError>;
 
     fn run(&self, input: Option<String>, day: u32, year: u32) -> Vec<String> {
         let input = input.unwrap_or_else(|| self.default_input().to_owned());

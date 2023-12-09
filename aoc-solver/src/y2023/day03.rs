@@ -51,8 +51,8 @@ fn parse(input: &str) -> Result<(Symbols, Numbers), AocError> {
 }
 
 impl Solution for Day03 {
-    type F = u32;
-    type S = u32;
+    type A = u32;
+    type B = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day03.txt")

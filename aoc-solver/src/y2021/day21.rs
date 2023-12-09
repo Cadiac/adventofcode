@@ -71,14 +71,14 @@ fn play_quantum_turn(rolls: u32, mut players: [Player; 2], active_player: usize)
 }
 
 impl Solution for Day21 {
-    type F = u32;
-    type S = usize;
+    type A = u32;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day21.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<u32, AocError> {
         let mut players = parse(input);
 
         let mut deterministic_dice = 1;
@@ -105,7 +105,7 @@ impl Solution for Day21 {
         }
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<usize, AocError> {
         let players = parse(input);
         let active_player = 0;
 

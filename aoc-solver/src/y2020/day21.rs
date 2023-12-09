@@ -23,8 +23,8 @@ fn parse_line(input: &str) -> (HashSet<&str>, HashSet<&str>) {
 }
 
 impl Solution for Day21 {
-    type F = usize;
-    type S = String;
+    type A = usize;
+    type B = String;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day21.txt")

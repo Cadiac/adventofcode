@@ -79,8 +79,8 @@ fn find_directory_sizes(node: &FsNode) -> Vec<usize> {
 }
 
 impl Solution for Day07 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day07.txt")

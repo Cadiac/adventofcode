@@ -45,8 +45,8 @@ fn parse_numbers(numbers: &str) -> Result<HashSet<u32>, AocError> {
 }
 
 impl Solution for Day04 {
-    type F = u32;
-    type S = usize;
+    type A = u32;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day04.txt")

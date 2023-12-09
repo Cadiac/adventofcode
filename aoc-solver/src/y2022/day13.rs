@@ -107,8 +107,8 @@ fn parse(input: &str) -> IResult<&str, Vec<[Packet; 2]>> {
 pub struct Day13;
 
 impl Solution for Day13 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day13.txt")

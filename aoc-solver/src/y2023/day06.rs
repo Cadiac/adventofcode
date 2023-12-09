@@ -74,8 +74,8 @@ fn parse_part_2(input: &str) -> Result<Race, AocError> {
 }
 
 impl Solution for Day06 {
-    type F = usize;
-    type S = i64;
+    type A = usize;
+    type B = i64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day06.txt")

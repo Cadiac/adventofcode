@@ -53,14 +53,14 @@ fn filter_by_bit_criteria(mut candidates: Vec<Vec<u32>>, expected_value: u32) ->
 }
 
 impl Solution for Day03 {
-    type F = u32;
-    type S = u32;
+    type A = u32;
+    type B = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day03.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<u32, AocError> {
         let bits_length = input.lines().next().unwrap_or("").len();
         let numbers = parse(input);
 
@@ -94,7 +94,7 @@ impl Solution for Day03 {
         Ok(decimal_most_common * decimal_least_common)
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<u32, AocError> {
         let numbers = parse(input);
 
         let ogr_candidates = filter_by_bit_criteria(numbers.clone(), 1);

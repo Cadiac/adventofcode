@@ -130,14 +130,14 @@ fn signal_to_decimal_mappings(unique_signal_patterns: Vec<HashSet<char>>) -> Has
 }
 
 impl Solution for Day08 {
-    type F = usize;
-    type S = u32;
+    type A = usize;
+    type B = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day08.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<usize, AocError> {
         let displays = parse(input);
 
         let sum = displays
@@ -158,7 +158,7 @@ impl Solution for Day08 {
         Ok(sum)
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<u32, AocError> {
         let displays = parse(input);
 
         let sum = displays

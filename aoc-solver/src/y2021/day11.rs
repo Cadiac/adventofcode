@@ -85,14 +85,14 @@ fn simulate_step(mut octopuses: Vec<Vec<u32>>) -> (Vec<Vec<u32>>, usize) {
 }
 
 impl Solution for Day11 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day11.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<Self::F, AocError> {
+    fn part_1(&self, input: &str) -> Result<usize, AocError> {
         let mut octopuses = parse(input);
 
         let mut total_flashes = 0;
@@ -105,7 +105,7 @@ impl Solution for Day11 {
         Ok(total_flashes)
     }
 
-    fn part_2(&self, input: &str) -> Result<Self::S, AocError> {
+    fn part_2(&self, input: &str) -> Result<usize, AocError> {
         let mut octopuses = parse(input);
 
         let total_octopuses_count: usize = octopuses.iter().map(|row| row.len()).sum();

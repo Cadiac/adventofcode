@@ -449,8 +449,8 @@ impl Day22 {
 }
 
 impl Solution for Day22 {
-    type F = i64;
-    type S = i64;
+    type A = i64;
+    type B = i64;
 
 
     fn default_input(&self) -> &'static str {

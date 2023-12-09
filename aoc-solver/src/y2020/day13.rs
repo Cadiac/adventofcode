@@ -23,8 +23,8 @@ fn mod_inv(a: i64, module: i64) -> i64 {
 }
 
 impl Solution for Day13 {
-    type F = i64;
-    type S = i64;
+    type A = i64;
+    type B = i64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day13.txt")

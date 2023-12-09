@@ -28,8 +28,8 @@ fn parse(input: &str) -> Result<Pairs, AocError> {
 }
 
 impl Solution for Day04 {
-    type F = usize;
-    type S = usize;
+    type A = usize;
+    type B = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day04.txt")
