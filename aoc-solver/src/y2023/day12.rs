@@ -1,4 +1,4 @@
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 use itertools::Itertools;
 
@@ -16,7 +16,15 @@ enum Spring {
 type Groups = VecDeque<usize>;
 type Springs = VecDeque<Spring>;
 
-fn parse(input: &str) -> Result<Vec<(Springs, Groups)>, AocError> {
+#[derive(Debug, Eq, PartialEq, Clone, Hash)]
+struct Record {
+    groups: Groups,
+    springs: Springs,
+    contiguous: usize,
+    next_has_to_be_operational: bool,
+}
+
+fn parse(input: &str) -> Result<Vec<Record>, AocError> {
     input
         .trim()
         .lines()
@@ -44,117 +52,89 @@ fn parse(input: &str) -> Result<Vec<(Springs, Groups)>, AocError> {
                 })
                 .try_collect()?;
 
-            Ok((springs, groups))
+            Ok(Record {
+                springs,
+                groups,
+                contiguous: 0,
+                next_has_to_be_operational: false,
+            })
         })
         .try_collect()
 }
 
-fn bfs(springs: Springs, groups: Groups) -> usize {
-    let mut queue = VecDeque::new();
-    let mut found: HashSet<Springs> = HashSet::new();
-
-    let start = (springs, 0, 0, 0, 0, false);
-    queue.push_back(start);
-
-    let total_damaged: usize = groups.iter().sum();
-
-    while let Some((
-        springs,
-        spring_index,
-        group_index,
-        contiguous,
-        mut damaged_count,
-        has_to_be_operational,
-    )) = queue.pop_back()
-    {
-        // if we already n damaged, where N >= groups, just stop?
-        if damaged_count > total_damaged {
-            // Did we reach the end filling all the groups?
-            continue;
-        }
-
-        if let Some(spring) = springs.get(spring_index) {
-            match spring {
-                Spring::Operational => {
-                    if contiguous == 0 {
-                        queue.push_back((
-                            springs,
-                            spring_index + 1,
-                            group_index,
-                            0,
-                            damaged_count,
-                            false,
-                        ));
-                    }
-                }
-                Spring::Damaged => {
-                    if has_to_be_operational {
-                        continue;
-                    }
-
-                    damaged_count += 1;
-
-                    if let Some(group) = groups.get(group_index) {
-                        // We have a group to fill and just hit '#'.
-                        // Did we find enough?
-                        if contiguous + 1 == *group {
-                            // we did, so move to next group
-                            queue.push_back((
-                                springs,
-                                spring_index + 1,
-                                group_index + 1,
-                                0,
-                                damaged_count,
-                                true,
-                            ));
-                        } else {
-                            queue.push_back((
-                                springs,
-                                spring_index + 1,
-                                group_index,
-                                contiguous + 1,
-                                damaged_count,
-                                false,
-                            ));
-                        }
-                    } else {
-                        // terminate this attempt, its invalid
-                        continue;
-                    }
-                }
-                Spring::Unknown => {
-                    let mut operational = springs.clone();
-                    operational[spring_index] = Spring::Operational;
-
-                    queue.push_back((
-                        operational,
-                        spring_index,
-                        group_index,
-                        contiguous,
-                        damaged_count,
-                        has_to_be_operational,
-                    ));
-
-                    let mut damaged = springs.clone();
-                    damaged[spring_index] = Spring::Damaged;
-
-                    queue.push_back((
-                        damaged,
-                        spring_index,
-                        group_index,
-                        contiguous,
-                        damaged_count,
-                        has_to_be_operational,
-                    ));
-                }
-            }
-        } else if group_index == groups.len() {
-            // Did we reach the end filling all the groups?
-            found.insert(springs);
-        }
+fn search(memo: &mut HashMap<Record, usize>, record: &Record) -> usize {
+    if let Some(cached) = memo.get(record) {
+        return *cached;
     }
 
-    found.len()
+    let mut next = record.clone();
+
+    if let Some(spring) = next.springs.pop_front() {
+        match spring {
+            Spring::Operational => {
+                if record.contiguous != 0 {
+                    memo.insert(record.clone(), 0);
+                    return 0;
+                }
+
+                next.next_has_to_be_operational = false;
+                let count = search(memo, &next);
+                memo.insert(record.clone(), count);
+                count
+            }
+            Spring::Damaged => {
+                if next.next_has_to_be_operational {
+                    memo.insert(record.clone(), 0);
+                    return 0;
+                }
+
+                if let Some(group) = next.groups.front() {
+                    // We have a group to fill and just hit '#'.
+                    // Did we find enough?
+                    if next.contiguous + 1 == *group {
+                        // we did, so move to next group
+                        next.groups.pop_front();
+                        next.contiguous = 0;
+                        next.next_has_to_be_operational = true;
+
+                        let count = search(memo, &next);
+                        memo.insert(record.clone(), count);
+                        count
+                    } else {
+                        next.contiguous += 1;
+                        next.next_has_to_be_operational = false;
+
+                        let count = search(memo, &next);
+                        memo.insert(record.clone(), count);
+                        count
+                    }
+                } else {
+                    // terminate this attempt, its invalid
+                    memo.insert(record.clone(), 0);
+                    0
+                }
+            }
+            Spring::Unknown => {
+                let mut operational = next.clone();
+                operational.springs.push_front(Spring::Operational);
+
+                let operational_count = search(memo, &operational);
+
+                let mut damaged = next.clone();
+                damaged.springs.push_front(Spring::Damaged);
+
+                let damaged_count = search(memo, &damaged);
+
+                operational_count + damaged_count
+            }
+        }
+    } else if record.groups.is_empty() {
+        memo.insert(record.clone(), 1);
+        return 1;
+    } else {
+        memo.insert(record.clone(), 0);
+        return 0;
+    }
 }
 
 impl Solution for Day12 {
@@ -168,13 +148,8 @@ impl Solution for Day12 {
     fn part_1(&self, input: &str) -> Result<usize, AocError> {
         let records = parse(input)?;
 
-        let total = records
-            .into_iter()
-            .map(|(springs, groups)| {
-                // Plan: BFS the all possibilities, terminating the searches as soon as we know its impossible
-                bfs(springs, groups)
-            })
-            .sum();
+        let mut memo = HashMap::new();
+        let total = records.iter().map(|record| search(&mut memo, record)).sum();
 
         Ok(total)
     }
@@ -182,21 +157,36 @@ impl Solution for Day12 {
     fn part_2(&self, input: &str) -> Result<usize, AocError> {
         let records = parse(input)?;
 
+        let mut memo = HashMap::new();
+
         let total = records
-            .into_iter()
-            .enumerate()
-            .map(|(index, (springs, groups))| {
-                println!("Index {index}");
-                let mut unfolded_springs = springs.clone();
-                let mut unfolded_groups = groups.clone();
+            .iter()
+            .map(|record| {
+                let springs = record
+                    .springs
+                    .iter()
+                    .copied()
+                    .chain([Spring::Unknown])
+                    .cycle()
+                    .take(5 * record.springs.len() + 4)
+                    .collect();
 
-                for _ in 0..4 {
-                    unfolded_springs.push_back(Spring::Unknown);
-                    unfolded_springs.append(&mut springs.clone());
-                    unfolded_groups.append(&mut groups.clone());
-                }
+                let groups = record
+                    .groups
+                    .iter()
+                    .copied()
+                    .cycle()
+                    .take(5 * record.groups.len())
+                    .collect();
 
-                bfs(unfolded_springs, unfolded_groups)
+                let unfolded = Record {
+                    springs,
+                    groups,
+                    contiguous: 0,
+                    next_has_to_be_operational: false,
+                };
+
+                search(&mut memo, &unfolded)
             })
             .sum();
 
@@ -246,5 +236,10 @@ mod tests {
             ),
             Ok(525152)
         );
+    }
+
+    #[test]
+    fn it_solves_part2_example_hard() {
+        assert_eq!(Day12.part_2("?###???????? 3,2,1"), Ok(506250));
     }
 }
