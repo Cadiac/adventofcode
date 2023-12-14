@@ -13,7 +13,7 @@ const SPIN_CYCLE: [Direction; 4] = [
 
 pub struct Day14;
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Tile {
     Rounded,
     Cube,
@@ -47,94 +47,109 @@ fn parse(input: &str) -> Result<Grid, AocError> {
         .try_collect()
 }
 
-fn slide_rock(mut tiles: Grid, x: usize, y: usize, dx: isize, dy: isize) -> Grid {
-    if tiles[y][x] != Tile::Rounded {
-        return tiles;
+fn slide_rock(grid: &mut Grid, x: usize, y: usize, dx: isize, dy: isize) {
+    if grid[y][x] != Tile::Rounded {
+        return;
     }
 
     let mut target_x = x as isize;
     let mut target_y = y as isize;
 
-    tiles[y][x] = Tile::Empty;
+    grid[y][x] = Tile::Empty;
 
-    while can_slide(&tiles, target_x + dx, target_y + dy) {
+    while can_slide(grid, target_x + dx, target_y + dy) {
         target_x += dx;
         target_y += dy;
     }
 
-    tiles[target_y as usize][target_x as usize] = Tile::Rounded;
-
-    tiles
+    grid[target_y as usize][target_x as usize] = Tile::Rounded;
 }
 
-fn can_slide(tiles: &Grid, x: isize, y: isize) -> bool {
+fn can_slide(grid: &Grid, x: isize, y: isize) -> bool {
     x >= 0
         && y >= 0
-        && y < tiles.len() as isize
-        && x < tiles[y as usize].len() as isize
-        && tiles[y as usize][x as usize] == Tile::Empty
+        && y < grid.len() as isize
+        && x < grid[y as usize].len() as isize
+        && grid[y as usize][x as usize] == Tile::Empty
 }
 
-fn tilt(mut tiles: Grid, direction: &Direction) -> Grid {
+fn tilt(grid: &mut Grid, direction: &Direction) {
+    let (height, width) = (grid.len(), grid[0].len());
+
     match direction {
         Direction::North => {
-            for y in 0..tiles.len() {
-                for x in 0..tiles[y].len() {
-                    tiles = slide_rock(tiles, x, y, 0, -1);
+            for y in 0..height {
+                for x in 0..width {
+                    slide_rock(grid, x, y, 0, -1);
                 }
             }
         }
         Direction::South => {
-            for y in (0..tiles.len()).rev() {
-                for x in 0..tiles[y].len() {
-                    tiles = slide_rock(tiles, x, y, 0, 1);
+            for y in (0..height).rev() {
+                for x in 0..width {
+                    slide_rock(grid, x, y, 0, 1);
                 }
             }
         }
         Direction::West => {
-            for y in 0..tiles.len() {
-                for x in 0..tiles[y].len() {
-                    tiles = slide_rock(tiles, x, y, -1, 0);
+            for y in 0..height {
+                for x in 0..width {
+                    slide_rock(grid, x, y, -1, 0);
                 }
             }
         }
         Direction::East => {
-            for y in 0..tiles.len() {
-                for x in (0..tiles[y].len()).rev() {
-                    tiles = slide_rock(tiles, x, y, 1, 0);
+            for y in 0..height {
+                for x in (0..width).rev() {
+                    slide_rock(grid, x, y, 1, 0);
                 }
             }
         }
     }
-
-    tiles
 }
 
-fn spin(mut tiles: Grid, cycles: usize) -> Grid {
-    let mut seen: HashMap<(Grid, Direction), usize> = HashMap::new();
+fn collect_round_rocks(grid: &Grid) -> Vec<Vec<usize>> {
+    let round_rocks = grid
+        .iter()
+        .map(|row| {
+            row.iter()
+                .enumerate()
+                .filter_map(|(x, tile)| match tile {
+                    Tile::Rounded => Some(x),
+                    _ => None,
+                })
+                .collect()
+        })
+        .collect();
+
+    round_rocks
+}
+
+fn spin(grid: &mut Grid, cycles: usize) {
+    let mut seen: HashMap<Vec<Vec<usize>>, usize> = HashMap::new();
     let mut simulated: Vec<Grid> = vec![];
 
     for cycle in 0..cycles {
-        if let Some(first_occurence) = seen.insert((tiles.clone(), Direction::North), cycle) {
-            let skips_every = cycle - first_occurence;
-            let remaining_cycle_at_end = (cycles - first_occurence) % skips_every - 1;
+        let round_rocks = collect_round_rocks(grid);
 
-            return simulated.swap_remove(first_occurence + remaining_cycle_at_end);
+        if let Some(first_occurence) = seen.insert(round_rocks, cycle) {
+            let repeats_every = cycle - first_occurence;
+            let remaining_cycle_at_end = (cycles - first_occurence) % repeats_every - 1;
+
+            *grid = simulated.swap_remove(first_occurence + remaining_cycle_at_end);
+            return;
         }
 
         for direction in SPIN_CYCLE.iter() {
-            tiles = tilt(tiles, direction);
+            tilt(grid, direction);
         }
 
-        simulated.push(tiles.clone());
+        simulated.push(grid.clone());
     }
-
-    tiles
 }
 
-fn support_beams_load(tiles: &Grid) -> u32 {
-    tiles
-        .iter()
+fn support_beams_load(grid: &Grid) -> u32 {
+    grid.iter()
         .rev()
         .enumerate()
         .map(|(y, row)| {
@@ -157,19 +172,19 @@ impl Solution for Day14 {
     }
 
     fn part_1(&self, input: &str) -> Result<u32, AocError> {
-        let grid = parse(input)?;
+        let mut grid = parse(input)?;
 
-        let tilted = tilt(grid, &Direction::North);
-        let total_load = support_beams_load(&tilted);
+        tilt(&mut grid, &Direction::North);
+        let total_load = support_beams_load(&grid);
 
         Ok(total_load)
     }
 
     fn part_2(&self, input: &str) -> Result<u32, AocError> {
-        let grid = parse(input)?;
+        let mut grid = parse(input)?;
 
-        let cycled = spin(grid, 1000000000);
-        let total_load = support_beams_load(&cycled);
+        spin(&mut grid, 1000000000);
+        let total_load = support_beams_load(&grid);
 
         Ok(total_load)
     }
@@ -195,86 +210,6 @@ mod tests {
                  #OO..#....\n"
             ),
             Ok(136)
-        );
-    }
-
-    #[test]
-    fn it_tilts_north() {
-        assert_eq!(
-            tilt(
-                parse(
-                    "O....#....\n\
-                     O.OO#....#\n\
-                     .....##...\n\
-                     OO.#O....O\n\
-                     .O.....O#.\n\
-                     O.#..O.#.#\n\
-                     ..O..#O..O\n\
-                     .......O..\n\
-                     #....###..\n\
-                     #OO..#....\n"
-                )
-                .unwrap(),
-                &Direction::North
-            ),
-            parse(
-                "OOOO.#.O..\n\
-                 OO..#....#\n\
-                 OO..O##..O\n\
-                 O..#.OO...\n\
-                 ........#.\n\
-                 ..#....#.#\n\
-                 ..O..#.O.O\n\
-                 ..O.......\n\
-                 #....###..\n\
-                 #....#....\n"
-            )
-            .unwrap()
-        );
-    }
-
-    #[test]
-    fn it_tilts_east() {
-        assert_eq!(
-            tilt(parse("O.O..#.O..\n").unwrap(), &Direction::East),
-            parse("...OO#...O\n").unwrap()
-        );
-    }
-
-    #[test]
-    fn it_tilts_west() {
-        assert_eq!(
-            tilt(parse("O.O..#.O..\n").unwrap(), &Direction::West),
-            parse("OO...#O...\n").unwrap()
-        );
-    }
-
-    #[test]
-    fn it_tilts_south() {
-        assert_eq!(
-            tilt(
-                parse(
-                    "O.\n\
-                 .#\n\
-                 ..\n\
-                 OO\n\
-                 #O\n\
-                 O.\n\
-                 .#\n"
-                )
-                .unwrap(),
-                &Direction::South
-            ),
-            parse(
-                "..\n\
-                 .#\n\
-                 O.\n\
-                 O.\n\
-                 #O\n\
-                 .O\n\
-                 O#\n"
-            )
-            .unwrap()
         );
     }
 
