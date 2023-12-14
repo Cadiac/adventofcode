@@ -70,9 +70,9 @@ fn find_possible(
 
         if is_at_end_done || is_at_last_just_finishing {
             return 1;
-        } else {
-            return 0;
         }
+
+        return 0;
     }
 
     let mut possible = 0;
