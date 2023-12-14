@@ -47,70 +47,61 @@ fn parse(input: &str) -> Result<Grid, AocError> {
         .try_collect()
 }
 
+fn slide_rock(mut tiles: Grid, x: usize, y: usize, dx: isize, dy: isize) -> Grid {
+    if tiles[y][x] != Tile::Rounded {
+        return tiles;
+    }
+
+    let mut target_x = x as isize;
+    let mut target_y = y as isize;
+
+    tiles[y][x] = Tile::Empty;
+
+    while can_slide(&tiles, target_x + dx, target_y + dy) {
+        target_x += dx;
+        target_y += dy;
+    }
+
+    tiles[target_y as usize][target_x as usize] = Tile::Rounded;
+
+    tiles
+}
+
+fn can_slide(tiles: &Grid, x: isize, y: isize) -> bool {
+    x >= 0
+        && y >= 0
+        && y < tiles.len() as isize
+        && x < tiles[y as usize].len() as isize
+        && tiles[y as usize][x as usize] == Tile::Empty
+}
+
 fn tilt(mut tiles: Grid, direction: &Direction) -> Grid {
     match direction {
         Direction::North => {
             for y in 0..tiles.len() {
                 for x in 0..tiles[y].len() {
-                    if tiles[y][x] == Tile::Rounded {
-                        tiles[y][x] = Tile::Empty;
-                        let mut target_y = y;
-
-                        while target_y > 0 && tiles[target_y - 1][x] == Tile::Empty {
-                            target_y -= 1
-                        }
-
-                        tiles[target_y][x] = Tile::Rounded;
-                    }
-                }
-            }
-        }
-        Direction::East => {
-            for y in 0..tiles.len() {
-                for x in (0..tiles[y].len()).rev() {
-                    if tiles[y][x] == Tile::Rounded {
-                        tiles[y][x] = Tile::Empty;
-                        let mut target_x = x;
-
-                        while target_x < tiles[y].len() - 1 && tiles[y][target_x + 1] == Tile::Empty
-                        {
-                            target_x += 1
-                        }
-
-                        tiles[y][target_x] = Tile::Rounded;
-                    }
+                    tiles = slide_rock(tiles, x, y, 0, -1);
                 }
             }
         }
         Direction::South => {
             for y in (0..tiles.len()).rev() {
                 for x in 0..tiles[y].len() {
-                    if tiles[y][x] == Tile::Rounded {
-                        tiles[y][x] = Tile::Empty;
-                        let mut target_y = y;
-
-                        while target_y < tiles.len() - 1 && tiles[target_y + 1][x] == Tile::Empty {
-                            target_y += 1
-                        }
-
-                        tiles[target_y][x] = Tile::Rounded;
-                    }
+                    tiles = slide_rock(tiles, x, y, 0, 1);
                 }
             }
         }
         Direction::West => {
             for y in 0..tiles.len() {
                 for x in 0..tiles[y].len() {
-                    if tiles[y][x] == Tile::Rounded {
-                        tiles[y][x] = Tile::Empty;
-                        let mut target_x = x;
-
-                        while target_x > 0 && tiles[y][target_x - 1] == Tile::Empty {
-                            target_x -= 1
-                        }
-
-                        tiles[y][target_x] = Tile::Rounded;
-                    }
+                    tiles = slide_rock(tiles, x, y, -1, 0);
+                }
+            }
+        }
+        Direction::East => {
+            for y in 0..tiles.len() {
+                for x in (0..tiles[y].len()).rev() {
+                    tiles = slide_rock(tiles, x, y, 1, 0);
                 }
             }
         }
