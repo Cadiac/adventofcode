@@ -4,29 +4,28 @@ use itertools::Itertools;
 
 use crate::solution::{AocError, Solution};
 
-const SPIN_CYCLE: [Direction; 4] = [
-    Direction::North,
-    Direction::West,
-    Direction::South,
-    Direction::East,
-];
-
 pub struct Day14;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone)]
 enum Tile {
     Rounded,
     Cube,
     Empty,
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
 enum Direction {
     North,
     East,
     South,
     West,
 }
+
+const SPIN_CYCLE: [Direction; 4] = [
+    Direction::North,
+    Direction::West,
+    Direction::South,
+    Direction::East,
+];
 
 type Grid = Vec<Vec<Tile>>;
 
@@ -47,62 +46,82 @@ fn parse(input: &str) -> Result<Grid, AocError> {
         .try_collect()
 }
 
-fn slide_rock(grid: &mut Grid, x: usize, y: usize, dx: isize, dy: isize) {
-    if grid[y][x] != Tile::Rounded {
-        return;
-    }
-
-    let mut target_x = x as isize;
-    let mut target_y = y as isize;
-
-    grid[y][x] = Tile::Empty;
-
-    while can_slide(grid, target_x + dx, target_y + dy) {
-        target_x += dx;
-        target_y += dy;
-    }
-
-    grid[target_y as usize][target_x as usize] = Tile::Rounded;
-}
-
-fn can_slide(grid: &Grid, x: isize, y: isize) -> bool {
-    x >= 0
-        && y >= 0
-        && y < grid.len() as isize
-        && x < grid[y as usize].len() as isize
-        && grid[y as usize][x as usize] == Tile::Empty
-}
-
-fn tilt(grid: &mut Grid, direction: &Direction) {
-    let (height, width) = (grid.len(), grid[0].len());
-
+fn tilt(tiles: &mut Grid, direction: &Direction) {
     match direction {
-        Direction::North => {
-            for y in 0..height {
-                for x in 0..width {
-                    slide_rock(grid, x, y, 0, -1);
+        Direction::North => slide_north(tiles),
+        Direction::East => slide_east(tiles),
+        Direction::South => slide_south(tiles),
+        Direction::West => slide_west(tiles),
+    }
+}
+
+fn slide_north(tiles: &mut Vec<Vec<Tile>>) {
+    for y in 0..tiles.len() {
+        for x in 0..tiles[y].len() {
+            if let Tile::Rounded = tiles[y][x] {
+                let mut target_y = y;
+
+                tiles[y][x] = Tile::Empty;
+
+                while target_y > 0 && matches!(tiles[target_y - 1][x], Tile::Empty) {
+                    target_y -= 1
                 }
+
+                tiles[target_y][x] = Tile::Rounded;
             }
         }
-        Direction::South => {
-            for y in (0..height).rev() {
-                for x in 0..width {
-                    slide_rock(grid, x, y, 0, 1);
+    }
+}
+
+fn slide_east(tiles: &mut Vec<Vec<Tile>>) {
+    for row in tiles {
+        for x in (0..row.len()).rev() {
+            if let Tile::Rounded = row[x] {
+                let mut target_x = x;
+
+                row[x] = Tile::Empty;
+
+                while target_x < row.len() - 1 && matches!(row[target_x + 1], Tile::Empty) {
+                    target_x += 1
                 }
+
+                row[target_x] = Tile::Rounded;
             }
         }
-        Direction::West => {
-            for y in 0..height {
-                for x in 0..width {
-                    slide_rock(grid, x, y, -1, 0);
+    }
+}
+
+fn slide_south(tiles: &mut Vec<Vec<Tile>>) {
+    for y in (0..tiles.len()).rev() {
+        for x in 0..tiles[y].len() {
+            if let Tile::Rounded = tiles[y][x] {
+                let mut target_y = y;
+
+                tiles[y][x] = Tile::Empty;
+
+                while target_y < tiles.len() - 1 && matches!(tiles[target_y + 1][x], Tile::Empty) {
+                    target_y += 1
                 }
+
+                tiles[target_y][x] = Tile::Rounded;
             }
         }
-        Direction::East => {
-            for y in 0..height {
-                for x in (0..width).rev() {
-                    slide_rock(grid, x, y, 1, 0);
+    }
+}
+
+fn slide_west(tiles: &mut Vec<Vec<Tile>>) {
+    for row in tiles {
+        for x in 0..row.len() {
+            if let Tile::Rounded = row[x] {
+                let mut target_x = x;
+
+                row[x] = Tile::Empty;
+
+                while target_x > 0 && matches!(row[target_x - 1], Tile::Empty) {
+                    target_x -= 1
                 }
+
+                row[target_x] = Tile::Rounded;
             }
         }
     }
