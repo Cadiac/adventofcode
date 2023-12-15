@@ -32,25 +32,19 @@ impl Solution for Day15 {
             .split(',')
             .fold(initial_boxes, |mut boxes, step| {
                 if let Some(label) = step.strip_suffix('-') {
-                    let box_index = hash(label);
+                    let index = hash(label);
 
-                    if let Some(lens_position) =
-                        boxes[box_index].iter().position(|(l, _)| *l == label)
-                    {
-                        boxes[box_index].remove(lens_position);
+                    if let Some(lens) = boxes[index].iter().position(|(l, _)| *l == label) {
+                        boxes[index].remove(lens);
                     }
-                }
-
-                if let Some((label, focal_length)) = step.split_once('=') {
-                    let box_index = hash(label);
+                } else if let Some((label, focal_length)) = step.split_once('=') {
+                    let index = hash(label);
                     let focal_length = focal_length.parse().unwrap();
 
-                    if let Some(lens_position) =
-                        boxes[box_index].iter().position(|(l, _)| *l == label)
-                    {
-                        boxes[box_index][lens_position] = (label, focal_length)
+                    if let Some(lens) = boxes[index].iter().position(|(l, _)| *l == label) {
+                        boxes[index][lens] = (label, focal_length)
                     } else {
-                        boxes[box_index].push((label, focal_length));
+                        boxes[index].push((label, focal_length));
                     }
                 }
 

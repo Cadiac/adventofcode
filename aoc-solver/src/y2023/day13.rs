@@ -1,108 +1,56 @@
-use itertools::Itertools;
-
 use crate::solution::{AocError, Solution};
 
 pub struct Day13;
 
-fn parse(input: &str) -> Result<Vec<Vec<Vec<bool>>>, AocError> {
+enum Direction {
+    Horizontal,
+    Vertical,
+}
+
+fn parse(input: &str) -> Vec<Vec<Vec<char>>> {
     input
         .trim()
         .split("\n\n")
-        .map(|pattern| {
-            pattern
-                .lines()
-                .map(|line| {
-                    let row = line
-                        .chars()
-                        .map(|spring| match spring {
-                            '.' => Ok(false),
-                            '#' => Ok(true),
-                            _ => Err(AocError::parse(spring, "Unexpected symbol")),
-                        })
-                        .try_collect()?;
-
-                    Ok(row)
-                })
-                .try_collect()
-        })
-        .try_collect()
+        .map(|pattern| pattern.lines().map(|line| line.chars().collect()).collect())
+        .collect()
 }
 
-fn find_reflection_line(
-    pattern: &[Vec<bool>],
-    ignore_mirror: Option<(usize, bool)>,
-) -> Option<(usize, bool)> {
+fn find_reflection_line(pattern: &[Vec<char>], part_2: bool) -> Option<(usize, Direction)> {
     for y in 0..pattern.len() - 1 {
-        // Does this row match the next one?
-        let mut is_mirrored = true;
-        for x in 0..pattern[y].len() {
-            if pattern[y][x] != pattern[y + 1][x] {
-                is_mirrored = false;
-                break;
-            }
-        }
+        let mut differences = 0;
+        let mut distance = 0;
 
-        if !is_mirrored {
-            continue;
-        }
-
-        let mut distance = 1;
-        while is_mirrored && y + distance + 1 < pattern.len() && y >= distance {
+        while y + distance < pattern.len() - 1 && y >= distance {
             for x in 0..pattern[y].len() {
                 if pattern[y + distance + 1][x] != pattern[y - distance][x] {
-                    is_mirrored = false;
-                    break;
+                    differences += 1;
                 }
             }
 
             distance += 1;
         }
 
-        if is_mirrored {
-            if let Some(ignore) = ignore_mirror {
-                if !ignore.1 || ignore.0 != y + 1 {
-                    return Some((y + 1, true));
-                }
-            } else {
-                return Some((y + 1, true));
-            }
+        if (part_2 && differences == 1) || (!part_2 && differences == 0) {
+            return Some((y + 1, Direction::Horizontal));
         }
     }
 
     for x in 0..pattern[0].len() - 1 {
-        // Does this column match the next one?
-        let mut is_mirrored = true;
-        for y in 0..pattern.len() {
-            if pattern[y][x] != pattern[y][x + 1] {
-                is_mirrored = false;
-                break;
-            }
-        }
+        let mut differences = 0;
+        let mut distance = 0;
 
-        if !is_mirrored {
-            continue;
-        }
-
-        let mut distance = 1;
-        while is_mirrored && x + distance + 1 < pattern[0].len() && x >= distance {
-            for y in 0..pattern.len() {
-                if pattern[y][x + distance + 1] != pattern[y][x - distance] {
-                    is_mirrored = false;
-                    break;
+        while x + distance < pattern[0].len() - 1 && x >= distance {
+            for line in pattern {
+                if line[x + distance + 1] != line[x - distance] {
+                    differences += 1;
                 }
             }
 
             distance += 1;
         }
 
-        if is_mirrored {
-            if let Some(ignore) = ignore_mirror {
-                if ignore.1 || ignore.0 != x + 1 {
-                    return Some((x + 1, false));
-                }
-            } else {
-                return Some((x + 1, false));
-            }
+        if (part_2 && differences == 1) || (!part_2 && differences == 0) {
+            return Some((x + 1, Direction::Vertical));
         }
     }
 
@@ -118,13 +66,13 @@ impl Solution for Day13 {
     }
 
     fn part_1(&self, input: &str) -> Result<usize, AocError> {
-        let patterns = parse(input)?;
+        let patterns = parse(input);
 
         let total = patterns
             .iter()
-            .map(|pattern| match find_reflection_line(pattern, None) {
-                Some((line, true)) => 100 * line,
-                Some((line, false)) => line,
+            .map(|pattern| match find_reflection_line(pattern, false) {
+                Some((line, Direction::Horizontal)) => 100 * line,
+                Some((line, Direction::Vertical)) => line,
                 None => 0,
             })
             .sum();
@@ -133,33 +81,16 @@ impl Solution for Day13 {
     }
 
     fn part_2(&self, input: &str) -> Result<usize, AocError> {
-        let patterns = parse(input)?;
+        let patterns = parse(input);
 
         let total = patterns
             .iter()
-            .map(|pattern| {
-                let original = find_reflection_line(pattern, None);
-
-                for y in 0..pattern.len() {
-                    for x in 0..pattern[y].len() {
-                        let mut fixed = pattern.clone();
-                        fixed[y][x] = !fixed[y][x];
-
-                        if let Some(fixed_reflection) = find_reflection_line(&fixed, original) {
-                            if fixed_reflection.1 {
-                                return 100 * fixed_reflection.0;
-                            } else {
-                                return fixed_reflection.0;
-                            }
-                        }
-                    }
-                }
-
-                0
+            .map(|pattern| match find_reflection_line(pattern, true) {
+                Some((line, Direction::Horizontal)) => 100 * line,
+                Some((line, Direction::Vertical)) => line,
+                None => 0,
             })
             .sum();
-
-        // Too low
 
         Ok(total)
     }
