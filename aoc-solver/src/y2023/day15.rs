@@ -30,7 +30,7 @@ impl Solution for Day15 {
         let sum = input
             .trim()
             .split(',')
-            .fold(initial_boxes, |mut boxes, step| {
+            .try_fold(initial_boxes, |mut boxes, step| {
                 if let Some(label) = step.strip_suffix('-') {
                     let index = hash(label);
 
@@ -39,7 +39,9 @@ impl Solution for Day15 {
                     }
                 } else if let Some((label, focal_length)) = step.split_once('=') {
                     let index = hash(label);
-                    let focal_length = focal_length.parse().unwrap();
+                    let focal_length = focal_length
+                        .parse()
+                        .map_err(|err| AocError::parse(focal_length, err))?;
 
                     if let Some(lens) = boxes[index].iter().position(|(l, _)| *l == label) {
                         boxes[index][lens] = (label, focal_length)
@@ -48,8 +50,8 @@ impl Solution for Day15 {
                     }
                 }
 
-                boxes
-            })
+                Ok(boxes)
+            })?
             .iter()
             .enumerate()
             .map(|(box_number, lens_box)| {
