@@ -46,6 +46,20 @@ $ cargo test --workspace
 
 within the project's root directory.
 
+## Benchmarking
+
+You can run all benchmarks within `aoc-solver` directory with
+
+```bash
+$ cargo bench
+```
+
+Individual day benchmarks can be run using
+
+```bash
+cargo bench -- day-1 --exact
+```
+
 ## Running the web project
 
 This repository now also ships with a small web tool, [https://aoc.cadi.ac/](https://aoc.cadi.ac/) to run the solutions online.
@@ -80,3 +94,11 @@ This should start the server at `localhost:8080`.
 ❄️ [Day 06](aoc-solver/src/y2023/day06.rs)
 ❄️ [Day 07](aoc-solver/src/y2023/day07.rs)
 ❄️ [Day 08](aoc-solver/src/y2023/day08.rs)
+❄️ [Day 09](aoc-solver/src/y2023/day09.rs)
+❄️ [Day 10](aoc-solver/src/y2023/day10.rs)
+❄️ [Day 11](aoc-solver/src/y2023/day11.rs)
+❄️ [Day 12](aoc-solver/src/y2023/day12.rs)
+❄️ [Day 13](aoc-solver/src/y2023/day13.rs)
+❄️ [Day 14](aoc-solver/src/y2023/day14.rs)
+❄️ [Day 15](aoc-solver/src/y2023/day15.rs)
+❄️ [Day 16](aoc-solver/src/y2023/day16.rs)
