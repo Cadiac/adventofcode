@@ -69,28 +69,18 @@ impl Solution for Day16 {
         let mut max_energized = 0;
 
         for x in 0..width {
-            let count = energize(width, height, &grid, (x as isize, 0, Direction::South))?;
+            let count = energize(width, height, &grid, (x, 0, Direction::South))?;
             max_energized = usize::max(max_energized, count);
 
-            let count = energize(
-                width,
-                height,
-                &grid,
-                (x as isize, height as isize - 1, Direction::North),
-            )?;
+            let count = energize(width, height, &grid, (x, height - 1, Direction::North))?;
             max_energized = usize::max(max_energized, count);
         }
 
         for y in 0..height {
-            let count = energize(width, height, &grid, (0, y as isize, Direction::East))?;
+            let count = energize(width, height, &grid, (0, y, Direction::East))?;
             max_energized = usize::max(max_energized, count);
 
-            let count = energize(
-                width,
-                height,
-                &grid,
-                (width as isize - 1, y as isize, Direction::West),
-            )?;
+            let count = energize(width, height, &grid, (width - 1, y, Direction::West))?;
             max_energized = usize::max(max_energized, count);
         }
 
@@ -102,66 +92,62 @@ fn energize(
     width: usize,
     height: usize,
     grid: &[Vec<Tile>],
-    entry: (isize, isize, Direction),
+    entry: (usize, usize, Direction),
 ) -> Result<usize, AocError> {
     let mut beams = vec![entry];
-    let mut seen: HashSet<(isize, isize, Direction)> = HashSet::new();
+    let mut seen: HashSet<(usize, usize, Direction)> = HashSet::new();
 
     while let Some((x, y, direction)) = beams.pop() {
-        if x >= 0
-            && y >= 0
-            && (x as usize) < width
-            && (y as usize) < height
-            && seen.insert((x, y, direction))
-        {
-            match grid[y as usize][x as usize] {
-                Tile::Empty => {
-                    match direction {
-                        Direction::North => beams.push((x, y - 1, direction)),
-                        Direction::East => beams.push((x + 1, y, direction)),
-                        Direction::South => beams.push((x, y + 1, direction)),
-                        Direction::West => beams.push((x - 1, y, direction)),
-                    };
-                }
-                Tile::Mirror(mirror) => {
-                    match (mirror, direction) {
-                        ('/', Direction::South) => beams.push((x - 1, y, Direction::West)),
-                        ('/', Direction::North) => beams.push((x + 1, y, Direction::East)),
-                        ('/', Direction::East) => beams.push((x, y - 1, Direction::North)),
-                        ('/', Direction::West) => beams.push((x, y + 1, Direction::South)),
+        if seen.insert((x, y, direction)) {
+            let x = x as isize;
+            let y = y as isize;
 
-                        ('\\', Direction::South) => beams.push((x + 1, y, Direction::East)),
-                        ('\\', Direction::North) => beams.push((x - 1, y, Direction::West)),
-                        ('\\', Direction::East) => beams.push((x, y + 1, Direction::South)),
-                        ('\\', Direction::West) => beams.push((x, y - 1, Direction::North)),
+            let next: Vec<(isize, isize, Direction)> = match grid[y as usize][x as usize] {
+                Tile::Empty => match direction {
+                    Direction::North => vec![(x, y - 1, direction)],
+                    Direction::East => vec![(x + 1, y, direction)],
+                    Direction::South => vec![(x, y + 1, direction)],
+                    Direction::West => vec![(x - 1, y, direction)],
+                },
+                Tile::Mirror(mirror) => match mirror {
+                    '/' => match direction {
+                        Direction::South => vec![(x - 1, y, Direction::West)],
+                        Direction::North => vec![(x + 1, y, Direction::East)],
+                        Direction::East => vec![(x, y - 1, Direction::North)],
+                        Direction::West => vec![(x, y + 1, Direction::South)],
+                    },
+                    '\\' => match direction {
+                        Direction::South => vec![(x + 1, y, Direction::East)],
+                        Direction::North => vec![(x - 1, y, Direction::West)],
+                        Direction::East => vec![(x, y + 1, Direction::South)],
+                        Direction::West => vec![(x, y - 1, Direction::North)],
+                    },
+                    _ => return Err(AocError::parse(mirror, "Unexpected mirror")),
+                },
+                Tile::Splitter(splitter) => match splitter {
+                    '|' => match direction {
+                        Direction::South => vec![(x, y + 1, direction)],
+                        Direction::North => vec![(x, y - 1, direction)],
+                        _ => vec![(x, y - 1, Direction::North), (x, y + 1, Direction::South)],
+                    },
+                    '-' => match direction {
+                        Direction::East => vec![(x + 1, y, direction)],
+                        Direction::West => vec![(x - 1, y, direction)],
+                        _ => vec![(x + 1, y, Direction::East), (x - 1, y, Direction::West)],
+                    },
+                    _ => return Err(AocError::parse(splitter, "Unexpected splitter")),
+                },
+            };
 
-                        _ => return Err(AocError::parse(mirror, "Unexpected mirror")),
-                    };
-                }
-                Tile::Splitter(splitter) => {
-                    match (splitter, direction) {
-                        ('|', Direction::South) => beams.push((x, y + 1, direction)),
-                        ('|', Direction::North) => beams.push((x, y - 1, direction)),
-                        ('|', _) => {
-                            beams.push((x, y - 1, Direction::North));
-                            beams.push((x, y + 1, Direction::South));
-                        }
-
-                        ('-', Direction::East) => beams.push((x + 1, y, direction)),
-                        ('-', Direction::West) => beams.push((x - 1, y, direction)),
-                        ('-', _) => {
-                            beams.push((x + 1, y, Direction::East));
-                            beams.push((x - 1, y, Direction::West));
-                        }
-
-                        _ => return Err(AocError::parse(splitter, "Unexpected splitter")),
-                    };
+            for (x, y, direction) in next {
+                if x >= 0 && y >= 0 && x < width as isize && y < height as isize {
+                    beams.push((x as usize, y as usize, direction));
                 }
             }
         }
     }
 
-    let energized: HashSet<(isize, isize)> = seen.into_iter().map(|(x, y, _)| (x, y)).collect();
+    let energized: HashSet<(usize, usize)> = seen.into_iter().map(|(x, y, _)| (x, y)).collect();
 
     Ok(energized.len())
 }
