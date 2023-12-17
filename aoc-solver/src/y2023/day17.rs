@@ -20,6 +20,30 @@ enum Direction {
     West,
 }
 
+impl Direction {
+    fn possible(&self, consequtive: u8, min_consequtive: u8) -> Vec<Direction> {
+        if consequtive < min_consequtive {
+            return vec![*self];
+        }
+
+        match self {
+            Direction::North => vec![Direction::North, Direction::East, Direction::West],
+            Direction::East => vec![Direction::East, Direction::North, Direction::South],
+            Direction::South => vec![Direction::South, Direction::East, Direction::West],
+            Direction::West => vec![Direction::West, Direction::North, Direction::South],
+        }
+    }
+
+    fn delta(&self) -> (isize, isize) {
+        match self {
+            Direction::North => (0, -1),
+            Direction::East => (1, 0),
+            Direction::South => (0, 1),
+            Direction::West => (-1, 0),
+        }
+    }
+}
+
 #[derive(Clone, Eq, PartialEq)]
 struct Search {
     heat_loss: u32,
@@ -60,52 +84,15 @@ fn parse(input: &str) -> Result<Grid, AocError> {
     Ok(grid)
 }
 
-fn directions(
-    direction: &Direction,
-    consequtive: u8,
-    min_consequtive: u8,
-) -> Vec<(Direction, isize, isize)> {
-    if consequtive < min_consequtive {
-        return match direction {
-            Direction::North => vec![(Direction::North, 0, -1)],
-            Direction::East => vec![(Direction::East, 1, 0)],
-            Direction::South => vec![(Direction::South, 0, 1)],
-            Direction::West => vec![(Direction::West, -1, 0)],
-        };
-    }
-
-    match direction {
-        Direction::North => vec![
-            (Direction::North, 0, -1),
-            (Direction::East, 1, 0),
-            (Direction::West, -1, 0),
-        ],
-        Direction::East => vec![
-            (Direction::East, 1, 0),
-            (Direction::North, 0, -1),
-            (Direction::South, 0, 1),
-        ],
-        Direction::South => vec![
-            (Direction::South, 0, 1),
-            (Direction::East, 1, 0),
-            (Direction::West, -1, 0),
-        ],
-        Direction::West => vec![
-            (Direction::West, -1, 0),
-            (Direction::North, 0, -1),
-            (Direction::South, 0, 1),
-        ],
-    }
-}
-
-fn dijkstra(grid: &Grid, min_consequtive: u8, max_consequtive: u8) -> Option<u32> {
+fn dijkstra(grid: &Grid, min_consequtive: u8, max_consequtive: u8) -> Result<u32, AocError> {
     let mut heat_losses: HashMap<(Coords, Direction, u8), u32> = HashMap::new();
     let mut heap: BinaryHeap<Search> = BinaryHeap::new();
 
-    let height = grid.len();
-    let width = grid[0].len();
-    let target = ((width - 1) as isize, (height - 1) as isize);
+    let height = grid.len() as isize;
+    let width = grid[0].len() as isize;
+    let target = (width - 1, height - 1);
 
+    heat_losses.insert(((0, 0), Direction::East, 0), 0);
     heap.push(Search {
         position: (0, 0),
         direction: Direction::East,
@@ -121,7 +108,7 @@ fn dijkstra(grid: &Grid, min_consequtive: u8, max_consequtive: u8) -> Option<u32
     }) = heap.pop()
     {
         if position == target && consequtive >= min_consequtive {
-            return Some(heat_losses[&(position, direction, consequtive)]);
+            return Ok(heat_losses[&(position, direction, consequtive)]);
         }
 
         if heat_loss
@@ -132,43 +119,39 @@ fn dijkstra(grid: &Grid, min_consequtive: u8, max_consequtive: u8) -> Option<u32
             continue;
         }
 
-        for (next_direction, dx, dy) in directions(&direction, consequtive, min_consequtive) {
-            let x = position.0 + dx;
-            let y = position.1 + dy;
+        for next_direction in direction.possible(consequtive, min_consequtive) {
+            let (dx, dy) = next_direction.delta();
+            let (x, y) = (position.0 + dx, position.1 + dy);
 
-            if x >= 0 && y >= 0 && (x as usize) < width && (y as usize) < height {
-                let neighbour = grid[y as usize][x as usize];
+            let next_consequtive = if direction == next_direction {
+                consequtive + 1
+            } else {
+                1
+            };
 
-                let next_consequtive = if direction == next_direction {
-                    consequtive + 1
-                } else {
-                    1
-                };
+            if x < 0 || y < 0 || x >= width || y >= height || next_consequtive > max_consequtive {
+                continue;
+            }
 
-                if next_consequtive > max_consequtive {
-                    continue;
-                }
+            let next = Search {
+                position: (x, y),
+                direction: next_direction,
+                heat_loss: heat_loss + grid[y as usize][x as usize] as u32,
+                consequtive: next_consequtive,
+            };
 
-                let next = Search {
-                    position: (x, y),
-                    direction: next_direction,
-                    heat_loss: heat_loss + neighbour as u32,
-                    consequtive: next_consequtive,
-                };
+            let best_known = heat_losses
+                .entry((next.position, next.direction, next.consequtive))
+                .or_insert(u32::MAX);
 
-                let best_known = heat_losses
-                    .entry((next.position, next.direction, next.consequtive))
-                    .or_insert(u32::MAX);
-
-                if next.heat_loss < *best_known {
-                    *best_known = next.heat_loss;
-                    heap.push(next)
-                }
+            if next.heat_loss < *best_known {
+                *best_known = next.heat_loss;
+                heap.push(next)
             }
         }
     }
 
-    None
+    Err(AocError::logic("No path found"))
 }
 
 impl Solution for Day17 {
@@ -181,16 +164,12 @@ impl Solution for Day17 {
 
     fn part_1(&self, input: &str) -> Result<u32, AocError> {
         let grid = parse(input)?;
-        let total_heat_loss = dijkstra(&grid, 0, 3).ok_or(AocError::logic("No path found"))?;
-
-        Ok(total_heat_loss)
+        dijkstra(&grid, 0, 3)
     }
 
     fn part_2(&self, input: &str) -> Result<u32, AocError> {
         let grid = parse(input)?;
-        let total_heat_loss = dijkstra(&grid, 4, 10).ok_or(AocError::logic("No path found"))?;
-
-        Ok(total_heat_loss)
+        dijkstra(&grid, 4, 10)
     }
 }
 
