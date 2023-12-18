@@ -4,7 +4,7 @@ use crate::solution::{AocError, Solution};
 
 pub struct Day18;
 
-type Point = (f64, f64);
+type Point = (i64, i64);
 
 enum Direction {
     Up,
@@ -14,7 +14,7 @@ enum Direction {
 }
 
 impl Direction {
-    fn as_delta(&self) -> (isize, isize) {
+    fn as_delta(&self) -> (i8, i8) {
         match self {
             Direction::Up => (0, -1),
             Direction::Right => (1, 0),
@@ -26,7 +26,7 @@ impl Direction {
 
 struct Instruction {
     direction: Direction,
-    steps: isize,
+    steps: u64,
     color: String,
 }
 
@@ -52,7 +52,7 @@ fn parse(input: &str) -> Result<Vec<Instruction>, AocError> {
             let color = color
                 .strip_prefix('(')
                 .and_then(|color| color.strip_suffix(')'))
-                .ok_or(AocError::parse(color, "invalid color"))?;
+                .ok_or(AocError::parse(color, "Invalid color"))?;
 
             Ok(Instruction {
                 direction,
@@ -65,27 +65,26 @@ fn parse(input: &str) -> Result<Vec<Instruction>, AocError> {
     Ok(instructions)
 }
 
-fn execute(instructions: Vec<Instruction>) -> Result<(usize, Vec<Point>), AocError> {
+fn execute(instructions: &[Instruction]) -> Result<(u64, Vec<Point>), AocError> {
     let mut current = (0, 0);
-    let mut trench_len: isize = 0;
-    let mut vertices = Vec::new();
+    let mut trench_len = 0;
+    let mut vertices = Vec::with_capacity(instructions.len());
 
     for instruction in instructions {
-        vertices.push((current.0 as f64, current.1 as f64));
-
-        let (dx, dy) = instruction.direction.as_delta();
+        vertices.push((current.0, current.1));
 
         trench_len += instruction.steps;
 
-        current.0 += instruction.steps * dx;
-        current.1 += instruction.steps * dy;
+        let (dx, dy) = instruction.direction.as_delta();
+        current.0 += instruction.steps as i64 * dx as i64;
+        current.1 += instruction.steps as i64 * dy as i64;
     }
 
-    Ok((trench_len as usize, vertices))
+    Ok((trench_len, vertices))
 }
 
-fn shoelace(vertices: &[Point]) -> f64 {
-    let mut area = 0.0;
+fn shoelace(vertices: &[Point]) -> i64 {
+    let mut area = 0;
     let n = vertices.len();
 
     for i in 0..n {
@@ -99,13 +98,13 @@ fn shoelace(vertices: &[Point]) -> f64 {
         area += x1 * y2 - x2 * y1;
     }
 
-    area.abs() / 2.0
+    area.abs() / 2
 }
 
-fn calculate_area(vertices: Vec<(f64, f64)>, trench_len: usize) -> u64 {
+fn calculate_area(vertices: &[Point], trench_len: u64) -> u64 {
     // Calculate the area "A" of polygon using Shoelace formula
     // https://en.wikipedia.org/wiki/Shoelace_formula
-    let area = shoelace(&vertices) as i64;
+    let area = shoelace(vertices);
 
     // Solve the amount of interior points "i" with Pick's theorem,
     // using trench length as "b" and the area from shoelace as "A"
@@ -116,7 +115,7 @@ fn calculate_area(vertices: Vec<(f64, f64)>, trench_len: usize) -> u64 {
 
     // Add together the volume dug out while digging the trench and
     // the volume contained within it
-    trench_len as u64 + interior_points as u64
+    trench_len + interior_points as u64
 }
 
 impl Solution for Day18 {
@@ -130,20 +129,20 @@ impl Solution for Day18 {
     fn part_1(&self, input: &str) -> Result<u64, AocError> {
         let instructions = parse(input)?;
 
-        let (trench_len, vertices) = execute(instructions)?;
-        let total_area = calculate_area(vertices, trench_len);
+        let (trench_len, vertices) = execute(&instructions)?;
+        let total_area = calculate_area(&vertices, trench_len);
 
         Ok(total_area)
     }
 
     fn part_2(&self, input: &str) -> Result<u64, AocError> {
-        let instructions = parse(input)?
+        let instructions: Vec<_> = parse(input)?
             .into_iter()
             .map(|instruction| {
                 let color = instruction
                     .color
                     .strip_prefix('#')
-                    .ok_or(AocError::parse(&instruction.color, "Missing #-prefix"))?;
+                    .ok_or(AocError::parse(&instruction.color, "Missing '#'-prefix"))?;
 
                 let (steps, direction) = color.split_at(5);
 
@@ -160,14 +159,14 @@ impl Solution for Day18 {
 
                 Ok(Instruction {
                     direction,
-                    steps: steps as isize,
+                    steps,
                     color: instruction.color,
                 })
             })
             .try_collect()?;
 
-        let (trench_len, vertices) = execute(instructions)?;
-        let total_area = calculate_area(vertices, trench_len);
+        let (trench_len, vertices) = execute(&instructions)?;
+        let total_area = calculate_area(&vertices, trench_len);
 
         Ok(total_area)
     }
