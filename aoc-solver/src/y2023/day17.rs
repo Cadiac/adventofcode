@@ -34,7 +34,7 @@ impl Direction {
         }
     }
 
-    fn delta(&self) -> (isize, isize) {
+    fn as_delta(&self) -> (isize, isize) {
         match self {
             Direction::North => (0, -1),
             Direction::East => (1, 0),
@@ -120,7 +120,7 @@ fn dijkstra(grid: &Grid, min_consequtive: u8, max_consequtive: u8) -> Result<u32
         }
 
         for next_direction in direction.possible(consequtive, min_consequtive) {
-            let (dx, dy) = next_direction.delta();
+            let (dx, dy) = next_direction.as_delta();
             let (x, y) = (position.0 + dx, position.1 + dy);
 
             let next_consequtive = if direction == next_direction {

@@ -89,11 +89,7 @@ impl Solution for Day08 {
             match instruction {
                 'L' => current = &node.left,
                 'R' => current = &node.right,
-                _ => {
-                    return Err(AocError::logic(format!(
-                        "Unknown instruction {instruction}"
-                    )))
-                }
+                _ => return Err(AocError::parse(instruction, "Unknown instruction")),
             }
 
             steps += 1;
