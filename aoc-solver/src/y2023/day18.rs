@@ -102,6 +102,23 @@ fn shoelace(vertices: &[Point]) -> f64 {
     area.abs() / 2.0
 }
 
+fn calculate_area(vertices: Vec<(f64, f64)>, trench_len: usize) -> u64 {
+    // Calculate the area "A" of polygon using Shoelace formula
+    // https://en.wikipedia.org/wiki/Shoelace_formula
+    let area = shoelace(&vertices) as i64;
+
+    // Solve the amount of interior points "i" with Pick's theorem,
+    // using trench length as "b" and the area from shoelace as "A"
+    // https://en.wikipedia.org/wiki/Pick%27s_theorem
+    // A = i + b/2 - 1
+    // i = -b/2 + 1 + A
+    let interior_points = trench_len as i64 / -2 + 1 + area;
+
+    // Add together the volume dug out while digging the trench and
+    // the volume contained within it
+    trench_len as u64 + interior_points as u64
+}
+
 impl Solution for Day18 {
     type A = u64;
     type B = u64;
@@ -154,23 +171,6 @@ impl Solution for Day18 {
 
         Ok(total_area)
     }
-}
-
-fn calculate_area(vertices: Vec<(f64, f64)>, trench_len: usize) -> u64 {
-    // Calculate the area "A" of polygon using Shoelace formula
-    // https://en.wikipedia.org/wiki/Shoelace_formula
-    let area = shoelace(&vertices) as i64;
-
-    // Solve the amount of interior points "i" with Pick's theorem,
-    // using trench length as "b" and the area from shoelace as "A"
-    // https://en.wikipedia.org/wiki/Pick%27s_theorem
-    // A = i + b/2 - 1
-    // i = -b/2 + 1 + A
-    let interior_points = trench_len as i64 / -2 + 1 + area;
-
-    // Add together the volume dug out while digging the trench and
-    // the volume contained within it
-    trench_len as u64 + interior_points as u64
 }
 
 #[cfg(test)]
