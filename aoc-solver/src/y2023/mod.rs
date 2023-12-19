@@ -81,7 +81,7 @@ impl Solver for Y2023 {
             16 => include_str!("./day16.rs"),
             17 => include_str!("./day17.rs"),
             18 => include_str!("./day18.rs"),
-            19 => include_str!("./day18.rs"),
+            19 => include_str!("./day19.rs"),
             _ => unimplemented!(),
         }
     }
