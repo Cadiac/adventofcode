@@ -207,10 +207,10 @@ impl Solution for Day19 {
             for step in &workflows[current] {
                 // `ranges` continues the steps of the current workflow, never fulfilling the condition
                 // `next` fulfills the condition and enters the target, leaving the current workflow.
-                let mut next = ranges.clone();
-
                 match step {
                     Step::Comparison((category, operator, operand, target)) => {
+                        let mut next = ranges.clone();
+
                         match operator {
                             Operator::GreaterThan => {
                                 ranges.entry(category.clone()).or_default().max = *operand;
