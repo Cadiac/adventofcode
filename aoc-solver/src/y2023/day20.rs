@@ -200,10 +200,11 @@ impl Solution for Day20 {
         let mut current = rx.as_str();
         let mut modules_to_find: HashMap<String, Option<u32>> = HashMap::new();
 
-        // This isn't that generic solution - assuming that chain of conjunction modules
-        // produces leads to the 'rx' module traverse this chain until we see conjunction
-        // module with more than one input. These inputs will trigger periodically, find
-        // the answer by determining the LCM of those periodic input cycle durations.
+        // This isn't very generic solution - assume that there's a chain of conjunction
+        // modules that produces the value of 'rx' module. Traverse this chain until we
+        // see conjunction a module with more than one input. These inputs will trigger
+        // periodically, find the durations of these cycles and the answer by determining
+        // the LCM of those periodic input cycle durations.
         loop {
             let target_module = modules
                 .get(current)
