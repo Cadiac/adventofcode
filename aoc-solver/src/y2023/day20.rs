@@ -60,8 +60,6 @@ fn parse(input: &str) -> Result<HashMap<String, Module>, AocError> {
         .try_collect()?;
 
     let mut inputs: HashMap<String, Vec<String>> = HashMap::new();
-
-    // Construct module inputs
     for (name, module) in modules.iter() {
         for output in &module.outputs {
             inputs.entry(output.clone()).or_default().push(name.clone());
@@ -121,37 +119,19 @@ fn press_button(
             };
 
             if let Some(output) = output {
-                emit_output(
-                    output,
-                    &current,
-                    module,
-                    &mut output_buffer,
-                    &mut lows,
-                    &mut highs,
-                );
+                match output {
+                    true => highs += module.outputs.len() as u32,
+                    false => lows += module.outputs.len() as u32,
+                }
+
+                for target in &module.outputs {
+                    output_buffer.push_back((target.clone(), output, current.to_owned()));
+                }
             }
         }
     }
 
     (lows, highs)
-}
-
-fn emit_output(
-    output: bool,
-    source: &str,
-    module: &mut Module,
-    output_buffer: &mut VecDeque<(String, bool, String)>,
-    lows: &mut u32,
-    highs: &mut u32,
-) {
-    match output {
-        true => *highs += module.outputs.len() as u32,
-        false => *lows += module.outputs.len() as u32,
-    }
-
-    for target in &module.outputs {
-        output_buffer.push_back((target.clone(), output, source.to_owned()));
-    }
 }
 
 fn gcd(a: u64, b: u64) -> u64 {
