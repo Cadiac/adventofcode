@@ -63,42 +63,54 @@ impl Solution for Day21 {
     fn part_2(&self, input: &str) -> Result<u64, AocError> {
         let (tiles, start) = parse(input)?;
 
-        // This works only on many assumptions of what the input looks like.
+        // This works on many assumptions of what the input looks like.
         // At the input there are no rocks on the X=0 and Y=0 axis, so the
         // Elf can just travel to that direction for the whole distance.
 
         // When gardens are being visited it appears that in every other garden
-        // the Elf only visits "odd" tiles and in every other "even" tiles.
+        // the Elf only visits "odd" tiles and in every other "even" tiles, like on a checkboard.
         // As long as as there's enough distance left to fully explore the garden
         // these seem to be the only possible reachable shapes, lets call them "A" and "B".
 
         // Assume that the garden is square shaped.
         let size = tiles.len();
 
-        // Iterate enough to exactly fill an area shaped like
-        //   , ^ .
-        // , / I \ .
-        // < = + = >
-        // ` \ I / ´
-        //   ` v ´
+        // Explore gardens exactly enough to fill an area shaped like
+        //
+        //     , ^ .
+        //   , / # \ .
+        //   < # # # >
+        //   ` \ # / ´
+        //     ` v ´
+
         let max_steps = 2 * size + (size - 1) / 2;
 
         let reachable = find_reachable(&tiles, start, max_steps, true);
 
-        // The visited garden copies include various types of shapes of visited tiles,
-        // total of 14 different.
+        // The gardens copies the Elf visits contain various kinds of shapes of
+        // visited tiles.
         //
-        //   J N G
-        // J F B C G
-        // W B A B E
-        // I E B D H
-        //   I S H
-        //
+        //                           N
+        //                          NNN
+        //                        K NNN H
+        //                       GG BBB CC
+        //                      GGG BBB CCC
+        //                    K GGG BBB CCC H
+        //                   WW BBB AAA BBB EE
+        //                  WWW BBB AAA BBB EEE
+        //  zoomed out:      WW BBB AAA BBB EE
+        //     K N H          J FFF BBB DDD I
+        //   K G B C H          FFF BBB DDD
+        //   W B A B E           FF BBB DD
+        //   J F B D I            J SSS I
+        //     J S I                SSS
+        //                           S
+        // The shapes are:
         // N, E, S, W: These are the points furthest away from start
         // A, B:       Fully filled shapes that repeat and fill the middle part,
         //             every second being "odd" and every second being "even"
-        // C, D, E, F: These are missing a corner
-        // G, H, I, J: These are the small corner pieces
+        // C, D, F, G: These are missing a corner
+        // H, I, J, K: These are the small corner pieces
 
         let size = size as isize;
 
@@ -129,7 +141,7 @@ impl Solution for Day21 {
         // (26501365 - 65) / 131 gardens to reach the point
         let n = ((26501365 - ((size - 1) / 2)) / size) as u64;
 
-        // On paper with some geometry and logic I've determined the count of shapes to be
+        // On a piece of paper with some geometry and logic I determined the count of shapes to be
         let a_count = (n - 1).pow(2);
         let b_count = n.pow(2);
         let small_corner_count = n;
@@ -194,8 +206,8 @@ fn find_reachable(
     unique
 }
 
-fn visited_area(reachable: &HashSet<Coords>, garden: Coords, size: isize) -> u64 {
-    reachable
+fn visited_area(visited: &HashSet<Coords>, garden: Coords, size: isize) -> u64 {
+    visited
         .iter()
         .filter(|(x, y)| {
             *x >= garden.0 * size
