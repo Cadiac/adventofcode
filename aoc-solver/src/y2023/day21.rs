@@ -46,21 +46,21 @@ fn parse(input: &str) -> Result<(Vec<Vec<Tile>>, Coords), AocError> {
 }
 
 impl Solution for Day21 {
-    type A = usize;
-    type B = usize;
+    type A = u64;
+    type B = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day21.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<usize, AocError> {
+    fn part_1(&self, input: &str) -> Result<u64, AocError> {
         let (tiles, start) = parse(input)?;
         let reachable = find_reachable(&tiles, start, 64, false);
 
-        Ok(reachable.len())
+        Ok(reachable.len() as u64)
     }
 
-    fn part_2(&self, input: &str) -> Result<usize, AocError> {
+    fn part_2(&self, input: &str) -> Result<u64, AocError> {
         let (tiles, start) = parse(input)?;
 
         // This works only on many assumptions of what the input looks like.
@@ -127,7 +127,7 @@ impl Solution for Day21 {
         // Our input distance is odd.
         // After exiting the middle area (65) we need to move accross
         // (26501365 - 65) / 131 gardens to reach the point
-        let n = ((26501365 - ((size - 1) / 2)) / size) as usize;
+        let n = ((26501365 - ((size - 1) / 2)) / size) as u64;
 
         // On paper with some geometry and logic I've determined the count of shapes to be
         let a_count = (n - 1).pow(2);
@@ -194,7 +194,7 @@ fn find_reachable(
     unique
 }
 
-fn visited_area(reachable: &HashSet<Coords>, garden: Coords, size: isize) -> usize {
+fn visited_area(reachable: &HashSet<Coords>, garden: Coords, size: isize) -> u64 {
     reachable
         .iter()
         .filter(|(x, y)| {
@@ -203,7 +203,7 @@ fn visited_area(reachable: &HashSet<Coords>, garden: Coords, size: isize) -> usi
                 && *y >= garden.1 * size
                 && *y < (garden.1 + 1) * size
         })
-        .count()
+        .count() as u64
 }
 
 #[cfg(test)]
