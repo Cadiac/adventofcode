@@ -34,16 +34,12 @@ fn parse(input: &str) -> Result<HashMap<String, Module>, AocError> {
                 .map(|output| output.to_owned())
                 .collect();
 
-            let (kind, name) = match name.chars().next() {
-                Some('%') => (
-                    ModuleType::FlipFlop,
-                    name.strip_prefix('%').ok_or(AocError::parse(name, "%"))?,
-                ),
-                Some('&') => (
-                    ModuleType::Conjunction,
-                    name.strip_prefix('&').ok_or(AocError::parse(name, "%"))?,
-                ),
-                _ => (ModuleType::Neutral, name),
+            let (kind, name) = if let Some(name) = name.strip_prefix('%') {
+                (ModuleType::FlipFlop, name)
+            } else if let Some(name) = name.strip_prefix('&') {
+                (ModuleType::Conjunction, name)
+            } else {
+                (ModuleType::Neutral, name)
             };
 
             Ok((
