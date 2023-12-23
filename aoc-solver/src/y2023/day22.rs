@@ -68,6 +68,47 @@ fn is_overlapping(a: &Brick, b: &Brick) -> bool {
     horizontal && vertical
 }
 
+fn find_supports(dropped: Vec<Brick>) -> HashMap<usize, HashSet<usize>> {
+    let bricks_with_supports = dropped
+        .iter()
+        .map(|brick| {
+            let supporting_bricks: HashSet<usize> = dropped
+                .iter()
+                .filter(|potential_support| is_supporting(potential_support, brick))
+                .map(|support| support.id)
+                .collect();
+
+            (brick.id, supporting_bricks)
+        })
+        .collect();
+
+    bricks_with_supports
+}
+
+fn apply_gravity(mut bricks: Vec<Brick>) -> Vec<Brick> {
+    bricks.sort_by(|a, b| a.left.z.cmp(&b.left.z));
+
+    let mut queue = VecDeque::from(bricks);
+    let mut dropped = Vec::new();
+
+    while let Some(mut brick) = queue.pop_front() {
+        let resting_height = dropped
+            .iter()
+            .filter(|stationary| is_overlapping(&brick, stationary))
+            .map(|b| b.right.z)
+            .max()
+            .unwrap_or(0)
+            + 1;
+
+        brick.right.z = resting_height + brick.right.z - brick.left.z;
+        brick.left.z = resting_height;
+
+        dropped.push(brick);
+    }
+
+    dropped
+}
+
 impl Solution for Day22 {
     type A = u32;
     type B = u32;
@@ -144,46 +185,6 @@ impl Solution for Day22 {
 
         Ok(total_falls as u32)
     }
-}
-
-fn find_supports(dropped: Vec<Brick>) -> HashMap<usize, HashSet<usize>> {
-    let bricks_with_supports: HashMap<usize, HashSet<usize>> = dropped
-        .iter()
-        .map(|brick| {
-            let supporting_bricks: HashSet<usize> = dropped
-                .iter()
-                .filter(|potential_support| is_supporting(potential_support, brick))
-                .map(|support| support.id)
-                .collect();
-
-            (brick.id, supporting_bricks)
-        })
-        .collect();
-    bricks_with_supports
-}
-
-fn apply_gravity(mut bricks: Vec<Brick>) -> Vec<Brick> {
-    bricks.sort_by(|a, b| a.left.z.cmp(&b.left.z));
-
-    let mut queue = VecDeque::from(bricks);
-    let mut dropped = Vec::new();
-
-    while let Some(mut brick) = queue.pop_front() {
-        let resting_height = dropped
-            .iter()
-            .filter(|stationary| is_overlapping(&brick, stationary))
-            .map(|b| b.right.z)
-            .max()
-            .unwrap_or(0)
-            + 1;
-
-        brick.right.z = resting_height + brick.right.z - brick.left.z;
-        brick.left.z = resting_height;
-
-        dropped.push(brick);
-    }
-
-    dropped
 }
 
 #[cfg(test)]
