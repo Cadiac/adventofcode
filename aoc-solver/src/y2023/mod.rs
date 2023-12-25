@@ -23,8 +23,10 @@ pub mod day20;
 pub mod day21;
 pub mod day22;
 pub mod day23;
+pub mod day24;
+pub mod day25;
 
-pub const MAX_DAYS: u8 = 23;
+pub const MAX_DAYS: u8 = 25;
 
 pub struct Y2023;
 
@@ -54,6 +56,8 @@ impl Solver for Y2023 {
             21 => day21::Day21.run(input, 21, 2023),
             22 => day22::Day22.run(input, 22, 2023),
             23 => day23::Day23.run(input, 23, 2023),
+            24 => day24::Day24.run(input, 24, 2023),
+            25 => day25::Day25.run(input, 25, 2023),
             _ => vec![String::from("Solution not implemented (yet?)")],
         }
     }
@@ -94,6 +98,8 @@ impl Solver for Y2023 {
             21 => include_str!("./day21.rs"),
             22 => include_str!("./day22.rs"),
             23 => include_str!("./day23.rs"),
+            24 => include_str!("./day24.rs"),
+            25 => include_str!("./day25.rs"),
             _ => unimplemented!(),
         }
     }
