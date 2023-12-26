@@ -1,8 +1,3 @@
-use std::{
-    cmp::Ordering,
-    collections::{BinaryHeap, HashMap, HashSet},
-};
-
 use itertools::Itertools;
 
 use crate::solution::{AocError, Solution};

@@ -3,187 +3,34 @@ use std::{
     collections::{BinaryHeap, HashMap, HashSet},
 };
 
-use itertools::Itertools;
-
 use crate::solution::{AocError, Solution};
 
 pub struct Day25;
 
-type Coords = (isize, isize);
-type Grid = Vec<Vec<Tile>>;
+type Graph = HashMap<String, HashSet<String>>;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Direction {
-    North,
-    East,
-    South,
-    West,
-}
+fn parse(input: &str) -> Result<Graph, AocError> {
+    let mut graph: Graph = HashMap::new();
 
-const DIRECTIONS: [Direction; 4] = [
-    Direction::North,
-    Direction::East,
-    Direction::South,
-    Direction::West,
-];
+    for line in input.trim().lines() {
+        let (name, edges) = line
+            .split_once(": ")
+            .ok_or(AocError::parse(line, "Invalid node"))?;
 
-impl Direction {
-    fn neighbours(
-        grid: &Grid,
-        position: Coords,
-        width: isize,
-        height: isize,
-        slippery: bool,
-    ) -> Vec<Coords> {
-        DIRECTIONS
-            .iter()
-            .filter_map(|direction| {
-                let (dx, dy) = direction.as_delta();
-                let (x, y) = (position.0 + dx, position.1 + dy);
-
-                if x < 0 || y < 0 || x >= width || y >= height {
-                    return None;
-                }
-
-                match grid[y as usize][x as usize] {
-                    Tile::Forest => None,
-                    Tile::Slope(slope_direction) if slippery && slope_direction != *direction => {
-                        None
-                    }
-                    _ => Some((x, y)),
-                }
-            })
-            .collect()
-    }
-
-    fn as_delta(&self) -> (isize, isize) {
-        match self {
-            Direction::North => (0, -1),
-            Direction::East => (1, 0),
-            Direction::South => (0, 1),
-            Direction::West => (-1, 0),
-        }
-    }
-}
-
-struct Node {
-    edges: HashMap<Coords, u32>,
-}
-
-type Graph = HashMap<Coords, Node>;
-
-#[derive(Debug, Clone, Copy)]
-enum Tile {
-    Path,
-    Forest,
-    Slope(Direction),
-}
-
-fn parse(input: &str) -> Result<Grid, AocError> {
-    let grid: Grid = input
-        .trim()
-        .lines()
-        .map(|line| {
-            line.chars()
-                .map(|tile| {
-                    let tile = match tile {
-                        '.' => Tile::Path,
-                        '#' => Tile::Forest,
-                        '^' => Tile::Slope(Direction::North),
-                        '>' => Tile::Slope(Direction::East),
-                        'v' => Tile::Slope(Direction::South),
-                        '<' => Tile::Slope(Direction::West),
-                        _ => return Err(AocError::parse(tile, "Unknown tile")),
-                    };
-
-                    Ok(tile)
-                })
-                .try_collect()
-        })
-        .try_collect()?;
-
-    Ok(grid)
-}
-
-fn find_edges(grid: &Grid, current: Coords) -> HashMap<Coords, u32> {
-    let (_, target, height, width) = bounds(grid);
-
-    let mut connected = HashMap::new();
-
-    if current == target {
-        return connected;
-    }
-
-    for start in Direction::neighbours(grid, current, width, height, false) {
-        let mut stack = vec![(start, 1)];
-        let mut visited = HashSet::from([current]);
-
-        while let Some((position, distance)) = stack.pop() {
-            visited.insert(position);
-
-            if position == target {
-                connected.insert(position, distance);
-                break;
-            }
-
-            // Count how many neighbours the current position has.
-            // If it has more than one consider it as a connected vertex.
-            let neighbours: Vec<Coords> =
-                Direction::neighbours(grid, position, width, height, false)
-                    .iter()
-                    .filter(|neighbour| !visited.contains(neighbour))
-                    .copied()
-                    .collect();
-
-            if neighbours.len() > 1 {
-                // If a longer way to target vertex has been found keep using it
-                let longest_dist = connected.entry(position).or_default();
-                *longest_dist = u32::max(*longest_dist, distance);
-            } else {
-                stack.extend(
-                    neighbours
-                        .into_iter()
-                        .map(|neighbour| (neighbour, distance + 1)),
-                );
-            }
+        for edge in edges.split_ascii_whitespace() {
+            (*graph.entry(name.to_owned()).or_default()).insert(edge.to_owned());
+            (*graph.entry(edge.to_owned()).or_default()).insert(name.to_owned());
         }
     }
 
-    connected
-}
-
-fn simplify_graph(grid: &Grid) -> Graph {
-    let start = (1, 0);
-
-    let mut graph = HashMap::new();
-    let mut stack = vec![start];
-
-    while let Some(current_node) = stack.pop() {
-        let edges = find_edges(grid, current_node);
-        let new_vertices = edges.keys().filter(|vertex| !graph.contains_key(*vertex));
-
-        stack.extend(new_vertices);
-        graph.insert(current_node, Node { edges });
-    }
-
-    graph
-}
-
-fn bounds(grid: &Grid) -> (Coords, Coords, isize, isize) {
-    let height = grid.len() as isize;
-    let width = grid[0].len() as isize;
-
-    let start = (1, 0);
-    let target = (width - 2, height - 1);
-
-    (start, target, height, width)
+    Ok(graph)
 }
 
 #[derive(Clone, Eq, PartialEq)]
 struct Search {
-    distance: i32,
-    position: Coords,
-    visited: HashSet<Coords>,
+    distance: u32,
+    position: String,
+    visited: HashSet<String>,
 }
 
 impl Ord for Search {
@@ -198,23 +45,15 @@ impl PartialOrd for Search {
     }
 }
 
-// At part 1 use dijkstra that instead of increasing the distance reduces it as
-// the distance grows. It then tries to maximize minimize this, finding the longest
-// path in the directed acyclic graph (DAG). This was based on this SO thread:
-// https://stackoverflow.com/questions/8027180/dijkstra-for-longest-path-in-a-dag
-fn dijkstra(grid: &Grid) -> u32 {
-    let (start, target, height, width) = bounds(grid);
-
-    let mut dist: HashMap<Coords, i32> = HashMap::new();
+fn dijkstra(graph: &Graph, start: &str, target: &str) -> Option<u32> {
+    let mut dist: HashMap<String, u32> = HashMap::new();
     let mut heap: BinaryHeap<Search> = BinaryHeap::new();
 
     heap.push(Search {
         distance: 0,
-        position: start,
+        position: start.to_owned(),
         visited: HashSet::new(),
     });
-
-    let mut max_distance = 0;
 
     while let Some(Search {
         position,
@@ -223,91 +62,126 @@ fn dijkstra(grid: &Grid) -> u32 {
     }) = heap.pop()
     {
         if position == target {
-            max_distance = max_distance.max(-dist[&position] as u32);
+            return Some(dist[&position]);
+        }
+
+        if !visited.insert(position.clone()) {
             continue;
         }
 
-        if !visited.insert(position) {
+        if distance > *dist.get(&position).unwrap_or(&u32::MAX) {
             continue;
         }
 
-        if distance > *dist.get(&position).unwrap_or(&i32::MAX) {
-            continue;
-        }
+        for edge in graph[&position].iter() {
+            if edge == target && position == start {
+                // We've cut the connection from start to target
+                continue;
+            }
 
-        for (x, y) in Direction::neighbours(grid, position, width, height, true) {
             let next = Search {
-                position: (x, y),
-                distance: distance - 1,
+                position: edge.clone(),
+                distance: distance + 1,
                 visited: visited.clone(),
             };
 
-            let longest_known = dist.entry(next.position).or_insert(i32::MAX);
+            let best_known = dist.entry(next.position.clone()).or_insert(u32::MAX);
 
-            if next.distance < *longest_known {
-                *longest_known = next.distance;
+            if next.distance < *best_known {
+                *best_known = next.distance;
                 heap.push(next)
             }
         }
     }
 
-    max_distance
+    None
 }
 
-fn dfs(
-    current: &Coords,
-    target: &Coords,
-    graph: &HashMap<Coords, Node>,
-    visited: &mut HashSet<Coords>,
-    distance: u32,
-) -> u32 {
-    if visited.contains(current) {
-        return 0;
+fn traverse(current: String, graph: &Graph, visited: &mut HashSet<String>) {
+    if !visited.insert(current.clone()) {
+        return;
     }
 
-    if current == target {
-        return distance;
+    for edge in graph[&current].iter() {
+        traverse(edge.clone(), graph, visited)
     }
-
-    visited.insert(*current);
-
-    let max_distance = graph[current]
-        .edges
-        .iter()
-        .map(|(vertex, edge_distance)| {
-            dfs(vertex, target, graph, visited, distance + edge_distance)
-        })
-        .max()
-        .unwrap_or(0);
-
-    visited.remove(current);
-
-    max_distance
 }
 
-impl Solution for Day23 {
+impl Solution for Day25 {
     type A = u32;
-    type B = u32;
+    type B = String;
 
     fn default_input(&self) -> &'static str {
-        include_str!("../../../inputs/2023/day23.txt")
+        include_str!("../../../inputs/2023/day25.txt")
     }
 
     fn part_1(&self, input: &str) -> Result<u32, AocError> {
-        let grid = parse(input)?;
-        let longest = dijkstra(&grid);
+        let mut graph = parse(input)?;
 
-        Ok(longest)
+        loop {
+            let starts: Vec<String> = graph.keys().cloned().collect();
+
+            let mut max = (0, String::new(), String::new());
+
+            for start in starts {
+                // Check what the distance to the current's neighbours would be if we cut the connection
+                let edges = graph.get(&start).cloned().unwrap();
+
+                for edge in edges.iter() {
+                    // TODO: If we've already calculated A -> B, don't calculate B -> A
+                    // TODO: Cache the distances we see while searching for the distance
+                    let distance = dijkstra(&graph, &start, edge);
+
+                    match distance {
+                        Some(distance) if distance > max.0 => {
+                            max = (distance, start.clone(), edge.clone())
+                        }
+                        None => {
+                            // We're done and the graph is now split into two groups!
+                            // Determine the sizes of these groups by traversing one of them
+
+                            // Cut the max connection permanently
+                            graph.entry(start.clone()).or_default().remove(edge);
+                            graph.entry(edge.clone()).or_default().remove(&start);
+
+                            let mut visited = HashSet::new();
+
+                            traverse(start, &graph, &mut visited);
+
+                            let size_1 = visited.len();
+                            let size_2 = graph.len() - size_1;
+
+                            return Ok((size_1 * size_2) as u32);
+                        }
+                        _ => {}
+                    }
+                }
+
+                *graph.entry(start).or_default() = edges.clone();
+            }
+
+            // The edge that leads to max distance to its neighbour is
+            // along separation line, cut that connection permanently
+            graph.entry(max.1.clone()).or_default().remove(&max.2);
+            graph.entry(max.2).or_default().remove(&max.1);
+        }
     }
 
-    fn part_2(&self, input: &str) -> Result<u32, AocError> {
-        let grid = parse(input)?;
-        let graph = simplify_graph(&grid);
-        let (start, target, _, _) = bounds(&grid);
-
-        let max_distance = dfs(&start, &target, &graph, &mut HashSet::new(), 0);
-
-        Ok(max_distance)
+    fn part_2(&self, _input: &str) -> Result<String, AocError> {
+        Ok([
+            "",
+            "                               ",
+            "               *               ",
+            "               ^^              ",
+            "              ^^o              ",
+            "              o^^              ",
+            "              ^^o^             ",
+            "             o^^^^o            ",
+            "             ^^o^^^^           ",
+            "        _______||_______       ",
+            "            AoC 2023           ",
+        ]
+        .join("\n"))
     }
 }
 
@@ -317,37 +191,22 @@ mod tests {
 
     #[rustfmt::skip]
     const EXAMPLE_INPUT: &str =
-        "#.#####################\n\
-         #.......#########...###\n\
-         #######.#########.#.###\n\
-         ###.....#.>.>.###.#.###\n\
-         ###v#####.#v#.###.#.###\n\
-         ###.>...#.#.#.....#...#\n\
-         ###v###.#.#.#########.#\n\
-         ###...#.#.#.......#...#\n\
-         #####.#.#.#######.#.###\n\
-         #.....#.#.#.......#...#\n\
-         #.#####.#.#.#########v#\n\
-         #.#...#...#...###...>.#\n\
-         #.#.#v#######v###.###v#\n\
-         #...#.>.#...>.>.#.###.#\n\
-         #####v#.#.###v#.#.###.#\n\
-         #.....#...#...#.#.#...#\n\
-         #.#########.###.#.#.###\n\
-         #...###...#...#...#.###\n\
-         ###.###.#.###v#####v###\n\
-         #...#...#.#.>.>.#.>.###\n\
-         #.###.###.#.###.#.#v###\n\
-         #.....###...###...#...#\n\
-         #####################.#\n";
+        "jqt: rhn xhk nvd\n\
+         rsh: frs pzl lsr\n\
+         xhk: hfx\n\
+         cmg: qnr nvd lhk bvb\n\
+         rhn: xhk bvb hfx\n\
+         bvb: xhk hfx\n\
+         pzl: lsr hfx nvd\n\
+         qnr: nvd\n\
+         ntq: jqt hfx bvb xhk\n\
+         nvd: lhk\n\
+         lsr: lhk\n\
+         rzs: qnr cmg lsr rsh\n\
+         frs: qnr lhk lsr";
 
     #[test]
     fn it_solves_part1_example() {
-        assert_eq!(Day23.part_1(EXAMPLE_INPUT), Ok(94));
-    }
-
-    #[test]
-    fn it_solves_part2_example() {
-        assert_eq!(Day23.part_2(EXAMPLE_INPUT), Ok(154));
+        assert_eq!(Day25.part_1(EXAMPLE_INPUT), Ok(54));
     }
 }
