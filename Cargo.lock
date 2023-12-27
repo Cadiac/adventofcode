@@ -123,6 +123,8 @@ dependencies = [
  "log",
  "nom",
  "num",
+ "num-bigint",
+ "num-traits",
  "regex",
  "serde_scan",
 ]

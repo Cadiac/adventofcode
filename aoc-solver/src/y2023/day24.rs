@@ -1,4 +1,8 @@
 use itertools::Itertools;
+use num_bigint::BigInt;
+use num_traits::One;
+use num_traits::ToPrimitive;
+use num_traits::Zero;
 
 use crate::solution::{AocError, Solution};
 
@@ -26,14 +30,14 @@ fn parse(input: &str) -> Result<Vec<Hailstone>, AocError> {
             ))?;
 
             let (x, y, z) = position
-                .split(",")
+                .split(',')
                 .collect_tuple()
                 .ok_or(AocError::parse(position, "Missing position"))?;
 
             let (vx, vy, vz) = velocity
-                .split(",")
+                .split(',')
                 .collect_tuple()
-                .ok_or(AocError::parse(velocity, "Missing position"))?;
+                .ok_or(AocError::parse(velocity, "Missing velocity"))?;
 
             Ok(Hailstone {
                 position: Vec3 {
@@ -58,137 +62,211 @@ fn parse_number(number: &str) -> Result<i64, AocError> {
         .map_err(|_| AocError::parse(number, "Error parsing number"))
 }
 
-fn solve_linear_equations_2(
-    (a1, b1, c1): (f64, f64, f64),
-    (a2, b2, c2): (f64, f64, f64),
-) -> Option<(f64, f64)> {
-    let det = a1 * b2 - a2 * b1;
+fn determinant(matrix: &[Vec<i64>]) -> BigInt {
+    let size = matrix.len();
 
-    if det == 0.0 {
-        None
-    } else {
-        let x = (b1 * c2 - b2 * c1) / det;
-        let y = (c1 * a2 - c2 * a1) / det;
-        Some((x, y))
-    }
-}
-
-fn solve_linear_equations_3(
-    (a1, b1, c1, d1): (f64, f64, f64, f64),
-    (a2, b2, c2, d2): (f64, f64, f64, f64),
-    (a3, b3, c3, d3): (f64, f64, f64, f64),
-) -> Option<(f64, f64, f64)> {
-    let det = a1 * (b2 * c3 - b3 * c2) - b1 * (a2 * c3 - a3 * c2) + c1 * (a2 * b3 - a3 * b2);
-
-    if det == 0.0 {
-        None
-    } else {
-        let det_x = d1 * (b2 * c3 - b3 * c2) - b1 * (d2 * c3 - d3 * c2) + c1 * (d2 * b3 - d3 * b2);
-        let det_y = a1 * (d2 * c3 - d3 * c2) - d1 * (a2 * c3 - a3 * c2) + c1 * (a2 * d3 - a3 * d2);
-        let det_z = a1 * (b2 * d3 - b3 * d2) - b1 * (a2 * d3 - a3 * d2) + d1 * (a2 * b3 - a3 * b2);
-
-        let x = det_x / det;
-        let y = det_y / det;
-        let z = det_z / det;
-
-        Some((x, y, z))
-    }
-}
-
-fn find_coefficients(hail: &Hailstone) -> (f64, f64, f64) {
-    let a = hail.velocity.y;
-    let b = -hail.velocity.x;
-    let c = hail.velocity.x * hail.position.y - hail.velocity.y * hail.position.x;
-
-    (a as f64, b as f64, c as f64)
-}
-
-fn find_intersection(
-    (a1, b1, c1, d1): (i64, i64, i64, i64),
-    (x0, y0, z0): (i64, i64, i64),
-    (vx, vy, vz): (i64, i64, i64),
-) -> Option<(i64, i64, i64)> {
-    // Calculate the parameter t at the point of intersection
-    let numerator = -(a1 * x0 + b1 * y0 + c1 * z0 + d1);
-    let denominator = a1 * vx + b1 * vy + c1 * vz;
-
-    if denominator == 0 {
-        // The line is parallel to the plane (or lies within it)
-        return None;
+    if size == 1 {
+        return BigInt::from(matrix[0][0]);
     }
 
-    if numerator % denominator != 0 {
-        // t is not an integer, hence no integer intersection point
-        return None;
+    if size == 2 {
+        return BigInt::from(matrix[0][0]) * BigInt::from(matrix[1][1])
+            - BigInt::from(matrix[1][0]) * BigInt::from(matrix[0][1]);
     }
 
-    let t = numerator / denominator;
+    let mut det = BigInt::zero();
 
-    // Calculate the intersection point
-    let x = x0 + t * vx;
-    let y = y0 + t * vy;
-    let z = z0 + t * vz;
+    for det_column in 0..size {
+        let mut submatrix = vec![vec![0; size - 1]; size - 1];
 
-    // Check if z-coordinate is greater than 0
-    if z > 0 {
-        Some((x, y, z))
-    } else {
-        None
-    }
-}
-
-fn intersects(a: &Hailstone, b: &Hailstone, (min, max): (f64, f64)) -> bool {
-    println!(
-        "Hailstone A: {}, {}, velocity: {}, {}",
-        a.position.x, a.position.y, a.velocity.x, a.velocity.y
-    );
-    println!(
-        "Hailstone B: {}, {}, velocity: {}, {}",
-        b.position.x, b.position.y, b.velocity.x, b.velocity.y
-    );
-
-    let coefficients_1 = find_coefficients(a);
-    let coefficients_2 = find_coefficients(b);
-
-    let (x, y) = match solve_linear_equations_2(coefficients_1, coefficients_2) {
-        Some(intersection_point) => intersection_point,
-        None => {
-            println!("No intersection");
-            return false;
+        for row in 1..size {
+            let mut sub_column = 0;
+            for column in 0..size {
+                if column == det_column {
+                    continue;
+                }
+                submatrix[row - 1][sub_column] = matrix[row][column];
+                sub_column += 1;
+            }
         }
+
+        let submatrix_det = determinant(&submatrix);
+
+        let sign = if det_column % 2 == 0 {
+            BigInt::one()
+        } else {
+            -BigInt::one()
+        };
+
+        det += sign * BigInt::from(matrix[0][det_column]) * submatrix_det;
+    }
+
+    det
+}
+
+fn solve_cramers_rule(matrix: &[Vec<i64>]) -> Option<Vec<f64>> {
+    // Last column of the matrix contains the constant solutions
+    // a*i + b*j + c*k + d*l = e*m
+    // ^-------------------^   ^-^
+    //     coefficients         solution
+    let size = matrix[0].len() - 1;
+
+    let coefficients_matrix: Vec<Vec<i64>> = matrix
+        .iter()
+        .map(|row| row.iter().copied().take(size).collect())
+        .collect();
+
+    let det = determinant(&coefficients_matrix);
+
+    if det.is_zero() {
+        return None;
+    }
+
+    let det = det.to_f64().expect("Overflow at determinant");
+
+    let mut results = Vec::new();
+
+    for column in 0..size {
+        let mut det_matrix = coefficients_matrix.clone();
+
+        for row in 0..size {
+            det_matrix[row][column] = matrix[row][size];
+        }
+
+        let det_column = determinant(&det_matrix)
+            .to_f64()
+            .expect("Overflow at column determinant");
+
+        results.push(det_column / det);
+    }
+
+    Some(results)
+}
+
+fn check_intersection(a: &Hailstone, b: &Hailstone, (min, max): (f64, f64)) -> bool {
+    // System of two equations and two unknowns (t_a and t_b)
+    // x_a + vx_a * t_a = x_b + vx_b * tb
+    // y_a + vy_a * t_a = y_b + vy_b * tb
+
+    // Represent this system as a coefficients matrix and solve it using Cramer's Rule
+    // vx_a * ta - vx_b * tb = x_a - x_b
+    // ^--^        ^--^        ^-------^
+    //  A           B           C
+    let matrix = vec![
+        vec![a.velocity.x, -b.velocity.x, b.position.x - a.position.x],
+        vec![a.velocity.y, -b.velocity.y, b.position.y - a.position.y],
+    ];
+
+    let (t_a, t_b) = match solve_cramers_rule(&matrix) {
+        Some(solution) => (solution[0], solution[1]),
+        None => return false,
     };
+
+    // Intersection coordinates
+    let x = a.position.x as f64 + a.velocity.x as f64 * t_a;
+    let y = a.position.y as f64 + a.velocity.y as f64 * t_a;
 
     let is_within_area = x >= min && y >= min && x <= max && y <= max;
-
-    let a_in_future = if coefficients_1.0 > 0.0 {
-        (a.position.y as f64) < y
-    } else {
-        (a.position.y as f64) > y
-    };
-
-    let b_in_future = if coefficients_2.0 > 0.0 {
-        (b.position.y as f64) < y
-    } else {
-        (b.position.y as f64) > y
-    };
-
-    let is_in_future = a_in_future && b_in_future;
-
-    println!(
-        "Intersection at {}, {} - area: {}, future: {} ({}, {})",
-        x, y, is_within_area, is_in_future, a_in_future, b_in_future
-    );
+    let is_in_future = t_a > 0.0 && t_b > 0.0;
 
     is_within_area && is_in_future
 }
 
-fn print(hailstone: &Hailstone) {
-    let vx = hailstone.velocity.x; // A
-    let vy = hailstone.velocity.y; // B
-    let x = hailstone.position.x; // a
-    let y = hailstone.position.y; // b
+fn count_intersections_within_bounds(hailstones: Vec<Hailstone>, bounds: (f64, f64)) -> u64 {
+    hailstones
+        .iter()
+        .tuple_combinations()
+        .filter(|(a, b)| check_intersection(a, b, bounds))
+        .count() as u64
+}
 
-    println!("{vy}x - {vx}y - {y}X + {x}Y - {} + {}", x * vy, vx * y)
+fn find_position(hailstones: Vec<Hailstone>) -> Result<Vec3, AocError> {
+    // Take a hailstone n and the position (x,y,z) where we're
+    // throwing the rock with (vx,vy,vz) velocity. By treating
+    // each axis separately, solve t on X-axis
+    // X + t*VX = x_n + t*vx_n
+    // t = (x_n - X) / (VX - vx_n)
+
+    // Repeat this for the other axis
+    // t = (y_n - Y) / (VY - vy_n)
+    // t = (z_n - Z) / (VZ - vz_n)
+
+    // From the equation of X-axis substitute t with one
+    // of these other two axis, say Y-axis.
+    // (x_n - X) / (VX - vx_n) = (y_n - Y) / (VY - vy_n)
+    // (x_n - X) * (VY - vy_n) = (y_n - Y) * (VX - vx_n)
+    // vy_n * X - vx_n * Y - y_n * VX + x_n * VY - x_n * vy_n + vx_n * y_n = X * VY - VX * X
+    // ^-----------------------------LHS---------------------------------^   ^-----RHS-----^
+
+    // RHS of the equation doens't contain anything specific to this hailstone.
+    // If we now take another hailstone and substitute X * VY - VX * X with its LHS, we get
+    // vy_0 * X - vx_0 * Y - y_0 * VX + x_0 * VY - x_0 * vy_0 + vx_0 * y_0
+    // = vy_1 * X - vx_1 * Y - y_1 * VX + x_1 * VY - x_1 * vy_1 + vx_1 * y_1
+    //
+    // (vy_0-vy_1)X + (vx_1-vx_0)Y + (y_1-y_0)VX + (x_0-x_1)VY = x_0 * vy_0 - vx_0 * y_0 - x_1 * vy_1 + vx_1 * y_1
+    // ^---------^    ^---------^    ^-------^     ^-------^     ^-----------------------------------------------^
+    //  A              B              C             D             E
+
+    // Take a sample of five hailstones from the input, and do this for each of the pairs.
+    // This results in a system of four equations with four unknowns (X, Y, VX and VY)
+
+    // Represent this system as a 5x4 coefficients matrix and solve it using Cramer's Rule
+    let matrix: Vec<Vec<i64>> = hailstones
+        .iter()
+        .tuple_windows()
+        .take(4)
+        .map(|(a, b)| {
+            vec![
+                (a.velocity.y - b.velocity.y),
+                (b.velocity.x - a.velocity.x),
+                (b.position.y - a.position.y),
+                (a.position.x - b.position.x),
+                (a.position.x * a.velocity.y
+                    - a.velocity.x * a.position.y
+                    - b.position.x * b.velocity.y
+                    + b.velocity.x * b.position.y),
+            ]
+        })
+        .collect();
+
+    let (x, y, vx, _vy) = match solve_cramers_rule(&matrix) {
+        Some(solution) => (solution[0], solution[1], solution[2], solution[3]),
+        None => return Err(AocError::logic("No solution was found")),
+    };
+
+    // With these we can get the value of t for every hailstone collision.
+
+    // Take the equation of t for Z-axis, and construct a
+    // system of two equations with two unknowns (Z and VZ). Solve it.
+    // t_n = (z_n - Z) / (VZ - vz_n) = (x_n - X) / (VZ - vx_n)
+    // Z + t_n * VZ = z_n + t_n * vz_n
+
+    let t0 = (hailstones[0].position.x as f64 - x) / (vx - hailstones[0].velocity.x as f64);
+    let t1 = (hailstones[1].position.x as f64 - x) / (vx - hailstones[1].velocity.x as f64);
+
+    let matrix = vec![
+        vec![
+            1,
+            t0 as i64,
+            hailstones[0].position.z + t0 as i64 * hailstones[0].velocity.z,
+        ],
+        vec![
+            1,
+            t1 as i64,
+            hailstones[1].position.z + t1 as i64 * hailstones[1].velocity.z,
+        ],
+    ];
+
+    let (z, _vz) = match solve_cramers_rule(&matrix) {
+        Some(solution) => (solution[0], solution[1]),
+        None => return Err(AocError::logic("No solution was found")),
+    };
+
+    Ok(Vec3 {
+        x: x as i64,
+        y: y as i64,
+        z: z as i64,
+    })
 }
 
 impl Solution for Day24 {
@@ -201,102 +279,19 @@ impl Solution for Day24 {
 
     fn part_1(&self, input: &str) -> Result<u64, AocError> {
         let hailstones = parse(input)?;
-
         let bounds = (200000000000000., 400000000000000.);
-        // let bounds = (7., 27.);
+        let count = count_intersections_within_bounds(hailstones, bounds);
 
-        let intersections = hailstones
-            .iter()
-            .tuple_combinations()
-            .filter(|(a, b)| intersects(a, b, bounds))
-            .count() as u64;
-
-        Ok(intersections)
+        Ok(count)
     }
 
     fn part_2(&self, input: &str) -> Result<u64, AocError> {
         let hailstones = parse(input)?;
+        let position = find_position(hailstones)?;
 
-        for hailstone in hailstones {
-            print(&hailstone)
-        }
-
-        todo!();
+        Ok((position.x + position.y + position.z) as u64)
     }
 }
-
-// 19, 13, 30 @ -2,  1, -2
-
-// a = 19
-// b = 13
-// c = 30
-
-// A = -2
-// B = 1
-// C = -2
-
-// 18, 19, 22 @ -1, -1, -2
-
-// a = 18
-// b = 19
-// c = 22
-
-// A = -1
-// B = -1
-// C = -2
-
-// -- 20, 25, 34 @ -2, -2, -4
-// -- 12, 31, 28 @ -1, -2, -1
-// -- 20, 19, 15 @  1, -5, -3
-
-// 1x + 2y - 13X + 19Y - 19 - 26
-// -1x + 1y - 19X + 18Y + 18 - 19
-// -2x + 2y - 25X + 20Y + 40 - 50
-// -2x + 1y - 31X + 12Y + 24 - 31
-// -5x - 1y - 19X + 20Y + 100 + 19
-
-// 1x + 2y - 13X + 19Y - 19 - 26 = -1x + 1y - 19X + 18Y + 18 - 19
-// -1x + 1y - 19X + 18Y + 18 - 19 = -2x + 2y - 25X + 20Y + 40 - 50
-// -2x + 2y - 25X + 20Y + 40 - 50 = -2x + 1y - 31X + 12Y + 24 - 31
-// -2x + 1y - 31X + 12Y + 24 - 31 = -5x - 1y - 19X + 20Y + 100 + 19
-
-// x = 24 and X = -3 and y = 13 and Y = 1
-
-// (c - z)/(Z - C) = (a - x)/(X - A)
-
-// (30 - z)/(Z + 2) = (19 - 24)/(-3 + 2)
-// (22 - z)/(Z + 2) = (18 - 24)/(-3 + 1)
-
-// -21x - 54y - 201349632539530X + 246694783951603Y - -5180590462983663 + 10872880157134620 = 7x - 77y - 131993821472398X + 220339749104883Y - 1542378243734181 + 10163524253374646
-// 7x - 77y - 131993821472398X + 220339749104883Y - 1542378243734181 + 10163524253374646 = 84x - 238y - 225554040514665X + 148729713759711Y - 12493295955815724 + 53681861642490270
-// 84x - 238y - 225554040514665X + 148729713759711Y - 12493295955815724 + 53681861642490270 = -116x - 57y - 277335413285770X + 243519011458151Y - -28248205329145516 + 15808118557288890
-// -116x - 57y - 277335413285770X + 243519011458151Y - -28248205329145516 + 15808118557288890 = -59x - 171y - 225367189590686X + 143332267182217Y - -8456603763750803 + 38537789420007306
-
-// x = 270392223533307 and X = 26 and y = 463714142194110 and Y = -331
-
-// a = 246694783951603
-// b = 201349632539530
-// c = 307741668306846
-
-// A = 54
-// B = -21
-// C = 12
-
-// (c - z)/(Z - C) = (a - x)/(X - A)
-
-// (307741668306846 - z)/(Z - 12) = (246694783951603 - 270392223533307)/(26 - 54)
-
-// a = 220339749104883
-// b = 131993821472398
-// c = 381979584524072
-
-// A = 77
-// B = 7
-// C = -58
-
-// (381979584524072 - z)/(Z + 58) = (220339749104883 - 270392223533307)/(26 - 77)
-
-// z = 273041846062208 and Z = 53
 
 #[cfg(test)]
 mod tests {
@@ -312,7 +307,17 @@ mod tests {
 
     #[test]
     fn it_solves_part1_example() {
-        assert_eq!(Day24.part_1(EXAMPLE_INPUT), Ok(2));
+        let hailstones = parse(EXAMPLE_INPUT);
+        assert!(hailstones.is_ok());
+        let hailstones = hailstones.unwrap();
+        let bounds = (7., 27.);
+
+        assert_eq!(count_intersections_within_bounds(hailstones, bounds), 2);
+    }
+
+    #[test]
+    fn it_solves_part1_real() {
+        assert_eq!(Day24.part_1(Day24.default_input()), Ok(14799));
     }
 
     #[test]
@@ -322,6 +327,34 @@ mod tests {
 
     #[test]
     fn it_solves_part2_real() {
-        assert_eq!(Day24.part_2(Day24.default_input()), Ok(47));
+        assert_eq!(Day24.part_2(Day24.default_input()), Ok(1007148211789625));
+    }
+
+    #[rustfmt::skip]
+    #[test]
+    fn it_calculates_determinant() {
+        assert_eq!(
+            determinant([
+                vec![3, 7],
+                vec![1,-4]].as_slice()),
+            BigInt::from(-19)
+        );
+
+        assert_eq!(
+            determinant([
+                vec![-2,-1, 2],
+                vec![ 2, 1, 4],
+                vec![-3, 3,-1]].as_slice()),
+            BigInt::from(54)
+        );
+
+        assert_eq!(
+            determinant([
+                vec![-1, 1, 4, 2],
+                vec![ 2,-1, 2, 5],
+                vec![ 1, 2, 3, 4],
+                vec![ 3, 4,-1, 2]].as_slice()),
+            BigInt::from(-26)
+        )
     }
 }
