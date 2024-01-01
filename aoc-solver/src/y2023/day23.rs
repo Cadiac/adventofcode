@@ -11,6 +11,7 @@ pub struct Day23;
 
 type Coords = (isize, isize);
 type Grid = Vec<Vec<Tile>>;
+type Graph = Vec<Vec<(usize, u32)>>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Direction {
@@ -65,12 +66,6 @@ impl Direction {
         }
     }
 }
-
-struct Node {
-    edges: HashMap<Coords, u32>,
-}
-
-type Graph = HashMap<Coords, Node>;
 
 #[derive(Debug, Clone, Copy)]
 enum Tile {
@@ -152,7 +147,7 @@ fn find_edges(grid: &Grid, current: Coords) -> HashMap<Coords, u32> {
     connected
 }
 
-fn simplify_graph(grid: &Grid) -> Graph {
+fn simplify_graph(grid: &Grid) -> (Graph, usize, usize, u32) {
     let start = (1, 0);
 
     let mut graph = HashMap::new();
@@ -163,10 +158,61 @@ fn simplify_graph(grid: &Grid) -> Graph {
         let new_vertices = edges.keys().filter(|vertex| !graph.contains_key(*vertex));
 
         stack.extend(new_vertices);
-        graph.insert(current_node, Node { edges });
+        graph.insert(current_node, edges);
     }
 
-    graph
+    let (start, mut target, _, _) = bounds(grid);
+    let mut distance = 0;
+
+    // Trim the end of the graph to the last junction that leads to the target
+    loop {
+        let nodes_leading_to_end: Vec<_> = graph
+            .iter()
+            .filter_map(|(key, edges)| {
+                if edges.contains_key(&target) {
+                    Some(*key)
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        if nodes_leading_to_end.len() != 1 {
+            break;
+        }
+
+        let previous = nodes_leading_to_end[0];
+
+        graph.remove(&target);
+
+        let edge_distance = graph[&previous][&target];
+        distance += edge_distance;
+
+        graph.entry(previous).or_default().remove(&target);
+
+        target = previous;
+    }
+
+    // Convert the graph from hashmap to vector
+    let mapping: Vec<Coords> = graph.keys().copied().collect();
+    let graph: Graph = mapping
+        .iter()
+        .map(|coords| {
+            graph[coords]
+                .iter()
+                .map(|(edge, edge_distance)| {
+                    let index = mapping.iter().position(|m| m == edge).unwrap();
+
+                    (index, *edge_distance)
+                })
+                .collect()
+        })
+        .collect();
+
+    let start = mapping.iter().position(|m| *m == start).unwrap();
+    let target = mapping.iter().position(|m| *m == target).unwrap();
+
+    (graph, start, target, distance)
 }
 
 fn bounds(grid: &Grid) -> (Coords, Coords, isize, isize) {
@@ -255,34 +301,33 @@ fn dijkstra(grid: &Grid) -> u32 {
 }
 
 fn dfs(
-    current: &Coords,
-    target: &Coords,
-    graph: &HashMap<Coords, Node>,
-    visited: &mut HashSet<Coords>,
+    current: usize,
+    target: usize,
     distance: u32,
-) -> u32 {
-    if visited.contains(current) {
-        return 0;
-    }
+    graph: &[Vec<(usize, u32)>],
+    visited: &mut Vec<bool>,
+    max_distance: &mut u32,
+) {
+    visited[current] = true;
 
     if current == target {
-        return distance;
+        *max_distance = (*max_distance).max(distance);
     }
 
-    visited.insert(*current);
+    for (vertex, edge_distance) in graph[current].iter() {
+        if !visited[*vertex] {
+            dfs(
+                *vertex,
+                target,
+                distance + edge_distance,
+                graph,
+                visited,
+                max_distance,
+            );
+        }
+    }
 
-    let max_distance = graph[current]
-        .edges
-        .iter()
-        .map(|(vertex, edge_distance)| {
-            dfs(vertex, target, graph, visited, distance + edge_distance)
-        })
-        .max()
-        .unwrap_or(0);
-
-    visited.remove(current);
-
-    max_distance
+    visited[current] = false;
 }
 
 impl Solution for Day23 {
@@ -302,10 +347,19 @@ impl Solution for Day23 {
 
     fn part_2(&self, input: &str) -> Result<u32, AocError> {
         let grid = parse(input)?;
-        let graph = simplify_graph(&grid);
-        let (start, target, _, _) = bounds(&grid);
+        let (graph, start, target, distance) = simplify_graph(&grid);
 
-        let max_distance = dfs(&start, &target, &graph, &mut HashSet::new(), 0);
+        let mut max_distance = 0;
+        let mut visited = vec![false; graph.len()];
+
+        dfs(
+            start,
+            target,
+            distance,
+            &graph,
+            &mut visited,
+            &mut max_distance,
+        );
 
         Ok(max_distance)
     }

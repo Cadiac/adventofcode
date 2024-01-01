@@ -203,8 +203,8 @@ fn find_position(hailstones: Vec<Hailstone>) -> Result<Vec3, AocError> {
     // vy_0 * X - vx_0 * Y - y_0 * VX + x_0 * VY - x_0 * vy_0 + vx_0 * y_0
     // = vy_1 * X - vx_1 * Y - y_1 * VX + x_1 * VY - x_1 * vy_1 + vx_1 * y_1
     //
-    // (vy_0-vy_1)X + (vx_1-vx_0)Y + (y_1-y_0)VX + (x_0-x_1)VY = x_0 * vy_0 - vx_0 * y_0 - x_1 * vy_1 + vx_1 * y_1
-    // ^---------^    ^---------^    ^-------^     ^-------^     ^-----------------------------------------------^
+    // (vy_0-vy_1)X + (vx_1-vx_0)Y + (y_1-y_0)VX + (x_0-x_1)VY = x_0*vy_0 - vx_0*y_0 - x_1*vy_1 + vx_1*y_1
+    // ^---------^    ^---------^    ^-------^     ^-------^     ^---------------------------------------^
     //  A              B              C             D             E
 
     // Take a sample of five hailstones from the input, and do this for each of the pairs.
