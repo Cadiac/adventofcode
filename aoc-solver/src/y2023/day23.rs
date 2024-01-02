@@ -12,6 +12,7 @@ pub struct Day23;
 type Coords = (isize, isize);
 type Grid = Vec<Vec<Tile>>;
 type Graph = Vec<Vec<(usize, u32)>>;
+type GraphMap = HashMap<(isize, isize), HashMap<(isize, isize), u32>>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Direction {
@@ -100,7 +101,7 @@ fn parse(input: &str) -> Result<Grid, AocError> {
     Ok(grid)
 }
 
-fn find_edges(grid: &Grid, current: Coords) -> HashMap<Coords, u32> {
+fn find_edges(grid: &Grid, current: Coords, slippery: bool) -> HashMap<Coords, u32> {
     let (_, target, height, width) = bounds(grid);
 
     let mut connected = HashMap::new();
@@ -109,7 +110,7 @@ fn find_edges(grid: &Grid, current: Coords) -> HashMap<Coords, u32> {
         return connected;
     }
 
-    for start in Direction::neighbours(grid, current, width, height, false) {
+    for start in Direction::neighbours(grid, current, width, height, slippery) {
         let mut stack = vec![(start, 1)];
         let mut visited = HashSet::from([current]);
 
@@ -121,8 +122,8 @@ fn find_edges(grid: &Grid, current: Coords) -> HashMap<Coords, u32> {
                 break;
             }
 
-            // Count how many neighbours the current position has.
-            // If it has more than one consider it as a connected vertex.
+            // Ignoring the slopes count how many unvisited nodes are connected to the current.
+            // If more than one consider it as a vertex.
             let neighbours: Vec<Coords> =
                 Direction::neighbours(grid, position, width, height, false)
                     .iter()
@@ -135,8 +136,15 @@ fn find_edges(grid: &Grid, current: Coords) -> HashMap<Coords, u32> {
                 let longest_dist = connected.entry(position).or_default();
                 *longest_dist = u32::max(*longest_dist, distance);
             } else {
+                let destinations: Vec<Coords> =
+                    Direction::neighbours(grid, position, width, height, slippery)
+                        .iter()
+                        .filter(|neighbour| !visited.contains(neighbour))
+                        .copied()
+                        .collect();
+
                 stack.extend(
-                    neighbours
+                    destinations
                         .into_iter()
                         .map(|neighbour| (neighbour, distance + 1)),
                 );
@@ -147,14 +155,15 @@ fn find_edges(grid: &Grid, current: Coords) -> HashMap<Coords, u32> {
     connected
 }
 
-fn simplify_graph(grid: &Grid) -> (Graph, usize, usize, u32) {
+fn simplify_graph(grid: &Grid, slippery: bool) -> (Graph, usize, usize, u32) {
     let start = (1, 0);
+    let mut distance = 0;
 
     let mut graph = HashMap::new();
     let mut stack = vec![start];
 
     while let Some(current_node) = stack.pop() {
-        let edges = find_edges(grid, current_node);
+        let edges = find_edges(grid, current_node, slippery);
         let new_vertices = edges.keys().filter(|vertex| !graph.contains_key(*vertex));
 
         stack.extend(new_vertices);
@@ -162,14 +171,51 @@ fn simplify_graph(grid: &Grid) -> (Graph, usize, usize, u32) {
     }
 
     let (start, mut target, _, _) = bounds(grid);
-    let mut distance = 0;
 
-    // Trim the end of the graph to the last junction that leads to the target
+    if !slippery {
+        // Trim the end of the graph to the last junction that leads to the target.
+        // This doesn't work on slippery graphs as they might skip some of the nodes
+        // leading to end and just directly connect to the end
+        trim(&mut graph, &mut target, &mut distance);
+    }
+
+    // Convert the graph from hashmap to a vector of vectors
+    let (graph, start, target) = convert(graph, start, target);
+
+    (graph, start, target, distance)
+}
+
+fn convert(
+    graph: HashMap<(isize, isize), HashMap<(isize, isize), u32>>,
+    start: (isize, isize),
+    target: (isize, isize),
+) -> (Vec<Vec<(usize, u32)>>, usize, usize) {
+    let mappings: Vec<Coords> = graph.keys().copied().collect();
+    let graph: Graph = mappings
+        .iter()
+        .map(|coords| {
+            graph[coords]
+                .iter()
+                .map(|(edge, edge_distance)| {
+                    let index = mappings.iter().position(|m| m == edge).unwrap_or(0);
+                    (index, *edge_distance)
+                })
+                .collect()
+        })
+        .collect();
+
+    let start = mappings.iter().position(|m| *m == start).unwrap_or(0);
+    let target = mappings.iter().position(|m| *m == target).unwrap_or(0);
+
+    (graph, start, target)
+}
+
+fn trim(graph: &mut GraphMap, target: &mut (isize, isize), distance: &mut u32) {
     loop {
         let nodes_leading_to_end: Vec<_> = graph
             .iter()
             .filter_map(|(key, edges)| {
-                if edges.contains_key(&target) {
+                if edges.contains_key(&*target) {
                     Some(*key)
                 } else {
                     None
@@ -183,36 +229,15 @@ fn simplify_graph(grid: &Grid) -> (Graph, usize, usize, u32) {
 
         let previous = nodes_leading_to_end[0];
 
-        graph.remove(&target);
+        graph.remove(&*target);
 
-        let edge_distance = graph[&previous][&target];
-        distance += edge_distance;
+        let edge_distance = graph[&previous][target];
+        *distance += edge_distance;
 
-        graph.entry(previous).or_default().remove(&target);
+        graph.entry(previous).or_default().remove(&*target);
 
-        target = previous;
+        *target = previous;
     }
-
-    // Convert the graph from hashmap to vector
-    let mapping: Vec<Coords> = graph.keys().copied().collect();
-    let graph: Graph = mapping
-        .iter()
-        .map(|coords| {
-            graph[coords]
-                .iter()
-                .map(|(edge, edge_distance)| {
-                    let index = mapping.iter().position(|m| m == edge).unwrap();
-
-                    (index, *edge_distance)
-                })
-                .collect()
-        })
-        .collect();
-
-    let start = mapping.iter().position(|m| *m == start).unwrap();
-    let target = mapping.iter().position(|m| *m == target).unwrap();
-
-    (graph, start, target, distance)
 }
 
 fn bounds(grid: &Grid) -> (Coords, Coords, isize, isize) {
@@ -228,8 +253,8 @@ fn bounds(grid: &Grid) -> (Coords, Coords, isize, isize) {
 #[derive(Clone, Eq, PartialEq)]
 struct Search {
     distance: i32,
-    position: Coords,
-    visited: HashSet<Coords>,
+    position: usize,
+    visited: HashSet<usize>,
 }
 
 impl Ord for Search {
@@ -248,19 +273,16 @@ impl PartialOrd for Search {
 // the distance grows. It then tries to maximize minimize this, finding the longest
 // path in the directed acyclic graph (DAG). This was based on this SO thread:
 // https://stackoverflow.com/questions/8027180/dijkstra-for-longest-path-in-a-dag
-fn dijkstra(grid: &Grid) -> u32 {
-    let (start, target, height, width) = bounds(grid);
-
-    let mut dist: HashMap<Coords, i32> = HashMap::new();
+fn dijkstra(graph: &Graph, start: usize, target: usize, distance: u32) -> u32 {
+    let mut dist: HashMap<usize, i32> = HashMap::new();
     let mut heap: BinaryHeap<Search> = BinaryHeap::new();
+    let mut max_distance = 0;
 
     heap.push(Search {
-        distance: 0,
+        distance: distance as i32,
         position: start,
         visited: HashSet::new(),
     });
-
-    let mut max_distance = 0;
 
     while let Some(Search {
         position,
@@ -281,10 +303,10 @@ fn dijkstra(grid: &Grid) -> u32 {
             continue;
         }
 
-        for (x, y) in Direction::neighbours(grid, position, width, height, true) {
+        for (edge, edge_distance) in graph[position].iter() {
             let next = Search {
-                position: (x, y),
-                distance: distance - 1,
+                position: *edge,
+                distance: distance - *edge_distance as i32,
                 visited: visited.clone(),
             };
 
@@ -340,14 +362,16 @@ impl Solution for Day23 {
 
     fn part_1(&self, input: &str) -> Result<u32, AocError> {
         let grid = parse(input)?;
-        let longest = dijkstra(&grid);
+        let (graph, start, target, distance) = simplify_graph(&grid, true);
 
-        Ok(longest)
+        let max_distance = dijkstra(&graph, start, target, distance);
+
+        Ok(max_distance)
     }
 
     fn part_2(&self, input: &str) -> Result<u32, AocError> {
         let grid = parse(input)?;
-        let (graph, start, target, distance) = simplify_graph(&grid);
+        let (graph, start, target, distance) = simplify_graph(&grid, false);
 
         let mut max_distance = 0;
         let mut visited = vec![false; graph.len()];
