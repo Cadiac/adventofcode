@@ -2,7 +2,10 @@ use yew::prelude::*;
 use yew_agent::oneshot::OneshotProvider;
 use yew_router::prelude::*;
 
-use crate::{agent::SolutionTask, header::Header, home::Home, solution::Solution, y2022};
+use crate::{
+    header::Header, home::Home, runner::SolutionTask, solution::Solution,
+    syntax::SyntaxHighlightTask, y2022,
+};
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum Route {
@@ -52,8 +55,10 @@ pub fn switch(route: Route) -> Html {
         <>
             <Header year={year} route={route} />
             <main class="fade-in">
-                <OneshotProvider<SolutionTask> path="/worker.js">
-                    { main }
+                <OneshotProvider<SolutionTask> path="/solution-worker.js">
+                    <OneshotProvider<SyntaxHighlightTask> path="/syntax-worker.js">
+                        { main }
+                    </OneshotProvider<SyntaxHighlightTask>>
                 </OneshotProvider<SolutionTask>>
             </main>
         </>

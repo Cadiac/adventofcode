@@ -2,16 +2,10 @@ use yew::platform::spawn_local;
 use yew::prelude::*;
 use yew_agent::oneshot::use_oneshot_runner;
 
-use syntect::highlighting::ThemeSet;
-use syntect::html::highlighted_html_for_string;
-use syntect::parsing::{SyntaxDefinition, SyntaxSetBuilder};
+use aoc_solver::{solution::Solver, y2020::Y2020, y2021::Y2021, y2022::Y2022, y2023::Y2023};
 
-use crate::agent::SolutionTask;
-use aoc_solver::solution::Solver;
-use aoc_solver::y2020::Y2020;
-use aoc_solver::y2021::Y2021;
-use aoc_solver::y2022::Y2022;
-use aoc_solver::y2023::Y2023;
+use crate::runner::SolutionTask;
+use crate::syntax::SyntaxHighlightTask;
 
 #[derive(Properties, PartialEq)]
 pub struct Props {
@@ -21,30 +15,42 @@ pub struct Props {
 
 #[function_component(SourceViewer)]
 pub fn source_viewer(props: &Props) -> Html {
-    let highlighted = use_memo((props.year, props.day), |(year, day)| {
+    let highlighted = use_state(|| "".to_string());
+
+    let syntax_task = use_oneshot_runner::<SyntaxHighlightTask>();
+
+    let run_syntax_highlight = {
+        let highlighted = highlighted.clone();
+
+        move |source: String| {
+            let syntax_agent = syntax_task.clone();
+            let highlighted = highlighted.clone();
+            highlighted.set("".to_string());
+
+            spawn_local(async move {
+                let output_value = syntax_agent.run(source).await;
+                highlighted.set(output_value);
+            });
+        }
+    };
+
+    let year = props.year;
+    let day = props.day;
+
+    use_effect_with((props.day, props.year), move |_| {
         let source = match year {
-            2020 => Y2020::get_source(*day),
-            2021 => Y2021::get_source(*day),
-            2022 => Y2022::get_source(*day),
-            2023 => Y2023::get_source(*day),
+            2020 => Y2020::get_source(day),
+            2021 => Y2021::get_source(day),
+            2022 => Y2022::get_source(day),
+            2023 => Y2023::get_source(day),
             _ => "",
         };
 
-        let rust_syntax = include_str!("../static/syntax/rust.sublime-syntax");
-
-        let mut builder = SyntaxSetBuilder::new();
-        builder.add(SyntaxDefinition::load_from_str(rust_syntax, true, None).unwrap());
-
-        let syntax_set = builder.build();
-        let theme_set = ThemeSet::load_defaults();
-        let theme = &theme_set.themes["base16-eighties.dark"];
-        let syntax_reference = syntax_set.find_syntax_by_extension("rs").unwrap();
-
-        highlighted_html_for_string(source, &syntax_set, syntax_reference, theme).unwrap()
+        run_syntax_highlight(source.to_owned())
     });
 
     let div = gloo::utils::document().create_element("div").unwrap();
-    div.set_class_name("highlighted");
+    div.set_class_name("highlighted fade-in");
     div.set_inner_html(highlighted.as_str());
 
     Html::VRef(div.into())

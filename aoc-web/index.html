@@ -20,20 +20,23 @@
     <link
       data-trunk
       rel="rust"
-      href="Cargo.toml"
       data-bin="app"
       data-type="main"
       data-wasm-opt="4"
-      data-weak-refs
     />
     <link
       data-trunk
       rel="rust"
-      href="Cargo.toml"
-      data-bin="worker"
+      data-bin="solution-worker"
       data-type="worker"
       data-wasm-opt="4"
-      data-weak-refs
+    />
+    <link
+      data-trunk
+      rel="rust"
+      data-bin="syntax-worker"
+      data-type="worker"
+      data-wasm-opt="4"
     />
 
     <link data-trunk rel="css" href="static/styles.css" />
