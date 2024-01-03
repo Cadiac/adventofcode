@@ -1,6 +1,6 @@
 use yew::prelude::*;
 
-use crate::{year::Year, NavLink, Route};
+use crate::{navlink::NavLink, router::Route, year::Year};
 
 #[derive(Properties, PartialEq)]
 pub struct HeaderProps {

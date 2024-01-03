@@ -1,7 +1,7 @@
 use yew::prelude::*;
 use yew_router::components::Link;
 
-use crate::Route;
+use crate::router::Route;
 
 const YEARS: &[u32] = &[2023, 2022, 2021, 2020];
 

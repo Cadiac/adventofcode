@@ -1,18 +1,8 @@
-pub mod header;
-pub mod home;
-pub mod navlink;
-pub mod solution;
-pub mod y2020;
-pub mod y2021;
-pub mod y2022;
-pub mod y2023;
-pub mod year;
-
-use home::Home;
 use yew::prelude::*;
+use yew_agent::oneshot::OneshotProvider;
 use yew_router::prelude::*;
 
-use crate::{header::Header, navlink::NavLink, solution::Solution};
+use crate::{agent::SolutionTask, header::Header, home::Home, solution::Solution, y2022};
 
 #[derive(Clone, Routable, PartialEq)]
 pub enum Route {
@@ -33,7 +23,7 @@ pub enum Route {
     NotFound,
 }
 
-fn router(route: Route) -> Html {
+pub fn switch(route: Route) -> Html {
     let year = match route {
         Route::Index | Route::NotFound => 2023,
         Route::Solution { year, day: _ } | Route::Home { year } => year,
@@ -61,42 +51,20 @@ fn router(route: Route) -> Html {
     html! {
         <>
             <Header year={year} route={route} />
-            <main class="fade-in">{ main }</main>
+            <main class="fade-in">
+                <OneshotProvider<SolutionTask> path="/worker.js">
+                    { main }
+                </OneshotProvider<SolutionTask>>
+            </main>
         </>
     }
 }
 
-#[function_component(Footer)]
-fn footer() -> Html {
+#[function_component(Router)]
+pub fn router() -> Html {
     html! {
-        <footer>
-            <small>
-                {"Made by "}
-                <a href="https://github.com/Cadiac">{"Cadiac"}</a>
-                {". Source code can be be found "}
-                <a href="https://github.com/Cadiac/adventofcode">{"here"}</a>
-                {"."}
-            </small>
-        </footer>
+        <BrowserRouter>
+            <Switch<Route> render={switch} />
+        </BrowserRouter>
     }
-}
-
-#[function_component(App)]
-fn app() -> Html {
-    html! {
-        <>
-            <BrowserRouter>
-                <Switch<Route> render={router} />
-            </BrowserRouter>
-            <Footer />
-        </>
-    }
-}
-
-fn main() {
-    let document = gloo::utils::document();
-    let container = document.query_selector("#aoc").unwrap().unwrap();
-
-    yew::Renderer::<App>::with_root(container).render();
-    wasm_logger::init(wasm_logger::Config::default());
 }
