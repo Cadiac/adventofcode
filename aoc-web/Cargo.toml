@@ -5,21 +5,22 @@ authors = ["Jaakko Husso <jaakko.t.husso@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-itertools = "0.12.0"
-log = "0.4.20"
+itertools = "0.13.0"
+log = "0.4.22"
 yew = { version = "0.21.0", features = ["csr"] }
 yew-agent = "0.3.0"
 yew-router = "0.18"
 wasm-logger = "0.2.0"
-wasm-bindgen = "0.2.88"
-web-sys = "0.3.65"
+wasm-bindgen = "0.2.97"
+web-sys = "0.3.74"
 aoc-solver = { path = "../aoc-solver" }
-gloo = "0.10.0"
-syntect = { version = "5.1.0", default-features = false, features = [
+gloo = "0.11.0"
+syntect = { version = "5.2.0", default-features = false, features = [
     "default-fancy",
 ] }
-serde = { version = "1.0.194", features = ["derive"] }
-chrono = { version = "0.4.31", default-features = false, features = [
+serde = { version = "1.0.215", features = ["derive"] }
+chrono = { version = "0.4.38", default-features = false, features = [
     "clock",
     "wasmbind",
 ] }
+time = "0.3.36"

@@ -28,13 +28,13 @@ pub enum Route {
 
 pub fn switch(route: Route) -> Html {
     let year = match route {
-        Route::Index | Route::NotFound => 2023,
+        Route::Index | Route::NotFound => 2024,
         Route::Solution { year, day: _ } | Route::Home { year } => year,
         Route::Lava | Route::Rope | Route::Cube => 2022,
     };
 
     let main = match route {
-        Route::Index => html! { <Home year={2023} /> },
+        Route::Index => html! { <Home year={2024} /> },
         Route::Home { year } => html! { <Home year={year} /> },
         Route::Solution { year, day } => {
             html! { <Solution year={year} day={day} />}

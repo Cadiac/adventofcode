@@ -16,6 +16,13 @@ pub fn header(props: &HeaderProps) -> Html {
             <nav class="links">
                 {
                     match props.year {
+                        2024 => {
+                            html! {
+                                <>
+                                    <NavLink route={Route::Solution { year: 2024, day: 1 }} current={props.route.clone()} text={"1"}/>
+                                </>
+                            }
+                        },
                         2023 => {
                             html! {
                                 <>

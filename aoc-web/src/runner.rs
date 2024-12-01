@@ -1,7 +1,9 @@
 use chrono::Local;
 use yew_agent::prelude::*;
 
-use aoc_solver::{solution::Solver, y2020::Y2020, y2021::Y2021, y2022::Y2022, y2023::Y2023};
+use aoc_solver::{
+    solution::Solver, y2020::Y2020, y2021::Y2021, y2022::Y2022, y2023::Y2023, y2024::Y2024,
+};
 
 #[oneshot]
 pub async fn SolutionTask(input: (u32, u8)) -> (String, i64) {
@@ -14,6 +16,7 @@ pub async fn SolutionTask(input: (u32, u8)) -> (String, i64) {
         2021 => Y2021::run_solution(day, None),
         2022 => Y2022::run_solution(day, None),
         2023 => Y2023::run_solution(day, None),
+        2024 => Y2024::run_solution(day, None),
         _ => vec!["Missing year".to_string()],
     };
 
