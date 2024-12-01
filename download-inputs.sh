@@ -6,7 +6,7 @@
 set -e
 
 START_YEAR=2020
-END_YEAR=2023
+END_YEAR=2024
 
 if [[ -z "${AOC_SESSION_COOKIE}" ]]; then
   echo "Missing env variable AOC_SESSION_COOKIE"
