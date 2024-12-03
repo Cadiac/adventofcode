@@ -78,21 +78,16 @@ impl Solution for Day03 {
 
     fn part_2(&self, input: &str) -> Result<u32, AocError> {
         let mut enabled = true;
-        let sum = parse(input)?
-            .iter()
-            .map(|instruction| match instruction {
-                Instruction::Mul(a, b) if enabled => a * b,
-                Instruction::Enable => {
-                    enabled = true;
-                    0
-                }
-                Instruction::Disable => {
-                    enabled = false;
-                    0
-                }
-                _ => 0,
-            })
-            .sum();
+        let mut sum = 0;
+
+        for instruction in parse(input)? {
+            match instruction {
+                Instruction::Mul(a, b) if enabled => sum += a * b,
+                Instruction::Enable => enabled = true,
+                Instruction::Disable => enabled = false,
+                _ => (),
+            }
+        }
 
         Ok(sum)
     }
