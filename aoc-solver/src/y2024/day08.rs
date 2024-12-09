@@ -32,7 +32,7 @@ fn parse(input: &str) -> Result<(Grid, usize, usize), AocError> {
     Ok((grid, width, height))
 }
 
-fn is_within_bounds(pos: &Coords, width: usize, height: usize) -> bool {
+fn is_within_bounds(pos: Coords, width: usize, height: usize) -> bool {
     pos.0 >= 0 && pos.1 >= 0 && pos.0 < (width as isize) && pos.1 < (height as isize)
 }
 
@@ -48,19 +48,23 @@ fn find_antinodes(
                 let dx = pair[1].0 - pair[0].0;
                 let dy = pair[1].1 - pair[0].1;
 
-                let left = (1..)
-                    .map(|i| (i, (pair[0].0 - i * dx, pair[0].1 - i * dy)))
-                    .take_while(|(i, position)| {
-                        (allow_resonance || *i == 1) && is_within_bounds(position, width, height)
-                    })
-                    .map(|(_, position)| position);
+                let left = (1..).map_while(|i| {
+                    if allow_resonance || i == 1 {
+                        let position = (pair[0].0 - i * dx, pair[0].1 - i * dy);
+                        is_within_bounds(position, width, height).then_some(position)
+                    } else {
+                        None
+                    }
+                });
 
-                let right = (1..)
-                    .map(|i| (i, (pair[1].0 + i * dx, pair[1].1 + i * dy)))
-                    .take_while(|(i, position)| {
-                        (allow_resonance || *i == 1) && is_within_bounds(position, width, height)
-                    })
-                    .map(|(_, position)| position);
+                let right = (1..).map_while(|i| {
+                    if allow_resonance || i == 1 {
+                        let position = (pair[1].0 + i * dx, pair[1].1 + i * dy);
+                        is_within_bounds(position, width, height).then_some(position)
+                    } else {
+                        None
+                    }
+                });
 
                 left.chain(right).collect::<Vec<_>>()
             })

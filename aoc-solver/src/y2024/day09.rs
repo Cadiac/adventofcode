@@ -1,13 +1,9 @@
-use itertools::Itertools;
-
 use crate::solution::{AocError, Solution};
-
-type Id = u32;
 
 #[derive(Debug, PartialEq, Eq)]
 enum Block {
     Free,
-    File(Id),
+    File(u32),
 }
 
 fn parse(input: &str) -> Result<Vec<Block>, AocError> {
@@ -59,15 +55,14 @@ fn compact(blocks: &mut [Block]) {
 }
 
 fn checksum(blocks: &[Block]) -> u32 {
-    let mut sum = 0;
-
-    for (index, block) in blocks.iter().enumerate() {
-        if let Block::File(id) = block {
-            sum += index as u32 * id
-        }
-    }
-
-    sum
+    blocks
+        .iter()
+        .enumerate()
+        .map_while(|(index, block)| match block {
+            Block::File(id) => Some(index as u32 * id),
+            Block::Free => None,
+        })
+        .sum()
 }
 
 pub struct Day09;
