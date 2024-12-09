@@ -3,7 +3,7 @@ use crate::solution::{AocError, Solution};
 #[derive(Debug, PartialEq, Eq)]
 enum Block {
     Free,
-    File(u32),
+    File(u64),
 }
 
 fn parse(input: &str) -> Result<Vec<Block>, AocError> {
@@ -46,7 +46,7 @@ fn compact(blocks: &mut [Block]) {
             tail -= 1
         }
 
-        if head >= tail {
+        if head > tail {
             return;
         }
 
@@ -54,12 +54,12 @@ fn compact(blocks: &mut [Block]) {
     }
 }
 
-fn checksum(blocks: &[Block]) -> u32 {
+fn checksum(blocks: &[Block]) -> u64 {
     blocks
         .iter()
         .enumerate()
         .map_while(|(index, block)| match block {
-            Block::File(id) => Some(index as u32 * id),
+            Block::File(id) => Some(index as u64 * id),
             Block::Free => None,
         })
         .sum()
@@ -67,14 +67,14 @@ fn checksum(blocks: &[Block]) -> u32 {
 
 pub struct Day09;
 impl Solution for Day09 {
-    type A = u32;
-    type B = u32;
+    type A = u64;
+    type B = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day09.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<u32, AocError> {
+    fn part_1(&self, input: &str) -> Result<u64, AocError> {
         let mut disk = parse(input)?;
 
         compact(&mut disk);
@@ -82,7 +82,7 @@ impl Solution for Day09 {
         Ok(checksum(&disk))
     }
 
-    fn part_2(&self, input: &str) -> Result<u32, AocError> {
+    fn part_2(&self, input: &str) -> Result<u64, AocError> {
         unimplemented!();
     }
 }
