@@ -7,7 +7,7 @@ pub mod day04;
 pub mod day05;
 pub mod day06;
 pub mod day07;
-// pub mod day08;
+pub mod day08;
 // pub mod day09;
 // pub mod day10;
 // pub mod day11;
@@ -40,7 +40,7 @@ impl Solver for Y2024 {
             5 => day05::Day05.run(input, 5, 2024),
             6 => day06::Day06.run(input, 6, 2024),
             7 => day07::Day07.run(input, 7, 2024),
-            // 8 => day08::Day08.run(input, 8, 2024),
+            8 => day08::Day08.run(input, 8, 2024),
             // 9 => day09::Day09.run(input, 9, 2024),
             // 10 => day10::Day10.run(input, 10, 2024),
             // 11 => day11::Day11.run(input, 11, 2024),
