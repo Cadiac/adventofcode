@@ -9,25 +9,22 @@ enum Block {
 fn parse(input: &str) -> Result<Vec<Block>, AocError> {
     let mut is_parsing_file = true;
     let mut id = 0;
-
     let mut blocks = Vec::new();
-    for character in input.chars() {
-        let size = character
+
+    for c in input.chars() {
+        let size = c
             .to_digit(10)
-            .ok_or_else(|| AocError::parse(character.to_string(), "Unexpected character"))?;
+            .ok_or_else(|| AocError::parse(c.to_string(), "Unexpected character"))?
+            as usize;
 
         if is_parsing_file {
-            for _ in 0..size {
-                blocks.push(Block::File(id, size as usize));
-            }
+            blocks.extend((0..size).map(|_| Block::File(id, size)));
             id += 1;
-            is_parsing_file = false;
         } else {
-            for _ in 0..size {
-                blocks.push(Block::Free);
-            }
-            is_parsing_file = true;
+            blocks.extend((0..size).map(|_| Block::Free));
         }
+
+        is_parsing_file = !is_parsing_file;
     }
 
     Ok(blocks)
@@ -55,55 +52,59 @@ fn compact_by_block(blocks: &mut [Block]) {
 }
 
 fn compact_by_file(blocks: &mut [Block]) {
-    let mut tail = blocks.len() - 1;
+    let mut tail = blocks.len().saturating_sub(1);
 
-    loop {
-        let size = loop {
-            match blocks[tail] {
-                Block::Free => tail -= 1,
-                Block::File(_, size) => break size,
-            }
-        };
-
-        let mut continuous_space = 0;
-        let mut head = 0;
-
-        loop {
-            if head >= tail {
-                // No space, skip this file
-
-                // Reached the beginning of the disk
-                if size > tail {
-                    return;
-                };
-
-                // Jump to the next file
-                tail -= size;
-                break;
+    while let Some(space_required) = next_file_from_tail(blocks, &mut tail) {
+        if !move_file_if_space(blocks, &mut tail, space_required) {
+            if space_required > tail {
+                return;
             }
 
-            match blocks[head] {
-                Block::Free => {
-                    head += 1;
-                    continuous_space += 1;
-                    if continuous_space >= size {
-                        let start = head - continuous_space;
+            tail -= space_required;
+        }
+    }
+}
 
-                        for i in 0..size {
-                            blocks.swap(start + i, tail - i);
-                        }
+fn next_file_from_tail(blocks: &[Block], tail: &mut usize) -> Option<usize> {
+    while *tail > 0 && matches!(blocks[*tail], Block::Free) {
+        *tail -= 1;
+    }
 
-                        tail -= size;
-                        break;
+    match blocks[*tail] {
+        Block::File(_, size) => Some(size),
+        _ => None,
+    }
+}
+
+fn move_file_if_space(blocks: &mut [Block], tail: &mut usize, space_required: usize) -> bool {
+    let mut head = 0;
+    let mut continuous_space = 0;
+
+    while head < *tail {
+        match blocks[head] {
+            Block::Free => {
+                continuous_space += 1;
+                head += 1;
+
+                if continuous_space >= space_required {
+                    let start = head - continuous_space;
+
+                    for i in 0..space_required {
+                        blocks.swap(start + i, *tail - i);
                     }
+
+                    *tail -= space_required;
+                    return true;
                 }
-                Block::File(_id, size) => {
-                    head += size;
-                    continuous_space = 0;
-                }
+            }
+            Block::File(_, size) => {
+                head += size;
+                continuous_space = 0;
             }
         }
     }
+
+    false
 }
 
 fn checksum(blocks: &[Block]) -> u64 {
