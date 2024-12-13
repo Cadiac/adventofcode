@@ -57,14 +57,12 @@ fn parse(input: &str) -> Result<Vec<Machine>, AocError> {
 }
 
 fn find_fewest_tokens(
-    Machine { price, a, b }: &Machine,
-    unit_conversion_error: bool,
+    Machine { mut price, a, b }: &Machine,
+    fix_unit_conversion_error: bool,
 ) -> Option<i64> {
-    let price = if !unit_conversion_error {
-        (price.0 + 10000000000000, price.1 + 10000000000000)
-    } else {
-        *price
-    };
+    if fix_unit_conversion_error {
+        price = (price.0 + 10000000000000, price.1 + 10000000000000)
+    }
 
     // Solving `a_presses` and `b_presses`
     // from a system of two equations, accepting only integer solutions:
@@ -97,7 +95,7 @@ impl Solution for Day13 {
 
         let fewest = machines
             .iter()
-            .filter_map(|machine| find_fewest_tokens(machine, true))
+            .filter_map(|machine| find_fewest_tokens(machine, false))
             .sum();
 
         Ok(fewest)
@@ -108,7 +106,7 @@ impl Solution for Day13 {
 
         let fewest = machines
             .iter()
-            .filter_map(|machine| find_fewest_tokens(machine, false))
+            .filter_map(|machine| find_fewest_tokens(machine, true))
             .sum();
 
         Ok(fewest)
