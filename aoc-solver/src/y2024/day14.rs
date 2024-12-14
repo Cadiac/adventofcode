@@ -8,12 +8,12 @@ type Coords = (i64, i64);
 const DIRECTIONS: [Coords; 4] = [(0, -1), (1, 0), (0, 1), (-1, 0)];
 
 #[derive(Debug, PartialEq)]
-struct Robot {
+pub struct Robot {
     v: Coords,
     pos: Coords,
 }
 
-fn parse(input: &str) -> Result<Vec<Robot>, AocError> {
+pub fn parse(input: &str) -> Result<Vec<Robot>, AocError> {
     let machines = input
         .trim()
         .lines()
@@ -37,7 +37,7 @@ fn parse(input: &str) -> Result<Vec<Robot>, AocError> {
     Ok(machines)
 }
 
-fn predict(robot: &Robot, width: u64, height: u64, seconds: i64) -> Coords {
+pub fn predict(robot: &Robot, width: u64, height: u64, seconds: i64) -> Coords {
     let x = (robot.pos.0 + seconds * robot.v.0).rem_euclid(width as i64);
     let y = (robot.pos.1 + seconds * robot.v.1).rem_euclid(height as i64);
     (x, y)
@@ -148,11 +148,11 @@ impl Solution for Day14 {
         let width = 101;
         let height = 103;
 
-        // Turns out this logic was more or less useless - all the robot velocities
-        // are less than the (prime) width & height, so the repeated positions are just
-        // determined by lcm(101, 103). But this logic would find the repeating patterns
-        // even if some robots were moving faster than the size of the area and
-        // possibly teleporting more than once per second.
+        // Turns out this logic was more or less useless - the width and the height are
+        // both primes, and also all the robot velocities less than the area dimensions,
+        // so the repeated positions are just determined by lcm(101, 103).
+        // But this logic would find the repeating patterns even if the dimensions were not
+        // prime or if robots were teleporting many times per second.
         let loops_after = repeats_every(&robots, width, height);
 
         // Assume that the christmas tree probably has a large continuous area,

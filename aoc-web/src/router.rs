@@ -4,7 +4,7 @@ use yew_router::prelude::*;
 
 use crate::{
     header::Header, home::Home, runner::SolutionTask, solution::Solution,
-    syntax::SyntaxHighlightTask, y2022,
+    syntax::SyntaxHighlightTask, y2022, y2024,
 };
 
 #[derive(Clone, Routable, PartialEq)]
@@ -21,6 +21,8 @@ pub enum Route {
     Lava,
     #[at("/2022/22/cube")]
     Cube,
+    #[at("/2024/14/visual")]
+    EasterEgg,
     #[not_found]
     #[at("/404")]
     NotFound,
@@ -31,6 +33,7 @@ pub fn switch(route: Route) -> Html {
         Route::Index | Route::NotFound => 2024,
         Route::Solution { year, day: _ } | Route::Home { year } => year,
         Route::Lava | Route::Rope | Route::Cube => 2022,
+        Route::EasterEgg => 2024,
     };
 
     let main = match route {
@@ -47,6 +50,9 @@ pub fn switch(route: Route) -> Html {
         }
         Route::Cube => {
             html! { <y2022::Cube/> }
+        }
+        Route::EasterEgg => {
+            html! { <y2024::EasterEgg/> }
         }
         Route::NotFound => html! {<h1>{ "Not Found :(" }</h1>},
     };

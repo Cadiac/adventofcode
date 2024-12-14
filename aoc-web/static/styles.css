@@ -223,3 +223,41 @@ code:before {
   animation: fadeInAnimation ease-in 400ms;
   animation-fill-mode: forwards;
 }
+
+.full-width {
+  width: 100%;
+  max-width: 900px;
+}
+
+.small {
+  font-size: 0.75rem;
+}
+
+input[type="range" i] {
+  padding-top: 1em;
+  padding-bottom: 1em;
+  margin: 1em 0 0 0;
+  height: 10px;
+  border: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  background-size: 16px 100%;
+  background-position: 0% 0%;
+  background-repeat: repeat;
+}
+
+input[type="range" i]::-webkit-slider-runnable-track {
+  height: 5px; 
+  background-color: #009900;
+}
+
+input[type="range" i]::-webkit-slider-thumb {
+  width: 10px;
+  height: 30px;
+  background-color: #ffff66;
+  box-shadow: 0 0 5px #ffff66;
+  -webkit-appearance: none;
+  margin-top: -1em;
+}
+

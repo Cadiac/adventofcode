@@ -33,6 +33,7 @@ pub fn header(props: &HeaderProps) -> Html {
                                     <NavLink route={Route::Solution { year: 2024, day: 12 }} current={props.route.clone()} text={"12"}/>
                                     <NavLink route={Route::Solution { year: 2024, day: 13 }} current={props.route.clone()} text={"13"}/>
                                     <NavLink route={Route::Solution { year: 2024, day: 14 }} current={props.route.clone()} text={"14"}/>
+                                    <NavLink route={Route::EasterEgg} current={props.route.clone()} text={"14+"}/>
                                 </>
                             }
                         },
