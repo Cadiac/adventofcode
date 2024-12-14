@@ -93,9 +93,9 @@ impl Component for EasterEgg {
                         Msg::TimeChanged(seconds)
                     })}
                 />
-                <span class="success">
+                <p class="success">
                     {format!("t={}", self.seconds)}
-                </span>
+                </p>
                 <pre class="small">
                     <code>{ output }</code>
                 </pre>
