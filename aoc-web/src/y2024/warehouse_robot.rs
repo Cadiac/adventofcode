@@ -3,7 +3,10 @@ use wasm_bindgen::{prelude::Closure, JsCast};
 use web_sys::{window, Window};
 use yew::prelude::*;
 
-use aoc_solver::y2024::day15::{move_robot, parse, Coords, Grid, Tile};
+use aoc_solver::{
+    solution::Solution,
+    y2024::day15::{move_robot, parse, Coords, Day15, Grid, Tile},
+};
 
 pub enum Msg {
     KeyPress(char),
@@ -22,20 +25,7 @@ impl Component for WarehouseRobot {
     type Properties = ();
 
     fn create(_ctx: &Context<Self>) -> Self {
-        let input = "##########\n\
-                 #..O..O.O#\n\
-                 #......O.#\n\
-                 #.OO..O.O#\n\
-                 #..O@..O.#\n\
-                 #O#..O...#\n\
-                 #O..O..O.#\n\
-                 #.OO.O.OO#\n\
-                 #....O...#\n\
-                 ##########\n\
-                 \n\
-                 v";
-
-        let (grid, _, robot) = parse(input, true).unwrap();
+        let (grid, _, robot) = parse(Day15.default_input(), true).unwrap();
 
         Self {
             keyboard_listener: None,
@@ -111,17 +101,17 @@ impl Component for WarehouseRobot {
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
-        let output = (0..10)
+        let output = (0..50)
             .map(|y| {
-                (0..20)
+                (0..100)
                     .map(|x| {
                         if (x, y) == self.robot {
                             "@".to_string()
                         } else {
                             match self.grid.get(&(x, y)) {
                                 Some(Tile::Wall) => "#".to_string(),
-                                Some(Tile::LargeBox(linked)) if linked.0 > x => "[".to_string(),
-                                Some(Tile::LargeBox(_)) => "]".to_string(),
+                                Some(Tile::WideBox(linked)) if linked.0 > x => "[".to_string(),
+                                Some(Tile::WideBox(_)) => "]".to_string(),
                                 _ => ".".to_string(),
                             }
                         }
@@ -145,7 +135,7 @@ impl Component for WarehouseRobot {
                     {" and "}
                     <a class="link" role="button" href={"javascript:void(0)"} onclick={link.callback(|_| Msg::KeyPress('D'))}>{"D"}</a>
                     {"."}</p>
-                <pre>
+                <pre class="small">
                     <code>{ output }</code>
                 </pre>
             </>
