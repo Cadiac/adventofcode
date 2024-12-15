@@ -23,6 +23,8 @@ pub enum Route {
     Cube,
     #[at("/2024/14/visual")]
     EasterEgg,
+    #[at("/2024/15/warehouse")]
+    WarehouseRobot,
     #[not_found]
     #[at("/404")]
     NotFound,
@@ -33,7 +35,7 @@ pub fn switch(route: Route) -> Html {
         Route::Index | Route::NotFound => 2024,
         Route::Solution { year, day: _ } | Route::Home { year } => year,
         Route::Lava | Route::Rope | Route::Cube => 2022,
-        Route::EasterEgg => 2024,
+        Route::EasterEgg | Route::WarehouseRobot => 2024,
     };
 
     let main = match route {
@@ -53,6 +55,9 @@ pub fn switch(route: Route) -> Html {
         }
         Route::EasterEgg => {
             html! { <y2024::EasterEgg/> }
+        }
+        Route::WarehouseRobot => {
+            html! { <y2024::WarehouseRobot/> }
         }
         Route::NotFound => html! {<h1>{ "Not Found :(" }</h1>},
     };
