@@ -91,7 +91,7 @@ impl Solver for Y2024 {
             14 => include_str!("./day14.rs"),
             15 => include_str!("./day15.rs"),
             16 => include_str!("./day16.rs"),
-            // 17 => include_str!("./day17.rs"),
+            17 => include_str!("./day17.rs"),
             // 18 => include_str!("./day18.rs"),
             // 19 => include_str!("./day19.rs"),
             // 20 => include_str!("./day20.rs"),
