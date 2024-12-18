@@ -96,7 +96,7 @@ pub fn a_star(corrupted: &[Coords], start: Coords, end: Coords) -> Option<u32> {
                 continue;
             }
 
-            let tentative_g = g.entry(position).or_default().saturating_add(1);
+            let tentative_g = g.get(&position).unwrap_or(&0) + 1;
             let existing_g = g.get(&neighbour).unwrap_or(&u32::MAX);
 
             if tentative_g < *existing_g {
@@ -137,15 +137,23 @@ impl Solution for Day18 {
     fn part_2(&self, input: &str) -> Result<String, AocError> {
         let corrupted = parse(input)?;
 
-        let mut t = 1024;
         let start = (0, 0);
         let end = (70, 70);
 
-        while a_star(&corrupted[0..t], start, end).is_some() {
-            t += 1;
+        let mut low = 1024;
+        let mut high = corrupted.len();
+
+        while low < high {
+            let mid = (low + high) / 2;
+
+            if a_star(&corrupted[0..mid], start, end).is_some() {
+                low = mid + 1;
+            } else {
+                high = mid;
+            }
         }
 
-        Ok(format!("{},{}", corrupted[t - 1].0, corrupted[t - 1].1))
+        Ok(format!("{},{}", corrupted[low - 1].0, corrupted[low - 1].1))
     }
 }
 
