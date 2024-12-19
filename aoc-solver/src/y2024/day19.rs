@@ -13,7 +13,7 @@ fn parse(input: &str) -> Result<(Vec<String>, Vec<String>), AocError> {
     Ok((towels, designs))
 }
 
-fn count_possible(towels: &[String], design: &str, cache: &mut HashMap<String, usize>) -> usize {
+fn count_possible(towels: &[String], design: &str, cache: &mut HashMap<String, u64>) -> u64 {
     if design.is_empty() {
         return 1;
     }
@@ -35,26 +35,26 @@ fn count_possible(towels: &[String], design: &str, cache: &mut HashMap<String, u
 
 pub struct Day19;
 impl Solution for Day19 {
-    type A = usize;
-    type B = usize;
+    type A = u64;
+    type B = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day19.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<usize, AocError> {
+    fn part_1(&self, input: &str) -> Result<u64, AocError> {
         let (towels, designs) = parse(input)?;
 
         let mut cache = HashMap::new();
         let possible = designs
             .iter()
             .filter(|design| count_possible(&towels, design, &mut cache) > 0)
-            .count();
+            .count() as u64;
 
         Ok(possible)
     }
 
-    fn part_2(&self, input: &str) -> Result<usize, AocError> {
+    fn part_2(&self, input: &str) -> Result<u64, AocError> {
         let (towels, designs) = parse(input)?;
 
         let mut cache = HashMap::new();
