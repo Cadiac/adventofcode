@@ -9,6 +9,7 @@ use crate::solution::{AocError, Solution};
 
 type Coords = (isize, isize);
 type Keyboard = HashMap<Coords, char>;
+type Sequence = Vec<char>;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Direction {
@@ -36,12 +37,12 @@ impl Direction {
     }
 }
 
-fn parse(input: &str) -> Result<Vec<(Vec<char>, u32)>, AocError> {
+fn parse(input: &str) -> Result<Vec<(Sequence, u64)>, AocError> {
     let codes = input
         .lines()
         .map(|line| {
             let numeric_part = &line[0..3];
-            let numeric: u32 = numeric_part
+            let numeric: u64 = numeric_part
                 .parse()
                 .map_err(|err| AocError::parse(numeric_part, err))?;
             let code = line.chars().collect();
@@ -161,27 +162,7 @@ fn find_shortest(keys: &Keyboard, start: &Coords, end: &Coords) -> Vec<Vec<Direc
     shortest
 }
 
-fn combine_parts(parts: &[Vec<Vec<char>>]) -> Vec<Vec<char>> {
-    let mut combinations = vec![vec![]];
-
-    for group in parts {
-        let mut new_combinations = Vec::new();
-
-        for combo_so_far in &combinations {
-            for option in group {
-                let mut combined = combo_so_far.clone();
-                combined.extend_from_slice(option);
-                new_combinations.push(combined);
-            }
-        }
-
-        combinations = new_combinations;
-    }
-
-    combinations
-}
-
-fn complexity(shortest: u32, numeric_part: u32) -> u32 {
+fn complexity(shortest: u64, numeric_part: u64) -> u64 {
     shortest * numeric_part
 }
 
@@ -190,29 +171,85 @@ impl Robot {
         Self { keys, current }
     }
 
-    fn find_inputs_to_produce(&self, sequence: &[char]) -> Vec<Vec<char>> {
+    fn find_inputs_to_produce(
+        &self,
+        sequence: &[char],
+        cache: &mut HashMap<(char, char), Vec<Sequence>>,
+    ) -> Vec<Vec<Sequence>> {
         let mut parts = vec![];
         let mut current = self.current;
 
         for button in sequence {
-            let (target, _key) = self.keys.iter().find(|(_, key)| *key == button).unwrap();
-            let shortest_paths = find_shortest(&self.keys, &current, target);
+            let (target, target_key) = self.keys.iter().find(|(_, key)| *key == button).unwrap();
+            let part = if let Some(cached) = cache.get(&(self.keys[&current], *target_key)) {
+                cached.clone()
+            } else {
+                let shortest_paths = find_shortest(&self.keys, &current, target);
 
-            let part = shortest_paths
-                .iter()
-                .map(|shortest| convert_to_directional(shortest))
-                .collect();
+                shortest_paths
+                    .iter()
+                    .map(|shortest| convert_to_directional(shortest))
+                    .collect()
+            };
 
             parts.push(part);
 
             current = *target;
         }
 
-        combine_parts(&parts)
+        parts
     }
 }
 
-fn convert_to_directional(shortest: &[Direction]) -> Vec<char> {
+fn recursive(
+    keys: &HashMap<Coords, char>,
+    sequence: &[char],
+    remaining_robots: u32,
+    cache: &mut HashMap<(String, u32), u64>,
+    shortest_cache: &mut HashMap<(char, char), Vec<Sequence>>,
+) -> u64 {
+    let sequence_key: String = sequence.iter().collect();
+    if let Some(cached) = cache.get(&(sequence_key.clone(), remaining_robots)) {
+        return *cached;
+    }
+
+    let mut current = (2, 0);
+    let mut count = 0;
+
+    for button in sequence {
+        let (target, target_key) = keys.iter().find(|(_, key)| *key == button).unwrap();
+        let possible = if let Some(cached) = shortest_cache.get(&(keys[&current], *target_key)) {
+            cached.clone()
+        } else {
+            let shortest_paths = find_shortest(keys, &current, target);
+
+            shortest_paths
+                .iter()
+                .map(|shortest| convert_to_directional(shortest))
+                .collect()
+        };
+
+        count += possible
+            .iter()
+            .map(|part| {
+                if remaining_robots > 1 {
+                    recursive(keys, part, remaining_robots - 1, cache, shortest_cache)
+                } else {
+                    part.len() as u64
+                }
+            })
+            .min()
+            .unwrap();
+
+        current = *target;
+    }
+
+    cache.insert((sequence_key, remaining_robots), count);
+
+    count
+}
+
+fn convert_to_directional(shortest: &[Direction]) -> Sequence {
     let mut input = vec![];
     for direction in shortest {
         input.push(match direction {
@@ -226,42 +263,51 @@ fn convert_to_directional(shortest: &[Direction]) -> Vec<char> {
     input
 }
 
-fn find_shortest_inputs(sequence: &[char]) -> Vec<char> {
+fn find_shortest_inputs(
+    sequence: &[char],
+    robots: u32,
+    cache: &mut HashMap<(String, u32), u64>,
+    shortest_cache: &mut HashMap<(char, char), Vec<Sequence>>,
+) -> u64 {
     let (numpad, numpad_start) = create_numerical_keypad();
-    let (keypad, keypad_start) = create_directional_keypad();
+    let (keypad, _) = create_directional_keypad();
 
     let numpad_robot = Robot::new(numpad, numpad_start);
-    let keypad_robot_1 = Robot::new(keypad.clone(), keypad_start);
-    let keypad_robot_2 = Robot::new(keypad, keypad_start);
+    let numpad_inputs = numpad_robot.find_inputs_to_produce(sequence, shortest_cache);
 
-    let numpad_inputs = numpad_robot.find_inputs_to_produce(sequence);
-
-    let shortest: Vec<_> = numpad_inputs
+    let shortest = numpad_inputs
         .iter()
-        .flat_map(|numpad_input| keypad_robot_1.find_inputs_to_produce(numpad_input))
-        .flat_map(|keypad_input| keypad_robot_2.find_inputs_to_produce(&keypad_input))
-        .min_by(|a, b| a.len().cmp(&b.len()))
-        .unwrap_or(Vec::new());
+        .map(|inputs| {
+            inputs
+                .iter()
+                .map(|input| recursive(&keypad, input, robots, cache, shortest_cache))
+                .min()
+                .unwrap()
+        })
+        .sum();
 
     shortest
 }
 
 pub struct Day21;
 impl Solution for Day21 {
-    type A = u32;
-    type B = u32;
+    type A = u64;
+    type B = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day21.txt")
     }
 
-    fn part_1(&self, input: &str) -> Result<u32, AocError> {
+    fn part_1(&self, input: &str) -> Result<u64, AocError> {
         let codes = parse(input)?;
+
+        let mut cache = HashMap::new();
+        let mut shortest_cache: HashMap<(char, char), Vec<Sequence>> = HashMap::new();
 
         let complexities = codes
             .into_iter()
             .map(|(code, numeric_part)| {
-                let shortest = find_shortest_inputs(&code).len() as u32;
+                let shortest = find_shortest_inputs(&code, 2, &mut cache, &mut shortest_cache);
                 complexity(shortest, numeric_part)
             })
             .sum();
@@ -269,8 +315,21 @@ impl Solution for Day21 {
         Ok(complexities)
     }
 
-    fn part_2(&self, input: &str) -> Result<u32, AocError> {
-        unimplemented!()
+    fn part_2(&self, input: &str) -> Result<u64, AocError> {
+        let codes = parse(input)?;
+
+        let mut cache = HashMap::new();
+        let mut shortest_cache: HashMap<(char, char), Vec<Sequence>> = HashMap::new();
+
+        let complexities = codes
+            .into_iter()
+            .map(|(code, numeric_part)| {
+                let shortest = find_shortest_inputs(&code, 25, &mut cache, &mut shortest_cache);
+                complexity(shortest, numeric_part)
+            })
+            .sum();
+
+        Ok(complexities)
     }
 }
 
@@ -292,43 +351,143 @@ mod tests {
     }
 
     #[test]
-    fn it_finds_shortest_numpad() {
-        let (keypad, a) = create_numerical_keypad();
+    fn it_solves_part2_real() {
+        assert_eq!(Day21.part_2(Day21.default_input()), Ok(167538833832712));
+    }
 
-        let robot = Robot::new(keypad, a);
+    #[test]
+    fn it_finds_shortest_numpad() {
+        let (numpad, a) = create_numerical_keypad();
+        let robot = Robot::new(numpad, a);
+        let mut cache: HashMap<(char, char), Vec<Sequence>> = HashMap::new();
 
         assert_eq!(
-            robot.find_inputs_to_produce(&['0', '2', '9', 'A']),
+            robot.find_inputs_to_produce(&['0', '2', '9', 'A'], &mut cache),
             vec![
-                "<A^A^>^AvvvA".chars().collect::<Vec<_>>(),
-                "<A^A^^>AvvvA".chars().collect::<Vec<_>>(),
-                "<A^A>^^AvvvA".chars().collect::<Vec<_>>(),
+                vec![vec!['<', 'A']], // A - 0
+                vec![vec!['^', 'A']], // 0 - 2
+                vec![
+                    // 2 - 9
+                    vec!['^', '>', '^', 'A'],
+                    vec!['^', '^', '>', 'A'],
+                    vec!['>', '^', '^', 'A']
+                ],
+                vec![vec!['v', 'v', 'v', 'A']] // 9 - A
+            ]
+        );
+    }
+
+    #[test]
+    fn it_finds_shortest_keypad() {
+        let (keypad, a) = create_directional_keypad();
+        let robot = Robot::new(keypad, a);
+        let mut cache: HashMap<(char, char), Vec<Sequence>> = HashMap::new();
+
+        assert_eq!(
+            robot.find_inputs_to_produce(&['<', 'A'], &mut cache),
+            vec![
+                vec![vec!['v', '<', '<', 'A'], vec!['<', 'v', '<', 'A']], // A - <
+                vec![vec!['>', '^', '>', 'A'], vec!['>', '>', '^', 'A']]  // < - A
+            ]
+        );
+    }
+
+    #[test]
+    fn it_finds_shortest_keypad_2() {
+        let (keypad, a) = create_directional_keypad();
+        let robot = Robot::new(keypad, a);
+        let mut cache: HashMap<(char, char), Vec<Sequence>> = HashMap::new();
+
+        assert_eq!(
+            robot.find_inputs_to_produce(&['^', '>', '^', 'A'], &mut cache),
+            vec![
+                vec![vec!['<', 'A']],                           // A - ^
+                vec![vec!['>', 'v', 'A'], vec!['v', '>', 'A']], // ^ - >
+                vec![vec!['^', '<', 'A'], vec!['<', '^', 'A']], // > - ^
+                vec![vec!['>', 'A']]                            // ^ - A
+            ]
+        );
+    }
+
+    #[test]
+    fn it_finds_shortest_keypad_3() {
+        let (keypad, a) = create_directional_keypad();
+        let robot = Robot::new(keypad, a);
+        let mut cache: HashMap<(char, char), Vec<Sequence>> = HashMap::new();
+
+        assert_eq!(
+            robot.find_inputs_to_produce(&['^', '^', '>', 'A'], &mut cache),
+            vec![
+                vec![vec!['<', 'A']],                           // A - ^
+                vec![vec!['A']],                                // ^ - ^
+                vec![vec!['>', 'v', 'A'], vec!['v', '>', 'A']], // ^ - >
+                vec![vec!['^', 'A']]                            // > - A
             ]
         );
     }
 
     #[test]
     fn it_finds_min_inputs_length_1() {
-        assert_eq!(find_shortest_inputs(&['0', '2', '9', 'A']).len(), 68);
+        assert_eq!(
+            find_shortest_inputs(
+                &['0', '2', '9', 'A'],
+                2,
+                &mut HashMap::new(),
+                &mut HashMap::new()
+            ),
+            68
+        );
     }
 
     #[test]
     fn it_finds_min_inputs_length_2() {
-        assert_eq!(find_shortest_inputs(&['9', '8', '0', 'A']).len(), 60);
+        assert_eq!(
+            find_shortest_inputs(
+                &['9', '8', '0', 'A'],
+                2,
+                &mut HashMap::new(),
+                &mut HashMap::new()
+            ),
+            60
+        );
     }
 
     #[test]
     fn it_finds_min_inputs_length_3() {
-        assert_eq!(find_shortest_inputs(&['1', '7', '9', 'A']).len(), 68);
+        assert_eq!(
+            find_shortest_inputs(
+                &['1', '7', '9', 'A'],
+                2,
+                &mut HashMap::new(),
+                &mut HashMap::new()
+            ),
+            68
+        );
     }
 
     #[test]
     fn it_finds_min_inputs_length_4() {
-        assert_eq!(find_shortest_inputs(&['4', '5', '6', 'A']).len(), 64);
+        assert_eq!(
+            find_shortest_inputs(
+                &['4', '5', '6', 'A'],
+                2,
+                &mut HashMap::new(),
+                &mut HashMap::new()
+            ),
+            64
+        );
     }
 
     #[test]
     fn it_finds_min_inputs_length_5() {
-        assert_eq!(find_shortest_inputs(&['3', '7', '9', 'A']).len(), 64);
+        assert_eq!(
+            find_shortest_inputs(
+                &['3', '7', '9', 'A'],
+                2,
+                &mut HashMap::new(),
+                &mut HashMap::new()
+            ),
+            64
+        );
     }
 }
