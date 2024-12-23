@@ -21,12 +21,12 @@ pub mod day18;
 pub mod day19;
 pub mod day20;
 pub mod day21;
-// pub mod day22;
+pub mod day22;
 // pub mod day23;
 // pub mod day24;
 // pub mod day25;
 
-pub const MAX_DAYS: u8 = 21;
+pub const MAX_DAYS: u8 = 22;
 
 pub struct Y2024;
 
@@ -54,7 +54,7 @@ impl Solver for Y2024 {
             19 => day19::Day19.run(input, 19, 2024),
             20 => day20::Day20.run(input, 20, 2024),
             21 => day21::Day21.run(input, 21, 2024),
-            // 22 => day22::Day22.run(input, 22, 2024),
+            22 => day22::Day22.run(input, 22, 2024),
             // 23 => day23::Day23.run(input, 23, 2024),
             // 24 => day24::Day24.run(input, 24, 2024),
             // 25 => day25::Day25.run(input, 25, 2024),
@@ -96,7 +96,7 @@ impl Solver for Y2024 {
             19 => include_str!("./day19.rs"),
             20 => include_str!("./day20.rs"),
             21 => include_str!("./day21.rs"),
-            // 22 => include_str!("./day22.rs"),
+            22 => include_str!("./day22.rs"),
             // 23 => include_str!("./day23.rs"),
             // 24 => include_str!("./day24.rs"),
             // 25 => include_str!("./day25.rs"),
