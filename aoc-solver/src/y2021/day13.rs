@@ -102,8 +102,8 @@ fn fold_paper(dots: &mut HashSet<Coords>, fold: Fold) {
 }
 
 impl Solution for Day13 {
-    type A = usize;
-    type B = String;
+    type Part1 = usize;
+    type Part2 = String;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day13.txt")

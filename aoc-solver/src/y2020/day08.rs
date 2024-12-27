@@ -87,8 +87,8 @@ fn parse_instruction(input: &str) -> IResult<&str, Instruction> {
 }
 
 impl Solution for Day08 {
-    type A = i32;
-    type B = i32;
+    type Part1 = i32;
+    type Part2 = i32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day08.txt")

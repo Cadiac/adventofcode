@@ -140,8 +140,8 @@ fn shoelace(vertices: &[Point]) -> f64 {
 }
 
 impl Solution for Day10 {
-    type A = u32;
-    type B = i32;
+    type Part1 = u32;
+    type Part2 = i32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day10.txt")

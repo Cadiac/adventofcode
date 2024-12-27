@@ -110,8 +110,8 @@ fn apply_gravity(mut bricks: Vec<Brick>) -> Vec<Brick> {
 }
 
 impl Solution for Day22 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day22.txt")

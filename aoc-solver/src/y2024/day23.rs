@@ -19,8 +19,8 @@ fn parse(input: &str) -> Result<HashMap<&str, HashSet<&str>>, AocError> {
 
 pub struct Day23;
 impl Solution for Day23 {
-    type A = u32;
-    type B = String;
+    type Part1 = u32;
+    type Part2 = String;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day23.txt")

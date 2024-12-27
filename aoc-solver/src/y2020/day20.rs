@@ -244,7 +244,7 @@ impl Solver {
         false
     }
 
-    fn check_for_sea_monsters(data: &mut Vec<Vec<(char, bool)>>) {
+    fn check_for_sea_monsters(data: &mut [Vec<(char, bool)>]) {
         // A sea monster will look like this:
         //                   #
         // #    ##    ##    ###
@@ -282,8 +282,8 @@ impl Solver {
 }
 
 impl Solution for Day20 {
-    type A = u64;
-    type B = usize;
+    type Part1 = u64;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day20.txt")

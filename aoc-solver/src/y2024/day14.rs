@@ -125,8 +125,8 @@ fn flood_fill(start: &Coords, visited: &mut HashSet<Coords>, robots: &HashSet<Co
 
 pub struct Day14;
 impl Solution for Day14 {
-    type A = u64;
-    type B = i64;
+    type Part1 = u64;
+    type Part2 = i64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day14.txt")

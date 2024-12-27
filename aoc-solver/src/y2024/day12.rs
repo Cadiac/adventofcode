@@ -83,8 +83,8 @@ fn count_corners(region: &HashSet<Coords>) -> usize {
 
 pub struct Day12;
 impl Solution for Day12 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day12.txt")

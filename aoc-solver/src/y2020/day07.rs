@@ -84,8 +84,8 @@ fn find_inner_bags_count(current: String, rules: HashMap<String, Rule>) -> usize
 }
 
 impl Solution for Day07 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day07.txt")

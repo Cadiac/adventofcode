@@ -143,8 +143,8 @@ fn lcm(a: u64, b: u64) -> u64 {
 }
 
 impl Solution for Day20 {
-    type A = u64;
-    type B = u64;
+    type Part1 = u64;
+    type Part2 = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day20.txt")

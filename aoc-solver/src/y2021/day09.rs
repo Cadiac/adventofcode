@@ -77,8 +77,8 @@ fn find_basin_recursive(
 }
 
 impl Solution for Day09 {
-    type A = u32;
-    type B = usize;
+    type Part1 = u32;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day09.txt")

@@ -49,8 +49,8 @@ fn solve(input: &str, days: usize) -> u64 {
 }
 
 impl Solution for Day06 {
-    type A = u64;
-    type B = u64;
+    type Part1 = u64;
+    type Part2 = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day06.txt")

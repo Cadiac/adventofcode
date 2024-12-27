@@ -58,8 +58,8 @@ fn find_reflection_line(pattern: &[Vec<char>], part_2: bool) -> Option<(usize, D
 }
 
 impl Solution for Day13 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day13.txt")

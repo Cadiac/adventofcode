@@ -116,8 +116,8 @@ pub fn a_star(corrupted: &[Coords], start: Coords, end: Coords) -> Option<u32> {
 
 pub struct Day18;
 impl Solution for Day18 {
-    type A = u32;
-    type B = String;
+    type Part1 = u32;
+    type Part2 = String;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day18.txt")

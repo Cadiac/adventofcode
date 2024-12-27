@@ -53,8 +53,8 @@ fn top_crates(crates: Vec<Vec<char>>) -> String {
 }
 
 impl Solution for Day05 {
-    type A = String;
-    type B = String;
+    type Part1 = String;
+    type Part2 = String;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day05.txt")

@@ -130,8 +130,8 @@ fn signal_to_decimal_mappings(unique_signal_patterns: Vec<HashSet<char>>) -> Has
 }
 
 impl Solution for Day08 {
-    type A = usize;
-    type B = u32;
+    type Part1 = usize;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day08.txt")

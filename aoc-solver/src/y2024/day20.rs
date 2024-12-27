@@ -137,8 +137,8 @@ fn filter_threshold(cheats: HashMap<u32, u32>, threshold: u32) -> u32 {
 
 pub struct Day20;
 impl Solution for Day20 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day20.txt")

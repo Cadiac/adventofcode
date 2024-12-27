@@ -14,27 +14,28 @@ fn parse(input: &str) -> Result<Universe, AocError> {
         .trim()
         .lines()
         .enumerate()
-        .flat_map(|(y, line)| line.chars().enumerate().filter_map(|(x, c)| {
-            if c == '#' {
-                return Some((x,y));
-            }
-            None
-        }).collect::<Vec<_>>())
+        .flat_map(|(y, line)| {
+            line.chars()
+                .enumerate()
+                .filter_map(|(x, c)| {
+                    if c == '#' {
+                        return Some((x, y));
+                    }
+                    None
+                })
+                .collect::<Vec<_>>()
+        })
         .collect();
 
     Ok(universe)
 }
 
 fn max_x(map: &Universe) -> usize {
-    map
-        .iter()
-        .max_by(|a, b| a.0.cmp(&b.0)).unwrap_or(&(0,0)).0
+    map.iter().max_by(|a, b| a.0.cmp(&b.0)).unwrap_or(&(0, 0)).0
 }
 
 fn max_y(map: &Universe) -> usize {
-    map
-        .iter()
-        .max_by(|a, b| a.1.cmp(&b.1)).unwrap_or(&(0,0)).1
+    map.iter().max_by(|a, b| a.1.cmp(&b.1)).unwrap_or(&(0, 0)).1
 }
 
 fn is_empty_row(map: &Universe, row: usize) -> bool {
@@ -95,7 +96,8 @@ fn distances(map: &Universe) -> i64 {
     let mut distance = 0;
 
     for (first, second) in map.iter().tuple_combinations() {
-        distance += (first.0 as i64 - second.0 as i64).abs() + (first.1 as i64 - second.1 as i64).abs();
+        distance +=
+            (first.0 as i64 - second.0 as i64).abs() + (first.1 as i64 - second.1 as i64).abs();
     }
 
     distance
@@ -110,8 +112,8 @@ fn solve(input: &str, rate: usize) -> Result<i64, AocError> {
 }
 
 impl Solution for Day11 {
-    type A = i64;
-    type B = i64;
+    type Part1 = i64;
+    type Part2 = i64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day11.txt")
@@ -132,8 +134,9 @@ mod tests {
 
     #[test]
     fn it_solves_part1_example() {
-        assert_eq!(solve(
-            "...#......\n\
+        assert_eq!(
+            solve(
+                "...#......\n\
              .......#..\n\
              #.........\n\
              ..........\n\
@@ -143,13 +146,18 @@ mod tests {
              ..........\n\
              .......#..\n\
              #...#.....
-        ", 2), Ok(374));
+        ",
+                2
+            ),
+            Ok(374)
+        );
     }
 
     #[test]
     fn it_solves_part2_example_1() {
-        assert_eq!(solve(
-            "...#......\n\
+        assert_eq!(
+            solve(
+                "...#......\n\
              .......#..\n\
              #.........\n\
              ..........\n\
@@ -159,13 +167,18 @@ mod tests {
              ..........\n\
              .......#..\n\
              #...#.....
-        ", 10), Ok(1030));
+        ",
+                10
+            ),
+            Ok(1030)
+        );
     }
 
     #[test]
     fn it_solves_part2_example_2() {
-        assert_eq!(solve(
-            "...#......\n\
+        assert_eq!(
+            solve(
+                "...#......\n\
              .......#..\n\
              #.........\n\
              ..........\n\
@@ -175,6 +188,10 @@ mod tests {
              ..........\n\
              .......#..\n\
              #...#.....
-        ", 100), Ok(8410));
+        ",
+                100
+            ),
+            Ok(8410)
+        );
     }
 }

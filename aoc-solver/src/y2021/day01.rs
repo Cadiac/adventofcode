@@ -17,8 +17,8 @@ where
 }
 
 impl Solution for Day01 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day01.txt")

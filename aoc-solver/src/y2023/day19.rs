@@ -140,8 +140,8 @@ fn parse(input: &str) -> Result<(Workflows, Vec<Part>), AocError> {
 }
 
 impl Solution for Day19 {
-    type A = u32;
-    type B = u64;
+    type Part1 = u32;
+    type Part2 = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day19.txt")
@@ -160,8 +160,8 @@ impl Solution for Day19 {
                         let (continue_next, target) = match step {
                             Step::Comparison((category, operator, operand, target)) => {
                                 let is_fulfilled = match operator {
-                                    Operator::GreaterThan => part[&category] > *operand,
-                                    Operator::LessThan => part[&category] < *operand,
+                                    Operator::GreaterThan => part[category] > *operand,
+                                    Operator::LessThan => part[category] < *operand,
                                 };
 
                                 (is_fulfilled, target)
@@ -174,7 +174,7 @@ impl Solution for Day19 {
                                 Target::Accepted => return Some(part.values().sum::<u32>()),
                                 Target::Rejected => return None,
                                 Target::Name(name) => {
-                                    current = &name;
+                                    current = name;
                                     break;
                                 }
                             }

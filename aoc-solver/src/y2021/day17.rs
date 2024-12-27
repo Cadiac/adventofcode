@@ -88,8 +88,8 @@ fn find_max_height(target_area: TargetArea, initial_x_v: i32, initial_y_v: i32) 
 }
 
 impl Solution for Day17 {
-    type A = i32;
-    type B = usize;
+    type Part1 = i32;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day17.txt")

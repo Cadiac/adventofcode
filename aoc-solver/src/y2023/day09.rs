@@ -50,8 +50,8 @@ fn extrapolate(mut sequence: Vec<i32>, direction: Direction) -> i32 {
 }
 
 impl Solution for Day09 {
-    type A = i32;
-    type B = i32;
+    type Part1 = i32;
+    type Part2 = i32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day09.txt")

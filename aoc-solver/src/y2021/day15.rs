@@ -123,8 +123,8 @@ fn solve(grid: Vec<Vec<u32>>) -> Result<u32, AocError> {
 }
 
 impl Solution for Day15 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day15.txt")

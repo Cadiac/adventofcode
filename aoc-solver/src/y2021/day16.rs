@@ -201,8 +201,8 @@ fn packet_value(packet: &Packet) -> u64 {
 }
 
 impl Solution for Day16 {
-    type A = u64;
-    type B = u64;
+    type Part1 = u64;
+    type Part2 = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day16.txt")
@@ -230,7 +230,7 @@ mod tests {
     #[test]
     fn it_parses_literal_value() {
         let bit_stream = &decode_hex_input("D2FE28").unwrap();
-        let (_, parsed) = parse_literal_value((&bit_stream, 0)).unwrap();
+        let (_, parsed) = parse_literal_value((bit_stream, 0)).unwrap();
         assert_eq!(
             parsed,
             Packet::LiteraValue {
@@ -244,7 +244,7 @@ mod tests {
     #[test]
     fn it_parses_operator_15_bits() {
         let bit_stream = &decode_hex_input("38006F45291200").unwrap();
-        let (_, parsed) = parse_operator_15_bits((&bit_stream, 0)).unwrap();
+        let (_, parsed) = parse_operator_15_bits((bit_stream, 0)).unwrap();
         assert_eq!(
             parsed,
             Packet::Operator {
@@ -270,7 +270,7 @@ mod tests {
     #[test]
     fn it_parses_operator_11_bits() {
         let bit_stream = &decode_hex_input("EE00D40C823060").unwrap();
-        let (_, parsed) = parse_operator_11_bits((&bit_stream, 0)).unwrap();
+        let (_, parsed) = parse_operator_11_bits((bit_stream, 0)).unwrap();
         assert_eq!(
             parsed,
             Packet::Operator {

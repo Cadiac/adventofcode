@@ -68,8 +68,8 @@ fn solve(input: &str, is_allow_diagonal: bool) -> usize {
 }
 
 impl Solution for Day05 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day05.txt")

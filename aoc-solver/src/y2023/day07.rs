@@ -131,8 +131,8 @@ fn calculate_winnings(input: &str, scores: &[char], use_jokers: bool) -> Result<
 }
 
 impl Solution for Day07 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day07.txt")

@@ -35,8 +35,8 @@ fn count_possible(towels: &[String], design: &str, cache: &mut HashMap<String, u
 
 pub struct Day19;
 impl Solution for Day19 {
-    type A = u64;
-    type B = u64;
+    type Part1 = u64;
+    type Part2 = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day19.txt")

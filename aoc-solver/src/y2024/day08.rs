@@ -74,8 +74,8 @@ fn find_antinodes(
 
 pub struct Day08;
 impl Solution for Day08 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day08.txt")

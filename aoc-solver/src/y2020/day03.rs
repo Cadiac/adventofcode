@@ -44,8 +44,8 @@ fn parse(input: &str) -> (HashSet<(usize, usize)>, usize, usize) {
 }
 
 impl Solution for Day03 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day03.txt")

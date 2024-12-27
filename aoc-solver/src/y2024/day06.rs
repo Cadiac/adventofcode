@@ -96,8 +96,8 @@ fn patrol(
 
 pub struct Day06;
 impl Solution for Day06 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day06.txt")

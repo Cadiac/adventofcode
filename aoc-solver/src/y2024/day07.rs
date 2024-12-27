@@ -44,8 +44,8 @@ fn is_possible(target: u64, current: u64, rest: &[u64], concat: bool) -> bool {
 
 pub struct Day07;
 impl Solution for Day07 {
-    type A = u64;
-    type B = u64;
+    type Part1 = u64;
+    type Part2 = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day07.txt")

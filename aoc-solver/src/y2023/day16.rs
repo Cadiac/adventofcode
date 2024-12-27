@@ -49,8 +49,8 @@ fn parse(input: &str) -> Result<(Grid, usize, usize), AocError> {
 }
 
 impl Solution for Day16 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day16.txt")

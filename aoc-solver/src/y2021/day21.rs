@@ -71,8 +71,8 @@ fn play_quantum_turn(rolls: u32, mut players: [Player; 2], active_player: usize)
 }
 
 impl Solution for Day21 {
-    type A = u32;
-    type B = usize;
+    type Part1 = u32;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day21.txt")

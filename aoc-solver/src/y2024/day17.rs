@@ -102,8 +102,8 @@ fn run_program(mut computer: Computer) -> Vec<u8> {
 
 pub struct Day17;
 impl Solution for Day17 {
-    type A = String;
-    type B = u64;
+    type Part1 = String;
+    type Part2 = u64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day17.txt")

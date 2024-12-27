@@ -82,8 +82,8 @@ fn evaluate_rpn(mut rpn: VecDeque<char>) -> i64 {
 }
 
 impl Solution for Day18 {
-    type A = i64;
-    type B = i64;
+    type Part1 = i64;
+    type Part2 = i64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day18.txt")

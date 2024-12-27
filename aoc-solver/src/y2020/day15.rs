@@ -31,8 +31,8 @@ fn memory_game(input: &str, turns: u32) -> u32 {
 }
 
 impl Solution for Day15 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day15.txt")

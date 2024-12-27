@@ -103,8 +103,8 @@ fn parse_with_autocomplete(input: &str) -> Option<Vec<char>> {
 }
 
 impl Solution for Day10 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day10.txt")

@@ -19,8 +19,8 @@ fn transform_subject_num(subject_number: u64, loop_size: u64) -> u64 {
 }
 
 impl Solution for Day25 {
-    type A = u64;
-    type B = String;
+    type Part1 = u64;
+    type Part2 = String;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day01.txt")

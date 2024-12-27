@@ -96,8 +96,8 @@ fn check_next(gates: &Gates, a: &&str, b: &&str, output: &&str, expected: &[Gate
 
 pub struct Day24;
 impl Solution for Day24 {
-    type A = u64;
-    type B = String;
+    type Part1 = u64;
+    type Part2 = String;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day24.txt")

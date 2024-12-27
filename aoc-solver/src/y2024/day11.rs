@@ -52,8 +52,8 @@ fn simulate(stone: u64, steps: usize, cache: &mut Cache) -> usize {
 
 pub struct Day11;
 impl Solution for Day11 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day11.txt")

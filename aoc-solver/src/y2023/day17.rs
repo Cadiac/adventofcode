@@ -155,8 +155,8 @@ fn dijkstra(grid: &Grid, min_consequtive: u8, max_consequtive: u8) -> Result<u32
 }
 
 impl Solution for Day17 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day17.txt")

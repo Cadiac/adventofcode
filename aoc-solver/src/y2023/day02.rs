@@ -63,8 +63,8 @@ fn max_color_seen(hands: &[Hand], color_extractor: impl Fn(&Hand) -> u32) -> u32
 }
 
 impl Solution for Day02 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day02.txt")

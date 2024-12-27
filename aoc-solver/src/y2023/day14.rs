@@ -55,7 +55,7 @@ fn tilt(tiles: &mut Grid, direction: &Direction) {
     }
 }
 
-fn slide_north(tiles: &mut Vec<Vec<Tile>>) {
+fn slide_north(tiles: &mut [Vec<Tile>]) {
     for y in 0..tiles.len() {
         for x in 0..tiles[y].len() {
             if let Tile::Rounded = tiles[y][x] {
@@ -91,7 +91,7 @@ fn slide_east(tiles: &mut Vec<Vec<Tile>>) {
     }
 }
 
-fn slide_south(tiles: &mut Vec<Vec<Tile>>) {
+fn slide_south(tiles: &mut [Vec<Tile>]) {
     for y in (0..tiles.len()).rev() {
         for x in 0..tiles[y].len() {
             if let Tile::Rounded = tiles[y][x] {
@@ -183,8 +183,8 @@ fn support_beams_load(grid: &Grid) -> u32 {
 }
 
 impl Solution for Day14 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2023/day14.txt")

@@ -17,13 +17,13 @@ struct Search<'a> {
     distance: u32,
 }
 
-impl<'a> Ord for Search<'a> {
+impl Ord for Search<'_> {
     fn cmp(&self, other: &Self) -> Ordering {
         other.distance.cmp(&self.distance)
     }
 }
 
-impl<'a> PartialOrd for Search<'a> {
+impl PartialOrd for Search<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
@@ -215,8 +215,8 @@ impl Day16 {
 }
 
 impl Solution for Day16 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day16.txt")

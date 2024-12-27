@@ -178,8 +178,8 @@ fn parse_passport_part2(input: &str) -> IResult<&str, Passport> {
 }
 
 impl Solution for Day04 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day04.txt")

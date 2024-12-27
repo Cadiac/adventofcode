@@ -201,8 +201,8 @@ impl GameOfCubes {
 }
 
 impl Solution for Day17 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day17.txt")

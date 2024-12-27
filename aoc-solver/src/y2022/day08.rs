@@ -32,8 +32,8 @@ fn parse(input: &str) -> Result<Vec<Vec<(i32, bool)>>, AocError> {
 }
 
 impl Solution for Day08 {
-    type A = i32;
-    type B = i32;
+    type Part1 = i32;
+    type Part2 = i32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day08.txt")

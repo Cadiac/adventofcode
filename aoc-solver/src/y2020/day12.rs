@@ -10,8 +10,8 @@ pub struct Ship {
 }
 
 impl Solution for Day12 {
-    type A = i32;
-    type B = i32;
+    type Part1 = i32;
+    type Part2 = i32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day12.txt")

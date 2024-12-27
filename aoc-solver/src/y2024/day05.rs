@@ -59,8 +59,8 @@ fn parse(input: &str) -> Result<(Rules, Updates), AocError> {
 
 pub struct Day05;
 impl Solution for Day05 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day05.txt")

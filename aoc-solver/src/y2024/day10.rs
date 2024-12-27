@@ -78,8 +78,8 @@ fn search_trails((x, y): (usize, usize), grid: &[Vec<u32>]) -> HashMap<(usize, u
 
 pub struct Day10;
 impl Solution for Day10 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day10.txt")

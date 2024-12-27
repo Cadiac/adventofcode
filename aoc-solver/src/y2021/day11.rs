@@ -85,8 +85,8 @@ fn simulate_step(mut octopuses: Vec<Vec<u32>>) -> (Vec<Vec<u32>>, usize) {
 }
 
 impl Solution for Day11 {
-    type A = usize;
-    type B = usize;
+    type Part1 = usize;
+    type Part2 = usize;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day11.txt")

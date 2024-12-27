@@ -53,8 +53,8 @@ fn filter_by_bit_criteria(mut candidates: Vec<Vec<u32>>, expected_value: u32) ->
 }
 
 impl Solution for Day03 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2021/day03.txt")

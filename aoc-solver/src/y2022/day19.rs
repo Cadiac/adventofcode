@@ -102,7 +102,7 @@ impl Day19 {
                     }
 
                     let required = cost.saturating_sub(inventory[ingredient]);
-                    Some((required + production[ingredient] - 1) / production[ingredient])
+                    Some(required.div_ceil(production[ingredient]))
                 })
                 .collect();
 
@@ -198,8 +198,8 @@ impl Day19 {
 }
 
 impl Solution for Day19 {
-    type A = u32;
-    type B = u32;
+    type Part1 = u32;
+    type Part2 = u32;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2022/day19.txt")

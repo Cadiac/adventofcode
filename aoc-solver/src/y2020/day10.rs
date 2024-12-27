@@ -107,8 +107,8 @@ impl Solver {
 }
 
 impl Solution for Day10 {
-    type A = i64;
-    type B = i64;
+    type Part1 = i64;
+    type Part2 = i64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2020/day10.txt")

@@ -83,8 +83,8 @@ fn find_fewest_tokens(
 
 pub struct Day13;
 impl Solution for Day13 {
-    type A = i64;
-    type B = i64;
+    type Part1 = i64;
+    type Part2 = i64;
 
     fn default_input(&self) -> &'static str {
         include_str!("../../../inputs/2024/day13.txt")
