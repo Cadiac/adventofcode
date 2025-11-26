@@ -39,7 +39,7 @@ pub fn switch(route: Route) -> Html {
     };
 
     let main = match route {
-        Route::Index => html! { <Home year={2024} /> },
+        Route::Index => html! { <Home year={2025} /> },
         Route::Home { year } => html! { <Home year={year} /> },
         Route::Solution { year, day } => {
             html! { <Solution year={year} day={day} />}

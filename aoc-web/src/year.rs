@@ -3,7 +3,7 @@ use yew_router::components::Link;
 
 use crate::router::Route;
 
-const YEARS: &[u32] = &[2024, 2023, 2022, 2021, 2020];
+const YEARS: &[u32] = &[2025, 2024, 2023, 2022, 2021, 2020];
 
 #[derive(Properties, PartialEq)]
 pub struct YearProps {

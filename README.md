@@ -1,8 +1,8 @@
 [![Tests and Deploy](https://github.com/Cadiac/adventofcode/actions/workflows/deploy.yml/badge.svg)](https://github.com/Cadiac/adventofcode/actions/workflows/deploy.yml)
 
-# 🎄🎄🎄 Advent of Code 2024 🎄🎄🎄
+# 🎄🎄🎄 Advent of Code 2025 🎄🎄🎄
 
-Solutions to [Advent of Code 2024](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
+Solutions to [Advent of Code 2025](https://adventofcode.com/) implemented in [Rust](https://www.rust-lang.org).
 
 Online solutions runner: https://aoc.cadi.ac/
 
@@ -17,13 +17,13 @@ The project is split into separate binaries within one cargo project.
 You can run individual solutions with
 
 ```bash
-$ cargo run -- --day 1 --year 2024
+$ cargo run -- --day 1 --year 2025
 ```
 
 or using custom inputs with
 
 ```bash
-$ cargo run -- --day 1 --year 2024 --file inputs/2024/day01.txt
+$ cargo run -- --day 1 --year 2025 --file inputs/2025/day01.txt
 ```
 
 All solutions of the current year can be run using defaults inputs from `inputs/` directory with
@@ -35,7 +35,7 @@ $ cargo run
 Single day's tests can be run with
 
 ```bash
-$ cargo test --workspace -- y2024::day01::tests
+$ cargo test --workspace -- y2025::day01::tests
 ```
 
 or all tests with
@@ -86,28 +86,4 @@ This should start the server at `localhost:8080`.
 
 ## Solutions
 
-❄️ [Day 01](aoc-solver/src/y2024/day01.rs)
-❄️ [Day 02](aoc-solver/src/y2024/day02.rs)
-❄️ [Day 03](aoc-solver/src/y2024/day03.rs)
-❄️ [Day 04](aoc-solver/src/y2024/day04.rs)
-❄️ [Day 05](aoc-solver/src/y2024/day05.rs)
-❄️ [Day 06](aoc-solver/src/y2024/day06.rs)
-❄️ [Day 07](aoc-solver/src/y2024/day07.rs)
-❄️ [Day 08](aoc-solver/src/y2024/day08.rs)
-❄️ [Day 09](aoc-solver/src/y2024/day09.rs)
-❄️ [Day 10](aoc-solver/src/y2024/day10.rs)
-❄️ [Day 11](aoc-solver/src/y2024/day11.rs)
-❄️ [Day 12](aoc-solver/src/y2024/day12.rs)
-❄️ [Day 13](aoc-solver/src/y2024/day13.rs)
-❄️ [Day 14](aoc-solver/src/y2024/day14.rs)
-❄️ [Day 15](aoc-solver/src/y2024/day15.rs)
-❄️ [Day 16](aoc-solver/src/y2024/day16.rs)
-❄️ [Day 17](aoc-solver/src/y2024/day17.rs)
-❄️ [Day 18](aoc-solver/src/y2024/day18.rs)
-❄️ [Day 19](aoc-solver/src/y2024/day19.rs)
-❄️ [Day 20](aoc-solver/src/y2024/day20.rs)
-❄️ [Day 21](aoc-solver/src/y2024/day21.rs)
-❄️ [Day 22](aoc-solver/src/y2024/day22.rs)
-❄️ [Day 23](aoc-solver/src/y2024/day23.rs)
-❄️ [Day 24](aoc-solver/src/y2024/day24.rs)
-❄️ [Day 25](aoc-solver/src/y2024/day25.rs)
+❄️ [Day 01](aoc-solver/src/y2025/day01.rs)

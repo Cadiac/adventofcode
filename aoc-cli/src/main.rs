@@ -11,6 +11,7 @@ use aoc_solver::y2021::Y2021;
 use aoc_solver::y2022::Y2022;
 use aoc_solver::y2023::Y2023;
 use aoc_solver::y2024::Y2024;
+use aoc_solver::y2025::Y2025;
 
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = None)]
@@ -20,7 +21,7 @@ struct Args {
     day: Option<u8>,
 
     /// Year of the Solution
-    #[clap(short, long, value_name = "<2020-2024>")]
+    #[clap(short, long, value_name = "<2020-2025>")]
     year: Option<u32>,
 
     /// Path to the input file
@@ -51,8 +52,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Some(2023) => {
                     Y2023::run_all();
                 }
-                Some(2024) | None => {
+                Some(2024) => {
                     Y2024::run_all();
+                }
+                Some(2025) | None => {
+                    Y2025::run_all();
                 }
                 _ => unimplemented!(),
             };
@@ -82,8 +86,11 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Some(2023) => {
                     Y2023::run_solution(day, input);
                 }
-                Some(2024) | None => {
+                Some(2024) => {
                     Y2024::run_solution(day, input);
+                }
+                Some(2025) | None => {
+                    Y2025::run_solution(day, input);
                 }
                 _ => unimplemented!(),
             }

@@ -4,6 +4,7 @@ use yew_agent::oneshot::use_oneshot_runner;
 
 use aoc_solver::{
     solution::Solver, y2020::Y2020, y2021::Y2021, y2022::Y2022, y2023::Y2023, y2024::Y2024,
+    y2025::Y2025,
 };
 
 use crate::runner::SolutionTask;
@@ -46,6 +47,7 @@ pub fn source_viewer(props: &Props) -> Html {
             2022 => Y2022::get_source(day),
             2023 => Y2023::get_source(day),
             2024 => Y2024::get_source(day),
+            2025 => Y2025::get_source(day),
             _ => "",
         };
 
