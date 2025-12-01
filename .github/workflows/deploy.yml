@@ -2,9 +2,9 @@ name: Tests and Deploy
 
 on:
   push:
-    branches: ["2024"]
+    branches: ["2025"]
   pull_request:
-    branches: ["2024"]
+    branches: ["2025"]
 
 env:
   CARGO_TERM_COLOR: always
