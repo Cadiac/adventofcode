@@ -4,28 +4,24 @@ use crate::solution::{AocError, Solution};
 
 pub struct Day01;
 
-fn parse(input: &str) -> Result<(Vec<u32>, Vec<u32>), AocError> {
-    let result: Vec<(u32, u32)> = input
+fn parse(input: &str) -> Result<Vec<i32>, AocError> {
+    input
         .trim()
         .lines()
         .map(|line| {
-            let (left_input, right_input) = line
-                .trim()
-                .split_once("   ")
-                .ok_or(AocError::parse(input, "Invalid input"))?;
+            let (direction, value) = line.split_at(1);
 
-            let left = left_input
-                .parse::<u32>()
-                .map_err(|err| AocError::parse(left_input, err))?;
-            let right = right_input
-                .parse::<u32>()
-                .map_err(|err| AocError::parse(right_input, err))?;
+            let turn = value
+                .parse::<i32>()
+                .map_err(|err| AocError::parse(line, err))?;
 
-            Ok((left, right))
+            match direction {
+                "L" => Ok(-turn),
+                "R" => Ok(turn),
+                _ => Err(AocError::parse(line, "unknown direction")),
+            }
         })
-        .try_collect()?;
-
-    Ok(result.into_iter().unzip())
+        .try_collect()
 }
 
 impl Solution for Day01 {
@@ -37,13 +33,40 @@ impl Solution for Day01 {
     }
 
     fn part_1(&self, input: &str) -> Result<u32, AocError> {
-        let (mut left, mut right) = parse(input)?;
+        let turns = parse(input)?;
+        let mut zeroes = 0;
 
-        unimplemented!();
+        turns.into_iter().fold(50, |position, turn| {
+            let next = (position + turn).rem_euclid(100);
+
+            if next == 0 {
+                zeroes += 1;
+            }
+
+            next
+        });
+
+        Ok(zeroes)
     }
 
     fn part_2(&self, input: &str) -> Result<u32, AocError> {
-        unimplemented!();
+        let turns = parse(input)?;
+        let mut zeroes = 0;
+
+        turns.into_iter().fold(50, |prev, turn| {
+            let next = (prev + turn).rem_euclid(100);
+            let full_rotations = turn.unsigned_abs() / 100;
+
+            zeroes += full_rotations;
+
+            if next == 0 || (prev != 0 && (turn < 0 && next > prev) || (turn > 0 && next < prev)) {
+                zeroes += 1;
+            }
+
+            next
+        });
+
+        Ok(zeroes)
     }
 }
 
@@ -55,14 +78,18 @@ mod tests {
     fn it_solves_part1_example() {
         assert_eq!(
             Day01.part_1(
-                "3   4\n\
-                 4   3\n\
-                 2   5\n\
-                 1   3\n\
-                 3   9\n\
-                 3   3"
+                "L68\n\
+                 L30\n\
+                 R48\n\
+                 L5\n\
+                 R60\n\
+                 L55\n\
+                 L1\n\
+                 L99\n\
+                 R14\n\
+                 L82"
             ),
-            Ok(11)
+            Ok(3)
         );
     }
 
@@ -70,14 +97,18 @@ mod tests {
     fn it_solves_part2_example() {
         assert_eq!(
             Day01.part_2(
-                "3   4\n\
-                 4   3\n\
-                 2   5\n\
-                 1   3\n\
-                 3   9\n\
-                 3   3"
+                "L68\n\
+                 L30\n\
+                 R48\n\
+                 L5\n\
+                 R60\n\
+                 L55\n\
+                 L1\n\
+                 L99\n\
+                 R14\n\
+                 L82"
             ),
-            Ok(31)
+            Ok(6)
         );
     }
 }
