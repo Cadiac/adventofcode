@@ -37,7 +37,7 @@ jobs:
         id: rustc_version
         run: |
           rust_version=$(rustc --version | md5sum | cut -f 1-1 -d ' ')
-          echo "##[set-output name=version;]$(echo $rust_version)"
+          echo "version=$rust_version" >> "$GITHUB_OUTPUT"
       - name: Restore Cargo cache
         uses: actions/cache@v3
         with:
@@ -59,7 +59,7 @@ jobs:
         env:
           RUSTFLAGS: "--remap-path-prefix $HOME=~"
       - name: Upload build artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: aoc-web
           path: aoc-web/dist
@@ -73,7 +73,7 @@ jobs:
 
     steps:
       - name: Download the artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: aoc-web
           path: ./aoc-web
