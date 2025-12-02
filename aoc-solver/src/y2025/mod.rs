@@ -1,8 +1,9 @@
 use crate::solution::{Solution, Solver};
 
 pub mod day01;
+pub mod day02;
 
-pub const MAX_DAYS: u8 = 21;
+pub const MAX_DAYS: u8 = 2;
 
 pub struct Y2025;
 
@@ -10,6 +11,7 @@ impl Solver for Y2025 {
     fn run_solution(day: u8, input: Option<String>) -> Vec<String> {
         match day {
             1 => day01::Day01.run(input, 1, 2025),
+            2 => day02::Day02.run(input, 2, 2025),
             _ => vec![String::from("Solution not implemented (yet?)")],
         }
     }
@@ -28,6 +30,7 @@ impl Solver for Y2025 {
     fn get_source(day: u8) -> &'static str {
         match day {
             1 => include_str!("./day01.rs"),
+            2 => include_str!("./day02.rs"),
             _ => unimplemented!(),
         }
     }
