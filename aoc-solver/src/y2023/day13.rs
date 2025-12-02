@@ -21,8 +21,11 @@ fn find_reflection_line(pattern: &[Vec<char>], part_2: bool) -> Option<(usize, D
         let mut distance = 0;
 
         while y + distance < pattern.len() - 1 && y >= distance {
-            for x in 0..pattern[y].len() {
-                if pattern[y + distance + 1][x] != pattern[y - distance][x] {
+            let upper = &pattern[y + distance + 1];
+            let lower = &pattern[y - distance];
+
+            for (left, right) in upper.iter().zip(lower) {
+                if left != right {
                     differences += 1;
                 }
             }

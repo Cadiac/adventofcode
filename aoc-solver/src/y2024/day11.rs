@@ -17,7 +17,7 @@ fn parse(input: &str) -> Result<Vec<u64>, AocError> {
 
 fn split(stone: u64) -> Option<(u64, u64)> {
     let digits = stone.ilog10() + 1;
-    if digits % 2 != 0 {
+    if !digits.is_multiple_of(2) {
         return None;
     }
 

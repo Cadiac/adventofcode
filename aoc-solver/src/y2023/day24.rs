@@ -79,13 +79,14 @@ fn determinant(matrix: &[Vec<i64>]) -> BigInt {
     for det_column in 0..size {
         let mut submatrix = vec![vec![0; size - 1]; size - 1];
 
-        for row in 1..size {
+        for (sub_row, row) in matrix.iter().skip(1).enumerate() {
             let mut sub_column = 0;
-            for column in 0..size {
+
+            for (column, &value) in row.iter().enumerate() {
                 if column == det_column {
                     continue;
                 }
-                submatrix[row - 1][sub_column] = matrix[row][column];
+                submatrix[sub_row][sub_column] = value;
                 sub_column += 1;
             }
         }

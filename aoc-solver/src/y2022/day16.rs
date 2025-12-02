@@ -70,7 +70,7 @@ fn dijkstra(valves: &HashMap<&str, Valve>, source: &str, target: &str) -> Option
 pub struct Day16;
 
 impl Day16 {
-    fn parse(input: &str) -> Result<Vec<Valve>, AocError> {
+    fn parse(input: &'_ str) -> Result<Vec<Valve<'_>>, AocError> {
         let mut valves = HashMap::new();
 
         for line in input.lines() {

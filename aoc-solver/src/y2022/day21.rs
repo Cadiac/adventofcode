@@ -17,7 +17,7 @@ enum Operation<'a> {
 pub struct Day21;
 
 impl Day21 {
-    fn parse(input: &str) -> Result<Operations, AocError> {
+    fn parse(input: &'_ str) -> Result<Operations<'_>, AocError> {
         let mut monkeys = HashMap::new();
 
         for line in input.lines() {

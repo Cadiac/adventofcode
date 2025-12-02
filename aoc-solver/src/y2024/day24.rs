@@ -14,7 +14,7 @@ enum Gate {
 type Gates<'a> = Vec<(Gate, &'a str, &'a str, &'a str)>;
 type Registers<'a> = HashMap<&'a str, Option<u8>>;
 
-fn parse(input: &str) -> Result<(Gates, Registers), AocError> {
+fn parse(input: &'_ str) -> Result<(Gates<'_>, Registers<'_>), AocError> {
     let (inputs_str, gates_str) = input
         .split_once("\n\n")
         .ok_or_else(|| AocError::parse(input, "Missing sections"))?;
