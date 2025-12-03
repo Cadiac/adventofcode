@@ -19,22 +19,31 @@ fn parse(input: &str) -> Result<Vec<Vec<u32>>, AocError> {
         .collect()
 }
 
-fn find_max_joltage(banks: &[u32], digits: usize) -> u64 {
+fn find_max_joltage(banks: &[u32], digits: usize) -> Option<u64> {
+    if digits > banks.len() {
+        return None;
+    }
+
     let mut skip = 0;
     let mut result = 0;
 
-    for digit in 0..digits {
-        let digit_pos = digits - digit - 1;
-        let take = banks.len() - skip - digit_pos;
+    for i in 0..digits {
+        let remaining = digits - i;
+        let end = banks.len() - (remaining - 1);
+        let slice = &banks[skip..end];
 
-        let mut banks_to_check = banks.iter().skip(skip).take(take);
-        let max = banks_to_check.clone().max().unwrap();
+        let (offset, &max) = slice
+            .iter()
+            .enumerate()
+            // max_by_key returns the last element
+            .rev()
+            .max_by_key(|&(_, v)| v)?;
 
-        skip += banks_to_check.position(|battery| battery == max).unwrap() + 1;
-        result += 10u64.pow(digit_pos as u32) * *max as u64
+        skip += offset + 1;
+        result = result * 10 + max as u64;
     }
 
-    result
+    Some(result)
 }
 
 impl Solution for Day03 {
@@ -48,7 +57,7 @@ impl Solution for Day03 {
     fn part_1(&self, input: &str) -> Result<u64, AocError> {
         let total = parse(input)?
             .iter()
-            .map(|bank| find_max_joltage(bank, 2))
+            .flat_map(|bank| find_max_joltage(bank, 2))
             .sum();
 
         Ok(total)
@@ -57,7 +66,7 @@ impl Solution for Day03 {
     fn part_2(&self, input: &str) -> Result<u64, AocError> {
         let total = parse(input)?
             .iter()
-            .map(|bank| find_max_joltage(bank, 12))
+            .flat_map(|bank| find_max_joltage(bank, 12))
             .sum();
 
         Ok(total)
@@ -72,7 +81,7 @@ mod tests {
     fn it_finds_max_joltage_1() {
         assert_eq!(
             find_max_joltage(&[9, 8, 7, 6, 5, 4, 3, 2, 1, 1, 1, 1, 1, 1, 1], 2),
-            98
+            Some(98)
         );
     }
 
@@ -80,7 +89,7 @@ mod tests {
     fn it_finds_max_joltage_2() {
         assert_eq!(
             find_max_joltage(&[8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9], 2),
-            89
+            Some(89)
         )
     }
 
@@ -88,7 +97,7 @@ mod tests {
     fn it_finds_max_joltage_3() {
         assert_eq!(
             find_max_joltage(&[2, 3, 4, 2, 3, 4, 2, 3, 4, 2, 3, 4, 2, 7, 8], 2),
-            78
+            Some(78)
         )
     }
 
@@ -96,7 +105,7 @@ mod tests {
     fn it_finds_max_joltage_4() {
         assert_eq!(
             find_max_joltage(&[8, 1, 8, 1, 8, 1, 9, 1, 1, 1, 1, 2, 1, 1, 1], 2),
-            92
+            Some(92)
         )
     }
 
@@ -104,7 +113,7 @@ mod tests {
     fn it_finds_max_joltage_5() {
         assert_eq!(
             find_max_joltage(&[9, 8, 7, 6, 5, 4, 3, 2, 1, 1, 1, 1, 1, 1, 1], 12),
-            987654321111
+            Some(987654321111)
         );
     }
 
@@ -112,7 +121,7 @@ mod tests {
     fn it_finds_max_joltage_6() {
         assert_eq!(
             find_max_joltage(&[8, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 9], 12),
-            811111111119
+            Some(811111111119)
         );
     }
 
@@ -120,7 +129,7 @@ mod tests {
     fn it_finds_max_joltage_7() {
         assert_eq!(
             find_max_joltage(&[2, 3, 4, 2, 3, 4, 2, 3, 4, 2, 3, 4, 2, 7, 8], 12),
-            434234234278
+            Some(434234234278)
         );
     }
 
@@ -128,7 +137,7 @@ mod tests {
     fn it_finds_max_joltage_8() {
         assert_eq!(
             find_max_joltage(&[8, 1, 8, 1, 8, 1, 9, 1, 1, 1, 1, 2, 1, 1, 1], 12),
-            888911112111
+            Some(888911112111)
         );
     }
 
