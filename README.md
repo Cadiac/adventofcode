@@ -90,3 +90,4 @@ This should start the server at `localhost:8080`.
 ❄️ [Day 02](aoc-solver/src/y2025/day02.rs)
 ❄️ [Day 03](aoc-solver/src/y2025/day03.rs)
 ❄️ [Day 04](aoc-solver/src/y2025/day04.rs)
+❄️ [Day 05](aoc-solver/src/y2025/day05.rs)

@@ -66,11 +66,9 @@ impl Solution for Day04 {
             removed += before - after;
 
             if before == after {
-                break;
+                return Ok(removed);
             }
         }
-
-        Ok(removed)
     }
 }
 
