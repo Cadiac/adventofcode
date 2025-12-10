@@ -1,9 +1,6 @@
 use crate::solution::{AocError, Solution};
 use itertools::Itertools;
-use std::{
-    collections::{HashMap, HashSet},
-    i64,
-};
+use std::collections::{HashMap, HashSet};
 
 type Coords = (i64, i64, i64);
 type Graph = HashMap<Coords, HashSet<Coords>>;
